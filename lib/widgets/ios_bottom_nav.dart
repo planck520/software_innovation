@@ -19,8 +19,8 @@ class NavItem {
 /// stitch_login_screen 风格底部导航栏
 /// - 5 个标签页布局
 /// - 玻璃态背景
-/// - 蓝色选中态
-class IosBottomNav extends StatelessWidget {
+/// - 蓝色选中态，点击时短暂变黄再平滑回蓝
+class IosBottomNav extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
   final List<NavItem> items;
@@ -40,6 +40,37 @@ class IosBottomNav extends StatelessWidget {
   });
 
   @override
+  State<IosBottomNav> createState() => _IosBottomNavState();
+}
+
+class _IosBottomNavState extends State<IosBottomNav> {
+  // 记录正在闪烁的索引，用于“点击变黄，0.5s 后平滑回蓝”
+  final Set<int> _flashing = {};
+  static const Color _flashColor = Color(0xFFFFD54F); // 明亮黄
+  final Map<int, double> _scaleTargets = {}; // 图标缩放目标
+
+  void _handleTap(int index) {
+    widget.onTap(index);
+    setState(() => _flashing.add(index));
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (!mounted) return;
+      setState(() => _flashing.remove(index));
+    });
+
+    // 点击缩放：先缩至 0.8，再在 0.125s 后恢复为 1
+    setState(() => _scaleTargets[index] = 0.8);
+    Future.delayed(const Duration(milliseconds: 125), () {
+      if (!mounted) return;
+      setState(() => _scaleTargets[index] = 1.0);
+    });
+  }
+
+  Color _targetColor(bool isSelected, bool flashing) {
+    if (flashing) return _flashColor;
+    return isSelected ? AppColors.primary : AppColors.textTertiary;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final navBar = Container(
       decoration: BoxDecoration(
@@ -56,7 +87,7 @@ class IosBottomNav extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppTokens.space2, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: items.asMap().entries.map((entry) {
+            children: widget.items.asMap().entries.map((entry) {
               final index = entry.key;
               final item = entry.value;
               return _buildNavItem(index, item);
@@ -66,7 +97,7 @@ class IosBottomNav extends StatelessWidget {
       ),
     );
 
-    if (showBlur) {
+    if (widget.showBlur) {
       return ClipRRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -79,44 +110,61 @@ class IosBottomNav extends StatelessWidget {
   }
 
   Widget _buildNavItem(int index, NavItem item) {
-    final isSelected = currentIndex == index;
+    final isSelected = widget.currentIndex == index;
+    final isFlashing = _flashing.contains(index);
+    final targetColor = _targetColor(isSelected, isFlashing);
+    final iconData = isSelected ? (item.activeIcon ?? item.icon) : item.icon;
+    final iconScale = _scaleTargets[index] ?? 1.0;
 
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () => _handleTap(index),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.space3, vertical: 6),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 图标
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-                color: isSelected ? AppColors.primary : AppColors.textTertiary,
-                size: 16.8,
+            // 图标：点击瞬间黄，0.5s 后回蓝，过渡平滑
+            AnimatedScale(
+              scale: iconScale,
+              duration: const Duration(milliseconds: 125),
+              curve: Curves.easeOut,
+              child: TweenAnimationBuilder<Color?>(
+                tween: ColorTween(end: targetColor),
+                duration: const Duration(milliseconds: 260),
+                builder: (context, color, _) {
+                  return Icon(
+                    iconData,
+                    color: color ?? targetColor,
+                    size: 16.8,
+                  );
+                },
               ),
             ),
             const SizedBox(height: 4),
-            // 标签
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? AppColors.primary : AppColors.textTertiary,
-              ),
-              child: Text(item.label),
+            // 标签颜色与图标保持同步
+            TweenAnimationBuilder<Color?>(
+              tween: ColorTween(end: targetColor),
+              duration: const Duration(milliseconds: 260),
+              builder: (context, color, _) {
+                return DefaultTextStyle(
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: color ?? targetColor,
+                  ),
+                  child: Text(item.label),
+                );
+              },
             ),
-            // 选中指示点
             const SizedBox(height: 2),
+            // 选中指示点也随颜色过渡
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: isSelected ? 4 : 0,
               height: isSelected ? 4 : 0,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: targetColor,
                 shape: BoxShape.circle,
               ),
             ),

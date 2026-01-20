@@ -195,7 +195,16 @@ class DarkCyberBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.backgroundDark,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0xFF00FF88), // 顶部绿色，可自定义
+            Color(0xFF000000), // 底部黑色
+          ],
+        ),
+      ),
       child: Stack(
         children: [
           if (showGrid)

@@ -143,7 +143,7 @@ class _LogoGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.05)
+      ..color = AppColors.primary.withValues(alpha: 0.5)
       ..strokeWidth = 1;
 
     // 绘制垂直线
@@ -1300,6 +1300,19 @@ class _HistoryPageState extends State<HistoryPage> {
     }).toList();
   }
 
+  Map<DateTime, int> _getInterviewData(List<dynamic> history) {
+    final data = <DateTime, int>{};
+    for (final item in history) {
+      final dateStr = item['date'];
+      if (dateStr == null) continue;
+      final parsed = DateTime.tryParse(dateStr);
+      if (parsed == null) continue;
+      final day = DateTime(parsed.year, parsed.month, parsed.day);
+      data[day] = (data[day] ?? 0) + 1;
+    }
+    return data;
+  }
+
   void _toggleSelectMode() {
     setState(() {
       _isSelectMode = !_isSelectMode;
@@ -1759,6 +1772,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     final List<dynamic> userHistory = globalUsers[currentUserIndex]['history'];
     final filteredHistory = _getFilteredHistory(userHistory);
+    final interviewData = _getInterviewData(userHistory);
 
     // 计算统计数据
     int totalInterviews = userHistory.length;
@@ -1774,7 +1788,7 @@ class _HistoryPageState extends State<HistoryPage> {
               // 顶部导航
               _buildHeader(filteredHistory),
               // 统计卡片 (非选择模式时显示)
-              if (!_isSelectMode) _buildStatsSection(avgTechScore, totalInterviews),
+              if (!_isSelectMode) _buildStatsSection(avgTechScore, totalInterviews, interviewData),
               // 选择模式工具栏
               if (_isSelectMode) _buildSelectToolbar(filteredHistory),
               // 筛选标签
@@ -1914,7 +1928,192 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildStatsSection(double avgScore, int totalCount) {
+// 新增：日历热力图组件
+  Widget _buildInterviewCalendar(Map<DateTime, int> interviewData) {
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+    final startRange = normalizedToday.subtract(const Duration(days: 364));
+    final startWeekdayIndex = (startRange.weekday + 6) % 7; // 以周一为起点
+    final firstCellDate = startRange.subtract(Duration(days: startWeekdayIndex));
+    final totalDays = normalizedToday.difference(firstCellDate).inDays + 1;
+    final weekCount = (totalDays / 7).ceil();
+    final dateFormatter = DateFormat('yyyy-MM-dd');
+
+    Color _colorForCount(int? count) {
+      if (count == null) {
+        return Colors.transparent;
+      }
+      if (count == 0) {
+        return AppColors.border.withOpacity(0.25);
+      }
+      if (count <= 5) {
+        final ratio = count / 5;
+        return Color.lerp(const Color(0xFFDCFCE7), const Color(0xFF064E3B), ratio)!;
+      }
+      if (count <= 10) {
+        return const Color(0xFFF87171);
+      }
+      return const Color(0xFFB91C1C);
+    }
+
+    List<Widget> _buildWeekColumns() {
+      return List.generate(weekCount, (week) {
+        return Padding(
+          padding: EdgeInsets.only(right: week == weekCount - 1 ? 0 : 3),
+          child: Column(
+            children: List.generate(7, (weekdayIndex) {
+              final date = firstCellDate.add(Duration(days: week * 7 + weekdayIndex));
+              final normalized = DateTime(date.year, date.month, date.day);
+              final bool inRange =
+                  !normalized.isBefore(startRange) && !normalized.isAfter(normalizedToday);
+              final int? count = inRange ? (interviewData[normalized] ?? 0) : null;
+              final tooltipText =
+                  "${dateFormatter.format(normalized)} · ${count == null ? 0 : count} 场";
+
+              final cell = Container(
+                width: 11,
+                height: 11,
+                margin: const EdgeInsets.symmetric(vertical: 1),
+                decoration: BoxDecoration(
+                  color: _colorForCount(count),
+                  borderRadius: BorderRadius.circular(2),
+                  border: inRange
+                      ? null
+                      : Border.all(color: AppColors.border.withOpacity(0.15), width: 0.5),
+                ),
+              );
+
+              if (!inRange) {
+                return cell;
+              }
+
+              return Tooltip(
+                message: tooltipText,
+                triggerMode: TooltipTriggerMode.longPress,
+                waitDuration: const Duration(milliseconds: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.border.withOpacity(0.6)),
+                ),
+                textStyle: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                preferBelow: false,
+                child: cell,
+              );
+            }),
+          ),
+        );
+      });
+    }
+
+    const weekdayLabels = ["一", "二", "三", "四", "五", "六", "日"];
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBackground,
+        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+        boxShadow: AppTokens.shadowSm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.cyberPurple.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  Icons.video_camera_front_outlined,
+                  color: AppColors.cyberPurple,
+                  size: 11.2,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                "面试场次",
+                style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+              ),
+              const Spacer(),
+              Text(
+                "过去一年",
+                style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: weekdayLabels
+                    .map((label) => SizedBox(
+                          height: 13,
+                          child: Text(
+                            label,
+                            style: TextStyle(fontSize: 9, color: AppColors.textTertiary),
+                          ),
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(children: _buildWeekColumns()),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              _buildLegendItem(AppColors.border.withOpacity(0.25), "0"),
+              _buildLegendItem(const Color(0xFFDCFCE7), "1-2"),
+              _buildLegendItem(const Color(0xFF34D399), "3-5"),
+              _buildLegendItem(const Color(0xFFF87171), "6-10"),
+              _buildLegendItem(const Color(0xFFB91C1C), ">10"),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 新增：图例小方块
+  Widget _buildLegendItem(Color color, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 2),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            color: color,
+            margin: const EdgeInsets.only(right: 2),
+          ),
+          Text(
+            text,
+            style: TextStyle(fontSize: 8, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsSection(
+      double avgScore, int totalCount, Map<DateTime, int> interviewData) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -1931,12 +2130,7 @@ class _HistoryPageState extends State<HistoryPage> {
           const SizedBox(width: 12),
           // 面试场次
           Expanded(
-            child: _buildStatCard(
-              label: "面试场次",
-              value: totalCount.toString(),
-              icon: Icons.video_camera_front_outlined,
-              color: AppColors.cyberPurple,
-            ),
+            child: _buildInterviewCalendar(interviewData),
           ),
         ],
       ),
@@ -3173,11 +3367,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         height: 84,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3),
-                            width: 2,
-                            style: BorderStyle.solid,
-                          ),
+                          border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2),
                         ),
                       ),
                       // 头像
@@ -3716,8 +3906,12 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.border.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+          border: Border.all(
+            color: AppColors.border.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: AppTokens.shadowSm,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -3761,7 +3955,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                 if (isHot) ...[
                   const SizedBox(width: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: AppColors.error.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
@@ -3769,10 +3963,10 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.local_fire_department, size: 7, color: AppColors.error),
-                        const SizedBox(width: 2),
+                        Icon(Icons.local_fire_department, size: 8.4, color: AppColors.error),
+                        const SizedBox(width: 4),
                         Text(
-                          "热门",
+                          "高频热门",
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -3787,7 +3981,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                 Icon(Icons.arrow_forward_ios, size: 9.8, color: AppColors.textTertiary),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Text(
               question['q'],
               style: TextStyle(
@@ -4000,6 +4194,8 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
 // --- 面试设置页 (stitch customize_interview 风格) ---
 class SetupPage extends StatefulWidget {
   const SetupPage({super.key});
+
+
 
   @override
   State<SetupPage> createState() => _SetupPageState();
@@ -4535,7 +4731,7 @@ class _SetupPageState extends State<SetupPage> {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.quiz_outlined, color: AppColors.primary, size: 11.2),
+                child: const Icon(Icons.quiz_outlined, color: AppColors.primary, size: 12.6),
               ),
               const SizedBox(width: 12),
               Text("题目组成", style: AppTextStyles.title),
@@ -4563,8 +4759,9 @@ class _SetupPageState extends State<SetupPage> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 10,
+                  fontSize: 9,
                   color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -4637,7 +4834,7 @@ class _SetupPageState extends State<SetupPage> {
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.work_outline, color: AppColors.primary, size: 11.2),
+                child: const Icon(Icons.work_outline, color: AppColors.primary, size: 12.6),
               ),
               const SizedBox(width: 12),
               Text("职位信息", style: AppTextStyles.title),
@@ -6375,3 +6572,4 @@ class _MiniEmotionCurvePainter extends CustomPainter {
     return oldDelegate.data != data;
   }
 }
+
