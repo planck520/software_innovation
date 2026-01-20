@@ -4604,7 +4604,7 @@ class _SetupPageState extends State<SetupPage> {
             ),
           ),
         ),
-        // 增加按钮...
+        // 增加按钮
         GestureDetector(
           onTap: () {
             if (value < 10) onChanged(value + 1);
