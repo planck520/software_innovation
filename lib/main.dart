@@ -5696,7 +5696,16 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
   Future<void> _initEngine() async {
     await _recorder.openRecorder();
     if (_cameras.isNotEmpty) {
-      _cameraController = CameraController(_cameras.first, ResolutionPreset.medium, enableAudio: false);
+      // 查找前置摄像头
+      final frontCamera = _cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => _cameras.first,
+      );
+      _cameraController = CameraController(
+        frontCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
       await _cameraController!.initialize();
       if (mounted) setState(() {});
     }
