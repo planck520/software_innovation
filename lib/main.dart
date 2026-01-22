@@ -5808,12 +5808,7 @@ class ReportPage extends StatelessWidget {
   }
 
   Widget _buildAbilitySection() {
-    final abilities = [
-      {'name': '技术广度', 'value': 90, 'color': AppColors.primary},
-      {'name': '逻辑思维', 'value': 85, 'color': AppColors.cyberPurple},
-      {'name': '沟通表达', 'value': 78, 'color': const Color(0xFF10B981)},
-      {'name': '情绪控制', 'value': 82, 'color': const Color(0xFFF59E0B)},
-    ];
+    final abilities = _parseAbilities();
 
     return GlassCard(
       padding: const EdgeInsets.all(14),
@@ -5834,45 +5829,148 @@ class ReportPage extends StatelessWidget {
               Text("能力评估", style: AppTextStyles.title),
             ],
           ),
-          const SizedBox(height: 20),
-          ...abilities.map((ability) => _buildAbilityBar(
-            ability['name'] as String,
-            ability['value'] as int,
-            ability['color'] as Color,
-          )).toList(),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 280,
+            child: RadarChart(
+              RadarChartData(
+                radarShape: RadarShape.polygon,
+                dataSets: [
+                  RadarDataSet(
+                    dataEntries: abilities
+                        .map((ability) => RadarEntry(value: ability['value'] as double))
+                        .toList(),
+                    fillColor: AppColors.primary.withOpacity(0.15),
+                    borderColor: AppColors.primary,
+                    borderWidth: 2.2,
+                    entryRadius: 2.8,
+                  ),
+                ],
+                radarBackgroundColor: Colors.transparent,
+                radarBorderData: BorderSide(color: AppColors.border.withOpacity(0.35)),
+                gridBorderData: BorderSide(color: AppColors.border.withOpacity(0.18)),
+                tickBorderData: BorderSide(color: AppColors.border.withOpacity(0.28)),
+                tickCount: 5,
+                titlePositionPercentageOffset: 0.2,
+                titleTextStyle: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+                getTitle: (index, angle) {
+                  final ability = abilities[index];
+                  return RadarChartTitle(
+                    text: ability['name'] as String,
+                    angle: angle,
+                  );
+                },
+                borderData: FlBorderData(show: false),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: abilities.map((ability) => _buildAbilityLegend(
+              ability['name'] as String,
+              ability['value'] as double,
+              ability['color'] as Color,
+            )).toList(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAbilityBar(String name, int value, Color color) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
+  List<Map<String, dynamic>> _parseAbilities() {
+    final palette = [
+      AppColors.primary,
+      AppColors.cyberPurple,
+      const Color(0xFF10B981),
+      const Color(0xFFF59E0B),
+      const Color(0xFF38BDF8),
+      const Color(0xFFE11D48),
+      const Color(0xFF8B5CF6),
+    ];
+
+    final fallback = [
+      {'name': '技术深度', 'value': 88.0},
+      {'name': '架构思维', 'value': 82.0},
+      {'name': '沟通协作', 'value': 86.0},
+      {'name': '应变能力', 'value': 79.0},
+      {'name': '情绪稳定', 'value': 84.0},
+      {'name': '表达清晰', 'value': 90.0},
+      {'name': '业务理解', 'value': 81.0},
+    ];
+
+    final rawAbilities = reportData['abilities'];
+    final List<Map<String, dynamic>> parsed = [];
+
+    if (rawAbilities is List) {
+      for (int i = 0; i < rawAbilities.length; i++) {
+        final item = rawAbilities[i];
+        if (item is Map && item['name'] != null && item['value'] != null) {
+          final value = (item['value'] as num?)?.toDouble();
+          if (value != null) {
+            parsed.add({
+              'name': item['name'].toString(),
+              'value': value.clamp(0, 100).toDouble(),
+              'color': palette[i % palette.length],
+            });
+          }
+        }
+      }
+    } else if (reportData['abilityScores'] is Map) {
+      final scores = reportData['abilityScores'] as Map;
+      final entries = scores.entries.toList();
+      for (int i = 0; i < entries.length; i++) {
+        final entry = entries[i];
+        final value = (entry.value as num?)?.toDouble();
+        if (value != null) {
+          parsed.add({
+            'name': entry.key.toString(),
+            'value': value.clamp(0, 100).toDouble(),
+            'color': palette[i % palette.length],
+          });
+        }
+      }
+    }
+
+    if (parsed.isNotEmpty) return parsed;
+
+    return List.generate(fallback.length, (index) => {
+      'name': fallback[index]['name'] as String,
+      'value': (fallback[index]['value'] as double).clamp(0, 100).toDouble(),
+      'color': palette[index % palette.length],
+    });
+  }
+
+  Widget _buildAbilityLegend(String name, double value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceDim,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(name, style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
-              Text("$value%", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: color)),
-            ],
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: value / 100),
-              duration: const Duration(milliseconds: 1200),
-              curve: Curves.easeOutCubic,
-              builder: (context, animValue, child) {
-                return LinearProgressIndicator(
-                  value: animValue,
-                  backgroundColor: AppColors.surfaceDim,
-                  valueColor: AlwaysStoppedAnimation<Color>(color),
-                  minHeight: 8,
-                );
-              },
-            ),
+          const SizedBox(width: 8),
+          Text(
+            name,
+            style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            "${value.toStringAsFixed(0)}%",
+            style: TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -6343,6 +6441,24 @@ Map<String, String> _buildSystemPrompt() {
     _askSpark();
   }
 
+  List<Map<String, dynamic>> _generateAbilityScores(int avgScore) {
+    final double base = avgScore.toDouble();
+    final double interactionFactor = ((_currentQuestionIndex + 1) * 2).toDouble();
+    final double stability = _emotionScore.toDouble();
+
+    double _clampScore(double value) => value.clamp(55, 99).toDouble();
+
+    return [
+      {"name": "技术深度", "value": _clampScore(base + 4)},
+      {"name": "架构思维", "value": _clampScore(base - 2 + interactionFactor * 0.3)},
+      {"name": "沟通协作", "value": _clampScore(base + 3)},
+      {"name": "应变能力", "value": _clampScore(base - 5 + interactionFactor)},
+      {"name": "情绪稳定", "value": _clampScore(stability)},
+      {"name": "表达清晰", "value": _clampScore(base + 2)},
+      {"name": "业务理解", "value": _clampScore(base - 3)},
+    ];
+  }
+
   void _finishInterview() {
     // 构建问答详情列表，为每个问答对生成分数
     final List<Map<String, dynamic>> qaDetails = [];
@@ -6374,6 +6490,7 @@ Map<String, String> _buildSystemPrompt() {
       "duration": _formattedTime,
       "questionCount": _currentQuestionIndex + 1,
       "emotionScore": _emotionScore,
+      "abilities": _generateAbilityScores(avgScore),
       "qaDetails": qaDetails,
     };
     globalUsers[currentUserIndex]['history'].insert(0, newReport);
