@@ -8,6 +8,22 @@ class AppColors {
   static const Color cyberBlue = Color(0xFF00f2ff);      // 赛博蓝
   static const Color cyberPurple = Color(0xFFbc13fe);    // 赛博紫
 
+  // ==================== 赛博风格增强色彩 ====================
+  static const Color cyberCyan = Color(0xFF00F5FF);      // 赛博青
+  static const Color cyberMagenta = Color(0xFFFF00FF);   // 赛博品红
+  static const Color cyberYellow = Color(0xFFFFD700);    // 赛博黄
+
+  // ==================== 渐变增强色 ====================
+  static const List<Color> neonGradient = [
+    Color(0xFF00F5FF),  // 赛博青
+    Color(0xFF135bec),  // 主蓝
+    Color(0xFFbc13fe),  // 赛博紫
+  ];
+
+  // ==================== 状态增强色 ====================
+  static const Color info = Color(0xFF06B6D4);           // 信息色
+  static const Color accent = Color(0xFF8B5CF6);         // 强调色
+
   // ==================== 背景色 ====================
   static const Color background = Color(0xFFf6f6f8);     // 浅色背景
   static const Color backgroundDark = Color(0xFF101622); // 深色背景
@@ -140,6 +156,29 @@ class AppColors {
       color: primary.withOpacity(0.4),
       blurRadius: 15,
       spreadRadius: 0,
+    ),
+  ];
+
+  // ==================== 多彩发光效果 ====================
+  static List<BoxShadow> get multiColorGlow => [
+    BoxShadow(
+      color: cyberCyan.withOpacity(0.5),
+      blurRadius: 20,
+      offset: const Offset(0, 0),
+    ),
+    BoxShadow(
+      color: cyberPurple.withOpacity(0.3),
+      blurRadius: 30,
+      offset: const Offset(0, 0),
+    ),
+  ];
+
+  // ==================== 脉冲发光效果 ====================
+  static List<BoxShadow> get pulseGlow => [
+    BoxShadow(
+      color: primary.withOpacity(0.6),
+      blurRadius: 8,
+      spreadRadius: 2,
     ),
   ];
 

@@ -31,6 +31,10 @@ import 'widgets/staggered_list_view.dart';
 import 'widgets/loading_states.dart';
 import 'widgets/background_decorations.dart';
 import 'widgets/digital_avatar.dart';
+import 'widgets/cyber_loading_indicator.dart';
+import 'widgets/tech_selection_chip.dart';
+import 'widgets/section_header.dart';
+import 'widgets/tech_toggle_switch.dart';
 
 List<CameraDescription> _cameras = [];
 
@@ -168,25 +172,107 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  late AnimationController _entryController;
+  bool _rememberMe = false;
+
+  // 交错入场动画控制器
+  late AnimationController _logoController;
+  late Animation<double> _logoScaleAnimation;
+  late Animation<double> _logoFadeAnimation;
+
+  late AnimationController _titleController;
+  late Animation<Offset> _titleSlideAnimation;
+
+  late AnimationController _inputController;
+  late Animation<Offset> _inputSlideAnimation;
+
+  late AnimationController _buttonController;
+  late Animation<double> _buttonFadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    _entryController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+    _initAnimations();
+    _startStaggeredAnimations();
+  }
+
+  void _initAnimations() {
+    // Logo区域动画 (0-400ms)
+    _logoController = AnimationController(
+      duration: const Duration(milliseconds: 400),
       vsync: this,
-    )..forward();
+    );
+    _logoScaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: AppTokens.curveSpring),
+    );
+    _logoFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeOut),
+    );
+
+    // 标题动画 (200-600ms)
+    _titleController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _titleSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _titleController, curve: AppTokens.curveEaseOut),
+    );
+
+    // 输入卡片动画 (400-800ms)
+    _inputController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _inputSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _inputController, curve: AppTokens.curveDecelerate),
+    );
+
+    // 按钮动画 (600-900ms)
+    _buttonController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _buttonFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _buttonController, curve: Curves.easeOut),
+    );
+  }
+
+  void _startStaggeredAnimations() {
+    // Logo立即开始
+    _logoController.forward();
+
+    // 标题200ms后开始
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) _titleController.forward();
+    });
+
+    // 输入卡片400ms后开始
+    Future.delayed(const Duration(milliseconds: 400), () {
+      if (mounted) _inputController.forward();
+    });
+
+    // 按钮600ms后开始
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) _buttonController.forward();
+    });
   }
 
   @override
   void dispose() {
-    _entryController.dispose();
+    _logoController.dispose();
+    _titleController.dispose();
+    _inputController.dispose();
+    _buttonController.dispose();
     _userController.dispose();
     _passController.dispose();
     super.dispose();
@@ -501,201 +587,119 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   }
 
   Widget _buildLogoSection() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.08),
-            AppColors.cyberPurple.withOpacity(0.08),
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          // 背景装饰网格
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-              child: CustomPaint(
-                painter: _LogoGridPainter(),
-              ),
-            ),
-          ),
-          // Logo图片
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Logo图片 - 更大尺寸
-                  Container(
-                    constraints: const BoxConstraints(maxWidth: 360, maxHeight: 180),
-                    child: Image.asset(
-                      'logo.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  const SizedBox(height: 0),
-                  // 状态标签
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-                    border: Border.all(color: AppColors.success.withOpacity(0.3)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: AppColors.success,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        "AI面试引擎就绪",
-                        style: TextStyle(
-                          color: AppColors.success,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1,
-                        ),
-                      ),
+    return AnimatedBuilder(
+      animation: Listenable.merge([_logoController, _logoScaleAnimation]),
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _logoScaleAnimation.value,
+          child: Opacity(
+            opacity: _logoFadeAnimation.value,
+            child: _BreathingLogoContainer(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.primary.withOpacity(0.08),
+                      AppColors.cyberPurple.withOpacity(0.08),
                     ],
                   ),
                 ),
-              ],
+                child: Stack(
+                  children: [
+                    // 背景装饰网格
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+                        child: CustomPaint(
+                          painter: _LogoGridPainter(),
+                        ),
+                      ),
+                    ),
+                    // 扫描线动画
+                    Positioned.fill(
+                      child: _ScanlineAnimation(
+                        color: AppColors.primary.withOpacity(0.15),
+                      ),
+                    ),
+                    // Logo图片
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Logo图片 - 更大尺寸
+                            Container(
+                              constraints: const BoxConstraints(maxWidth: 360, maxHeight: 180),
+                              child: Image.asset(
+                                'logo.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                            const SizedBox(height: 0),
+                            // 状态标签 - 带脉冲效果
+                            _PulseStatusBadge(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTitle() {
+    return SlideTransition(
+      position: _titleSlideAnimation,
+      child: Column(
+        children: [
+          Text(
+            "AI 门户登录",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "初始化您的认知会话",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildTitle() {
-    return Column(
-      children: [
-        Text(
-          "AI 门户登录",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          "初始化您的认知会话",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 11,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildInputCard() {
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
+    return SlideTransition(
+      position: _inputSlideAnimation,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 用户名输入
-          Text(
-            "邮箱或手机号",
-            style: TextStyle(
-              color: AppColors.textPrimary.withOpacity(0.7),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
-            ),
-            child: TextField(
-              controller: _userController,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-              decoration: InputDecoration(
-                hintText: "user_id@simulation.io",
-                hintStyle: TextStyle(color: AppColors.textTertiary),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(12),
-                suffixIcon: Icon(Icons.alternate_email, color: AppColors.textTertiary),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          // 密码输入
-          Text(
-            "访问码",
-            style: TextStyle(
-              color: AppColors.textPrimary.withOpacity(0.7),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
-            ),
-            child: TextField(
-              controller: _passController,
-              obscureText: _obscurePassword,
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-              decoration: InputDecoration(
-                hintText: "••••••••",
-                hintStyle: TextStyle(color: AppColors.textTertiary),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(12),
-                suffixIcon: GestureDetector(
-                  onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-                  child: Icon(
-                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // 忘记密码链接
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: _showForgotPasswordDialog,
-              child: Text(
-                "忘记密码?",
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
+          // 用户名输入卡片
+          _buildUsernameCard(),
+          const SizedBox(height: 16),
+          // 密码输入卡片
+          _buildPasswordCard(),
+          const SizedBox(height: 16),
+          // 记住我和忘记密码行
+          _buildExtraOptions(),
+          const SizedBox(height: 16),
           // 登录按钮
           _buildLoginButton(),
         ],
@@ -703,33 +707,109 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildLoginButton() {
-    if (_isLoading) {
-      return Container(
-        width: double.infinity,
-        height: 39,
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+  Widget _buildUsernameCard() {
+    return _AnimatedInputCard(
+      label: "邮箱或手机号",
+      hintText: "user_id@simulation.io",
+      icon: Icons.alternate_email,
+      controller: _userController,
+    );
+  }
+
+  Widget _buildPasswordCard() {
+    return _AnimatedInputCard(
+      label: "访问码",
+      hintText: "••••••••",
+      icon: Icons.lock_outline,
+      controller: _passController,
+      obscureText: _obscurePassword,
+      onTapIcon: () => setState(() => _obscurePassword = !_obscurePassword),
+      iconBuilder: (obscure) => Icon(
+        obscure ? Icons.visibility : Icons.visibility_off,
+        color: AppColors.textTertiary,
+        size: 14,
+      ),
+    );
+  }
+
+  Widget _buildExtraOptions() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // 记住我选项
+        Row(
+          children: [
+            GestureDetector(
+              onTap: () => setState(() => _rememberMe = !_rememberMe),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: _rememberMe ? AppColors.primary : Colors.transparent,
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: _rememberMe ? AppColors.primary : AppColors.border,
+                    width: 1.5,
+                  ),
+                ),
+                child: _rememberMe
+                    ? const Icon(Icons.check, color: Colors.white, size: 12)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => setState(() => _rememberMe = !_rememberMe),
+              child: Text(
+                "记住我",
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
         ),
-        child: const Center(
-          child: SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+        // 忘记密码链接
+        TextButton(
+          onPressed: _showForgotPasswordDialog,
+          child: Text(
+            "忘记密码?",
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
-      );
-    }
+      ],
+    );
+  }
 
-    return TechButton(
-      text: "进入",
-      icon: Icons.login,
-      onPressed: _handleLogin,
-      isFullWidth: true,
+  Widget _buildLoginButton() {
+    return FadeTransition(
+      opacity: _buttonFadeAnimation,
+      child: _isLoading
+          ? Container(
+              width: double.infinity,
+              height: 39,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: AppColors.primaryGradient,
+                ),
+                borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+              ),
+              child: Center(
+                child: CyberLoadingIndicatorSmall(size: 24),
+              ),
+            )
+          : TechButton(
+              text: "进入",
+              icon: Icons.login,
+              onPressed: _handleLogin,
+              isFullWidth: true,
+            ),
     );
   }
 
@@ -801,6 +881,352 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
           ),
         ],
       ),
+    );
+  }
+}
+
+// ==================== 登录页面辅助动画组件 ====================
+
+/// Logo呼吸动画容器
+class _BreathingLogoContainer extends StatefulWidget {
+  final Widget child;
+
+  const _BreathingLogoContainer({required this.child});
+
+  @override
+  State<_BreathingLogoContainer> createState() => _BreathingLogoContainerState();
+}
+
+class _BreathingLogoContainerState extends State<_BreathingLogoContainer>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _breathController;
+  late Animation<double> _breathAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _breathController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _breathAnimation = Tween<double>(begin: 0.98, end: 1.02).animate(
+      CurvedAnimation(parent: _breathController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _breathController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _breathAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _breathAnimation.value,
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+
+/// 扫描线动画
+class _ScanlineAnimation extends StatefulWidget {
+  final Color color;
+
+  const _ScanlineAnimation({required this.color});
+
+  @override
+  State<_ScanlineAnimation> createState() => _ScanlineAnimationState();
+}
+
+class _ScanlineAnimationState extends State<_ScanlineAnimation>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _scanController;
+  late Animation<double> _scanAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _scanController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat();
+
+    _scanAnimation = Tween<double>(begin: -0.1, end: 1.1).animate(
+      CurvedAnimation(parent: _scanController, curve: Curves.linear),
+    );
+  }
+
+  @override
+  void dispose() {
+    _scanController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _scanAnimation,
+      builder: (context, child) {
+        return Positioned(
+          top: _scanAnimation.value * 300,
+          left: 0,
+          right: 0,
+          child: Opacity(
+            opacity: 0.5,
+            child: Container(
+              height: 2,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    widget.color,
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 脉冲状态标签
+class _PulseStatusBadge extends StatefulWidget {
+  @override
+  State<_PulseStatusBadge> createState() => _PulseStatusBadgeState();
+}
+
+class _PulseStatusBadgeState extends State<_PulseStatusBadge>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.3, end: 0.7).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppColors.success.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+            border: Border.all(
+              color: AppColors.success.withOpacity(0.3 + _pulseAnimation.value * 0.3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.success.withOpacity(_pulseAnimation.value * 0.3),
+                blurRadius: 8,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: AppColors.success,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.success.withOpacity(_pulseAnimation.value),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                "AI面试引擎就绪",
+                style: TextStyle(
+                  color: AppColors.success,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 动画输入卡片组件
+class _AnimatedInputCard extends StatefulWidget {
+  final String label;
+  final String hintText;
+  final IconData icon;
+  final TextEditingController controller;
+  final bool obscureText;
+  final VoidCallback? onTapIcon;
+  final Widget Function(bool)? iconBuilder;
+
+  const _AnimatedInputCard({
+    required this.label,
+    required this.hintText,
+    required this.icon,
+    required this.controller,
+    this.obscureText = false,
+    this.onTapIcon,
+    this.iconBuilder,
+  });
+
+  @override
+  State<_AnimatedInputCard> createState() => _AnimatedInputCardState();
+}
+
+class _AnimatedInputCardState extends State<_AnimatedInputCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _glowController;
+  late Animation<double> _glowAnimation;
+  late FocusNode _focusNode;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _glowController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _glowAnimation = Tween<double>(begin: 0.2, end: 0.6).animate(
+      CurvedAnimation(
+        parent: _glowController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _focusNode.addListener(() {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+      if (_isFocused) {
+        _glowController.repeat(reverse: true);
+      } else {
+        _glowController.stop();
+        _glowController.reset();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    _glowController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _glowAnimation,
+      builder: (context, child) {
+        final glowOpacity = _isFocused ? _glowAnimation.value : 0.0;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardBackground,
+            borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+            border: Border.all(
+              color: _isFocused
+                  ? AppColors.primary.withOpacity(0.5 + glowOpacity * 0.3)
+                  : AppColors.border.withOpacity(0.5),
+              width: _isFocused ? 1.5 : 1,
+            ),
+            boxShadow: _isFocused
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(glowOpacity * 0.5),
+                      blurRadius: 8 + glowOpacity * 10,
+                      offset: const Offset(0, 0),
+                    ),
+                  ]
+                : null,
+          ),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 标签
+              Text(
+                widget.label,
+                style: TextStyle(
+                  color: AppColors.textPrimary.withOpacity(0.7),
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              // 输入框
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceDim.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+                ),
+                child: TextField(
+                  controller: widget.controller,
+                  focusNode: _focusNode,
+                  obscureText: widget.obscureText,
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: widget.hintText,
+                    hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.all(10),
+                    prefixIcon: Icon(widget.icon, color: AppColors.textTertiary, size: 16),
+                    suffixIcon: widget.iconBuilder != null
+                        ? GestureDetector(
+                            onTap: widget.onTapIcon,
+                            child: widget.iconBuilder!(widget.obscureText),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -4005,11 +4431,109 @@ class SetupPage extends StatefulWidget {
   State<SetupPage> createState() => _SetupPageState();
 }
 
-class _SetupPageState extends State<SetupPage> {
+class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
   String selectedJobCategory = '技术研发';  // 职位大类
   String selectedJob = '算法工程师';  // 具体职位
   String companySize = '大型企业';
   String? selectedCompany;  // 具体公司（仅大型企业时使用）
+
+  // 页面入场动画控制器
+  late AnimationController _headerController;
+  late AnimationController _titleController;
+  late AnimationController _interviewerController;
+  late AnimationController _contentController;
+
+  // TabBar 分页控制器
+  late TabController _tabController;
+
+  late Animation<Offset> _headerSlideAnimation;
+  late Animation<double> _headerFadeAnimation;
+  late Animation<Offset> _titleSlideAnimation;
+  late Animation<double> _interviewerFadeAnimation;
+  late Animation<Offset> _contentSlideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initAnimations();
+    _startStaggeredAnimations();
+  }
+
+  void _initAnimations() {
+    // TabBar 分页控制器
+    _tabController = TabController(length: 2, vsync: this);
+
+    // 头部动画
+    _headerController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _headerSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, -0.2),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _headerController, curve: AppTokens.curveEaseOut),
+    );
+    _headerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _headerController, curve: Curves.easeOut),
+    );
+
+    // 标题动画
+    _titleController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _titleSlideAnimation = Tween<Offset>(
+      begin: const Offset(-0.2, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _titleController, curve: AppTokens.curveDecelerate),
+    );
+
+    // 面试官卡片动画
+    _interviewerController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _interviewerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _interviewerController, curve: Curves.easeOut),
+    );
+
+    // 内容区域动画
+    _contentController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _contentSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _contentController, curve: AppTokens.curveEaseOut),
+    );
+  }
+
+  void _startStaggeredAnimations() {
+    _headerController.forward();
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) _titleController.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) _interviewerController.forward();
+    });
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) _contentController.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _headerController.dispose();
+    _titleController.dispose();
+    _interviewerController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
 
   // 职位二级分类
   final Map<String, List<String>> jobCategories = {
@@ -4058,7 +4582,7 @@ class _SetupPageState extends State<SetupPage> {
       'color': const Color(0xFF10B981),
       'traits': ['业务理解', '项目经验', '团队协作'],
       'style': '务实型',
-      'description': '关注实际业务能力，评估你如何将技术应用到真实业务场景。',
+      'description': '关注实际业务能力，评估你如何将技术应用到真实��务场景。',
       'avatarUrl': 'https://api.dicebear.com/9.x/micah/png?seed=Sophia&backgroundColor=d1f4d1&size=128&baseColor=f9c9b6&earringsProbability=100',
     },
     {
@@ -4078,6 +4602,19 @@ class _SetupPageState extends State<SetupPage> {
   int objectiveCount = 3;
   int algorithmCount = 2;
 
+  // 难度选择
+  String selectedDifficulty = '自适应';
+  final List<String> difficultyLevels = ['简单', '中等', '困难', '自适应'];
+
+  // 时间限制
+  String timeLimit = '60秒';
+  final List<String> timeLimitOptions = ['30秒', '60秒', '90秒', '无限制'];
+
+  // 题目偏好
+  bool includeCodeQuestions = true;
+  bool allowSkipQuestions = true;
+  bool showHintsAfterAnswer = false;
+
   // 自适应难度
   bool adaptiveDifficulty = true;
 
@@ -4090,181 +4627,14 @@ class _SetupPageState extends State<SetupPage> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 拖拽指示器
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // 头像和名称
-            Row(
-              children: [
-                DigitalAvatar(
-                  name: interviewer['name'],
-                  imageUrl: interviewer['avatarUrl'],
-                  size: 44.8,
-                  accentColor: color,
-                  isSelected: true,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        interviewer['name'],
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: color.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              interviewer['role'],
-                              style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceDim,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              interviewer['style'],
-                              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            // 描述
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: color.withOpacity(0.1)),
-              ),
-              child: Text(
-                interviewer['description'],
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            // 面试特征
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "面试特征",
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: (interviewer['traits'] as List<String>).map((trait) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: color.withOpacity(0.2)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.check_circle, color: color, size: 9.8),
-                      const SizedBox(width: 6),
-                      Text(
-                        trait,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: color,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 24),
-            // 选择按钮
-            GestureDetector(
-              onTap: () {
-                setState(() => selectedInterviewer = index);
-                Navigator.pop(context);
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [color, color.withOpacity(0.8)]),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    selectedInterviewer == index ? "已选择" : "选择此面试官",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).padding.bottom + 10),
-          ],
-        ),
+      builder: (context) => _InterviewerDetailSheet(
+        interviewer: interviewer,
+        color: color,
+        isSelected: selectedInterviewer == index,
+        onSelect: () {
+          setState(() => selectedInterviewer = index);
+          Navigator.pop(context);
+        },
       ),
     );
   }
@@ -4275,34 +4645,45 @@ class _SetupPageState extends State<SetupPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 顶部导航
-                _buildHeader(),
-                const SizedBox(height: 24),
-                // 标题
-                _buildTitle(),
-                const SizedBox(height: 24),
-                // AI 面试官选择 (2x2 网格)
-                _buildInterviewerSection(),
-                const SizedBox(height: 24),
-                // 题目配置
-                _buildQuestionComposition(),
-                const SizedBox(height: 24),
-                // 职位信息
-                _buildJobSection(),
-                const SizedBox(height: 24),
-                // 自适应难度
-                _buildAdaptiveDifficulty(),
-                const SizedBox(height: 32),
-                // 开始面试按钮
-                _buildStartButton(),
-                const SizedBox(height: 20),
-              ],
-            ),
+          child: Column(
+            children: [
+              // 顶部导航
+              _buildHeader(),
+              const SizedBox(height: 24),
+              // 标题
+              _buildTitle(),
+              const SizedBox(height: 16),
+              // TabBar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TabBar(
+                  controller: _tabController,
+                  indicatorColor: AppColors.primary,
+                  labelColor: AppColors.primary,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  labelStyle: AppTextStyles.tabBarLabel,
+                  unselectedLabelStyle: AppTextStyles.tabBarLabel.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
+                  dividerColor: Colors.transparent,
+                  tabs: const [
+                    Tab(text: '面试设置'),
+                    Tab(text: '题目配置'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              // TabBarView 内容
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildInterviewSettingsTab(),
+                    _buildQuestionConfigTab(),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -4310,340 +4691,312 @@ class _SetupPageState extends State<SetupPage> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-          ),
-          child: const Icon(Icons.tune, color: Colors.white, size: 9.8),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            "定制面试",
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    return SlideTransition(
+      position: _headerSlideAnimation,
+      child: FadeTransition(
+        opacity: _headerFadeAnimation,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+              ),
+              child: const Icon(Icons.tune, color: Colors.white, size: 9.8),
             ),
-          ),
-        ),
-        // 在线状态
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: AppColors.success,
-                  shape: BoxShape.circle,
-                ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                "定制面试",
+                style: AppTextStyles.sectionTitle,
               ),
-              const SizedBox(width: 6),
-              Text(
-                "AI 就绪",
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+            ),
+            // 在线状态
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(AppTokens.radiusFull),
               ),
-            ],
-          ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    "AI 就绪",
+                    style: AppTextStyles.chipLabelSmall.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildTitle() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "选择AI面试官",
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
+    return SlideTransition(
+      position: _titleSlideAnimation,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "选择AI面试官",
+            style: AppTextStyles.sectionTitle,
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          "定制您的模拟面试体验",
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 11,
+          const SizedBox(height: 6),
+          Text(
+            "定制您的模拟面试体验",
+            style: AppTextStyles.sectionSubtitle,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildInterviewerSection() {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        childAspectRatio: 0.9,
-      ),
-      itemCount: interviewers.length,
-      itemBuilder: (context, index) {
-        final interviewer = interviewers[index];
-        final isSelected = selectedInterviewer == index;
-        final Color color = interviewer['color'];
+    return FadeTransition(
+      opacity: _interviewerFadeAnimation,
+      child: SizedBox(
+        height: 180,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          itemCount: interviewers.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 12),
+          itemBuilder: (context, index) {
+            final interviewer = interviewers[index];
+            final isSelected = selectedInterviewer == index;
+            final Color color = interviewer['color'];
 
-        return GestureDetector(
-          onTap: () => setState(() => selectedInterviewer = index),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            decoration: BoxDecoration(
-              color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-              border: Border.all(
-                color: isSelected ? color : AppColors.border.withOpacity(0.3),
-                width: isSelected ? 2 : 1,
-              ),
-              boxShadow: isSelected ? [
-                BoxShadow(
-                  color: color.withOpacity(0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+              width: 140,
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+                border: Border.all(
+                  color: isSelected ? color : AppColors.border.withOpacity(0.3),
+                  width: isSelected ? 2 : 1,
                 ),
-              ] : null,
-            ),
-            child: Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                boxShadow: isSelected ? [
+                  BoxShadow(
+                    color: color.withOpacity(0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ] : null,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => setState(() => selectedInterviewer = index),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+                  child: Stack(
                     children: [
-                      // 数字人头像
-                      AnimatedDigitalAvatar(
-                        name: interviewer['name'],
-                        imageUrl: interviewer['avatarUrl'],
-                        size: 36.4,
-                        accentColor: color,
-                        isSelected: isSelected,
-                      ),
-                      const SizedBox(height: 8),
-                      // 名称
-                      Text(
-                        interviewer['name'],
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // 数字人头像
+                            AnimatedDigitalAvatar(
+                              name: interviewer['name'],
+                              imageUrl: interviewer['avatarUrl'],
+                              size: 38,
+                              accentColor: color,
+                              isSelected: isSelected,
+                            ),
+                            const SizedBox(height: 8),
+                            // 名称
+                            Text(
+                              interviewer['name'],
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            // 角色
+                            Text(
+                              interviewer['role'],
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            // 风格标签
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    color.withOpacity(0.15),
+                                    color.withOpacity(0.05),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: color.withOpacity(0.2),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                interviewer['style'],
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  color: color,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      // 角色
-                      Text(
-                        interviewer['role'],
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: AppColors.textSecondary,
+                      // 选中标记
+                      if (isSelected)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: _PulseCheckMark(color: color),
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      // 风格标签
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          interviewer['style'],
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: color,
-                            fontWeight: FontWeight.w500,
+                      // 查看详情按钮
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: GestureDetector(
+                          onTap: () => _showInterviewerDetail(index),
+                          child: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceDim,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.info_outline, color: AppColors.textTertiary, size: 10),
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                // 选中标记
-                if (isSelected)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 18,
-                      height: 18,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(Icons.check, color: Colors.white, size: 7),
-                    ),
-                  ),
-                // 查看详情按钮
-                Positioned(
-                  top: 8,
-                  left: 8,
-                  child: GestureDetector(
-                    onTap: () => _showInterviewerDetail(index),
-                    child: Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceDim,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.info_outline, color: AppColors.textTertiary, size: 8.4),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
   Widget _buildQuestionComposition() {
     return GlassCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SectionHeader(
+            icon: Icons.quiz_outlined,
+            title: "题目组成",
+          ),
+          const SizedBox(height: 10),
+          _buildStepper("主观题", subjectiveCount, (v) => setState(() => subjectiveCount = v)),
+          const SizedBox(height: 12),
+          _buildStepper("客观题", objectiveCount, (v) => setState(() => objectiveCount = v)),
+          const SizedBox(height: 12),
+          _buildStepper("算法题", algorithmCount, (v) => setState(() => algorithmCount = v)),
+          const SizedBox(height: 12),
+          // 难度选择
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+              Icon(Icons.brightness_1, size: 4, color: AppColors.cyberPurple.withOpacity(0.5)),
+              const SizedBox(width: 6),
+              Text(
+                "难度等级",
+                style: AppTextStyles.labelTiny.copyWith(
+                  color: AppColors.textSecondary,
                 ),
-                child: const Icon(Icons.quiz_outlined, color: AppColors.primary, size: 11.2),
               ),
-              const SizedBox(width: 12),
-              Text("题目组成", style: AppTextStyles.title),
             ],
           ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: difficultyLevels.map((level) {
+              return TechSelectionChip(
+                label: level,
+                isSelected: selectedDifficulty == level,
+                onChanged: (isSelected) {
+                  if (isSelected) setState(() => selectedDifficulty = level);
+                },
+                size: ChipSize.small,
+              );
+            }).toList(),
+          ),
           const SizedBox(height: 12),
-          _buildStepper("主观题", subjectiveCount, (v) => setState(() => subjectiveCount = v)),
-          const SizedBox(height: 10),
-          _buildStepper("客观题", objectiveCount, (v) => setState(() => objectiveCount = v)),
-          const SizedBox(height: 10),
-          _buildStepper("算法题", algorithmCount, (v) => setState(() => algorithmCount = v)),
+          // 时间限制
+          Row(
+            children: [
+              Icon(Icons.access_time, size: 10, color: AppColors.primary.withOpacity(0.5)),
+              const SizedBox(width: 6),
+              Text(
+                "单题时限",
+                style: AppTextStyles.labelTiny.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TechSegmentedControl(
+            options: timeLimitOptions,
+            selectedIndex: timeLimitOptions.indexOf(timeLimit),
+            onIndexChanged: (index) => setState(() => timeLimit = timeLimitOptions[index]),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildStepper(String label, int value, Function(int) onChanged) {
-    return Row(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              Icon(Icons.circle, size: 4, color: AppColors.primary.withOpacity(0.5)),
-              SizedBox(width: 6),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // 减少按钮
-        GestureDetector(
-          onTap: () {
-            if (value > 0) onChanged(value - 1);
-          },
-          child: Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceDim,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Icon(Icons.remove, color: AppColors.textSecondary, size: 12.6),
-          ),
-        ),
-        // 数值
-        Container(
-          width: 36,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
-          ),
-          child: Text(
-            value.toString(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-        // 增加按钮_1
-        GestureDetector(
-          onTap: () {
-            if (value < 10) onChanged(value + 1);
-          },
-          child: Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.add, color: Colors.white, size: 12.6),
-          ),
-        ),
-      ],
+    return _AnimatedStepper(
+      label: label,
+      value: value,
+      onChanged: onChanged,
+      minValue: 0,
+      maxValue: 10,
     );
   }
 
   Widget _buildJobSection() {
     return GlassCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.work_outline, color: AppColors.primary, size: 11.2),
-              ),
-              const SizedBox(width: 12),
-              Text("职位信息", style: AppTextStyles.title),
-            ],
+          const SectionHeader(
+            icon: Icons.work_outline,
+            title: "职位信息",
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           // 职位大类
           Row(
               children: [
@@ -4651,20 +5004,19 @@ class _SetupPageState extends State<SetupPage> {
                 SizedBox(width: 6),
                 Text(
                 "职位类别",
-                style: TextStyle(
-              fontSize: 9,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+                style: AppTextStyles.labelTiny.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border.withOpacity(0.5)),
             ),
             child: DropdownButtonHideUnderline(
@@ -4674,7 +5026,7 @@ class _SetupPageState extends State<SetupPage> {
                 dropdownColor: AppColors.surface,
                 items: jobCategories.keys.map((e) => DropdownMenuItem(
                   value: e,
-                  child: Text(e, style: TextStyle(fontSize: 11, color: AppColors.textPrimary)),
+                  child: Text(e, style: AppTextStyles.dropdownItem),
                 )).toList(),
                 onChanged: (v) => setState(() {
                   selectedJobCategory = v!;
@@ -4684,7 +5036,7 @@ class _SetupPageState extends State<SetupPage> {
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           // 具体职位
           Row(
               children: [
@@ -4692,20 +5044,19 @@ class _SetupPageState extends State<SetupPage> {
                 SizedBox(width: 6),
                 Text(
                 "目标职位",
-                style: TextStyle(
-              fontSize: 9,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+                style: AppTextStyles.labelTiny.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border.withOpacity(0.5)),
             ),
             child: DropdownButtonHideUnderline(
@@ -4715,14 +5066,14 @@ class _SetupPageState extends State<SetupPage> {
                 dropdownColor: AppColors.surface,
                 items: jobCategories[selectedJobCategory]!.map((e) => DropdownMenuItem(
                   value: e,
-                  child: Text(e, style: TextStyle(fontSize: 11, color: AppColors.textPrimary)),
+                  child: Text(e, style: AppTextStyles.dropdownItem),
                 )).toList(),
                 onChanged: (v) => setState(() => selectedJob = v!),
                 icon: Icon(Icons.keyboard_arrow_down, color: AppColors.textTertiary),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           // 企业规模
           Row(
               children: [
@@ -4730,20 +5081,19 @@ class _SetupPageState extends State<SetupPage> {
                 SizedBox(width: 6),
                 Text(
                 "企业规模",
-                style: TextStyle(
-              fontSize: 9,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
+                style: AppTextStyles.labelTiny.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            height: 40,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.cardBackground,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: AppColors.border.withOpacity(0.5)),
             ),
             child: DropdownButtonHideUnderline(
@@ -4753,7 +5103,7 @@ class _SetupPageState extends State<SetupPage> {
                 dropdownColor: AppColors.surface,
                 items: ['初创公司', '中型企业', '大型企业'].map((e) => DropdownMenuItem(
                   value: e,
-                  child: Text(e, style: TextStyle(fontSize: 11, color: AppColors.textPrimary)),
+                  child: Text(e, style: AppTextStyles.dropdownItem),
                 )).toList(),
                 onChanged: (v) => setState(() {
                   companySize = v!;
@@ -4767,21 +5117,20 @@ class _SetupPageState extends State<SetupPage> {
           ),
           // 具体公司选择（仅大型企业时显示）
           if (companySize == '大型企业') ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Text(
               "目标公司",
-              style: TextStyle(
-                fontSize: 12,
+              style: AppTextStyles.label.copyWith(
                 color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.cardBackground,
-                borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.primary.withOpacity(0.3)),
               ),
               child: DropdownButtonHideUnderline(
@@ -4789,10 +5138,10 @@ class _SetupPageState extends State<SetupPage> {
                   value: selectedCompany,
                   isExpanded: true,
                   dropdownColor: AppColors.surface,
-                  hint: Text("选择目标公司", style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                  hint: Text("选择目标公司", style: AppTextStyles.dropdownItem.copyWith(color: AppColors.textTertiary)),
                   items: majorCompanies.map((e) => DropdownMenuItem(
                     value: e,
-                    child: Text(e, style: TextStyle(fontSize: 11, color: AppColors.textPrimary)),
+                    child: Text(e, style: AppTextStyles.dropdownItem),
                   )).toList(),
                   onChanged: (v) => setState(() => selectedCompany = v),
                   icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
@@ -4827,45 +5176,104 @@ class _SetupPageState extends State<SetupPage> {
                 const SizedBox(height: 2),
                 Text(
                   "AI根据表现动态调整难度",
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  style: AppTextStyles.chipLabel.copyWith(color: AppColors.textSecondary),
                 ),
               ],
             ),
           ),
-          // Toggle Switch
-          GestureDetector(
-            onTap: () => setState(() => adaptiveDifficulty = !adaptiveDifficulty),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 50,
-              height: 28,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                color: adaptiveDifficulty ? AppColors.primary : AppColors.surfaceDim,
-              ),
-              child: AnimatedAlign(
-                duration: const Duration(milliseconds: 200),
-                alignment: adaptiveDifficulty ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+          // 使用 TechToggleSwitch
+          TechToggleSwitch(
+            value: adaptiveDifficulty,
+            onChanged: (value) => setState(() => adaptiveDifficulty = value),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildQuestionPreferences() {
+    return GlassCard(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader(
+            icon: Icons.tune,
+            title: "答题偏好",
+            iconColor: AppColors.cyberPurple,
+          ),
+          const SizedBox(height: 10),
+          _buildPreferenceToggle(
+            icon: Icons.code,
+            label: "包含代码题",
+            description: "包含编程相关的技术问题",
+            value: includeCodeQuestions,
+            onChanged: (v) => setState(() => includeCodeQuestions = v),
+          ),
+          const SizedBox(height: 12),
+          _buildPreferenceToggle(
+            icon: Icons.skip_next,
+            label: "允许跳题",
+            description: "答题时可跳过当前题目",
+            value: allowSkipQuestions,
+            onChanged: (v) => setState(() => allowSkipQuestions = v),
+          ),
+          const SizedBox(height: 12),
+          _buildPreferenceToggle(
+            icon: Icons.lightbulb_outline,
+            label: "答题后显示提示",
+            description: "完成后显示答案解析",
+            value: showHintsAfterAnswer,
+            onChanged: (v) => setState(() => showHintsAfterAnswer = v),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPreferenceToggle({
+    required IconData icon,
+    required String label,
+    required String description,
+    required bool value,
+    required Function(bool) onChanged,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 12),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: AppTextStyles.chipLabel.copyWith(
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                description,
+                style: AppTextStyles.chipLabelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 使用 TechToggleSwitch
+        TechToggleSwitch(
+          value: value,
+          onChanged: onChanged,
+        ),
+      ],
     );
   }
 
@@ -4910,6 +5318,682 @@ class _SetupPageState extends State<SetupPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// 标签页1：面试���置
+  Widget _buildInterviewSettingsTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // AI 面试官选择
+          _buildInterviewerSection(),
+          const SizedBox(height: 20),
+          // 职位信息
+          _buildJobSection(),
+          const SizedBox(height: 20),
+          // 自适应难度
+          _buildAdaptiveDifficulty(),
+        ],
+      ),
+    );
+  }
+
+  /// 标签页2：题目配置
+  Widget _buildQuestionConfigTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 题目组成
+          _buildQuestionComposition(),
+          const SizedBox(height: 20),
+          // 答题偏好
+          _buildQuestionPreferences(),
+          const SizedBox(height: 24),
+          // 开始面试按钮
+          _buildStartButton(),
+        ],
+      ),
+    );
+  }
+}
+
+// ==================== 面试设置页面辅助组件 ====================
+
+/// 脉冲选中标记
+class _PulseCheckMark extends StatefulWidget {
+  final Color color;
+
+  const _PulseCheckMark({required this.color});
+
+  @override
+  State<_PulseCheckMark> createState() => _PulseCheckMarkState();
+}
+
+class _PulseCheckMarkState extends State<_PulseCheckMark>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 0.3, end: 0.7).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: widget.color,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: widget.color.withOpacity(_pulseAnimation.value),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.check, color: Colors.white, size: 8),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 面试官详情弹窗（带动画）
+class _InterviewerDetailSheet extends StatefulWidget {
+  final Map<String, dynamic> interviewer;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onSelect;
+
+  const _InterviewerDetailSheet({
+    required this.interviewer,
+    required this.color,
+    required this.isSelected,
+    required this.onSelect,
+  });
+
+  @override
+  State<_InterviewerDetailSheet> createState() => _InterviewerDetailSheetState();
+}
+
+class _InterviewerDetailSheetState extends State<_InterviewerDetailSheet>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _slideController;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _slideController,
+        curve: const Interval(0.3, 1.0),
+      ),
+    );
+
+    _slideController.forward();
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _slideController,
+      builder: (context, child) {
+        return SlideTransition(
+          position: _slideAnimation,
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: widget.color.withOpacity(0.2),
+                    blurRadius: 30,
+                    offset: const Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 拖拽指示器
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: AppColors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  // 头像和名称
+                  Row(
+                    children: [
+                      Hero(
+                        tag: 'interviewer_${widget.interviewer['name']}',
+                        child: DigitalAvatar(
+                          name: widget.interviewer['name'],
+                          imageUrl: widget.interviewer['avatarUrl'],
+                          size: 52,
+                          accentColor: widget.color,
+                          isSelected: true,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.interviewer['name'],
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        widget.color.withOpacity(0.15),
+                                        widget.color.withOpacity(0.05),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(
+                                      color: widget.color.withOpacity(0.3),
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    widget.interviewer['role'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: widget.color,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceDim,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    widget.interviewer['style'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // 描述
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          widget.color.withOpacity(0.08),
+                          widget.color.withOpacity(0.03),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: widget.color.withOpacity(0.15),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      widget.interviewer['description'],
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // 面试特征
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "面试特征",
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: (widget.interviewer['traits'] as List<String>).map((trait) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              widget.color.withOpacity(0.12),
+                              widget.color.withOpacity(0.04),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: widget.color.withOpacity(0.25),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              color: widget.color,
+                              size: 11,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              trait,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: widget.color,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 28),
+                  // 选择按钮
+                  GestureDetector(
+                    onTap: widget.onSelect,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: widget.isSelected
+                              ? [widget.color, widget.color.withOpacity(0.9)]
+                              : [widget.color.withOpacity(0.8), widget.color],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.color.withOpacity(0.4),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            widget.isSelected ? Icons.check_circle : Icons.person_add,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            widget.isSelected ? "已选择" : "选择此面试官",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 动画步进器组件
+class _AnimatedStepper extends StatefulWidget {
+  final String label;
+  final int value;
+  final Function(int) onChanged;
+  final int minValue;
+  final int maxValue;
+
+  const _AnimatedStepper({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+    this.minValue = 0,
+    this.maxValue = 10,
+  });
+
+  @override
+  State<_AnimatedStepper> createState() => _AnimatedStepperState();
+}
+
+class _AnimatedStepperState extends State<_AnimatedStepper>
+    with TickerProviderStateMixin {
+  late AnimationController _valueController;
+  late Animation<double> _valueAnimation;
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _valueController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _valueAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _valueController, curve: Curves.easeOut),
+    );
+
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _shakeAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _shakeController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _valueController.dispose();
+    _shakeController.dispose();
+    super.dispose();
+  }
+
+  void _handleDecrement() {
+    if (widget.value > widget.minValue) {
+      _valueController.forward().then((_) => _valueController.reverse());
+      widget.onChanged(widget.value - 1);
+    } else {
+      _shakeController.forward().then((_) => _shakeController.reverse());
+    }
+  }
+
+  void _handleIncrement() {
+    if (widget.value < widget.maxValue) {
+      _valueController.forward().then((_) => _valueController.reverse());
+      widget.onChanged(widget.value + 1);
+    } else {
+      _shakeController.forward().then((_) => _shakeController.reverse());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final canDecrement = widget.value > widget.minValue;
+    final canIncrement = widget.value < widget.maxValue;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Icon(Icons.circle, size: 4, color: AppColors.primary.withOpacity(0.5)),
+              const SizedBox(width: 6),
+              Text(
+                widget.label,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 减少按钮
+        _StepperButton(
+          icon: Icons.remove,
+          isEnabled: canDecrement,
+          onTap: _handleDecrement,
+          isPrimary: false,
+        ),
+        const SizedBox(width: 6),
+        // 数值
+        AnimatedBuilder(
+          animation: _valueAnimation,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _valueAnimation.value,
+              child: Container(
+                width: 44,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withOpacity(0.1),
+                      AppColors.cyberPurple.withOpacity(0.08),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.primary.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  widget.value.toString(),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(width: 6),
+        // 增加按钮
+        _StepperButton(
+          icon: Icons.add,
+          isEnabled: canIncrement,
+          onTap: _handleIncrement,
+          isPrimary: true,
+        ),
+      ],
+    );
+  }
+}
+
+/// 步进器按钮组件
+class _StepperButton extends StatefulWidget {
+  final IconData icon;
+  final bool isEnabled;
+  final VoidCallback onTap;
+  final bool isPrimary;
+
+  const _StepperButton({
+    required this.icon,
+    required this.isEnabled,
+    required this.onTap,
+    this.isPrimary = false,
+  });
+
+  @override
+  State<_StepperButton> createState() => _StepperButtonState();
+}
+
+class _StepperButtonState extends State<_StepperButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _handleTapDown() {
+    if (!widget.isEnabled) return;
+    setState(() => _isPressed = true);
+    _controller.forward();
+  }
+
+  void _handleTapUp() {
+    if (!_isPressed) return;
+    setState(() => _isPressed = false);
+    _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.isEnabled ? (_) => _handleTapDown() : null,
+      onTapUp: widget.isEnabled ? (_) => _handleTapUp() : null,
+      onTapCancel: widget.isEnabled ? _handleTapUp : null,
+      onTap: widget.isEnabled ? widget.onTap : null,
+      child: AnimatedBuilder(
+        animation: _scaleAnimation,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _isPressed ? _scaleAnimation.value : 1.0,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                gradient: widget.isEnabled && widget.isPrimary
+                    ? LinearGradient(
+                        colors: AppColors.primaryGradient,
+                      )
+                    : null,
+                color: widget.isEnabled && !widget.isPrimary
+                    ? AppColors.surfaceDim
+                    : widget.isEnabled
+                        ? AppColors.primary
+                        : AppColors.surfaceDim.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: widget.isEnabled
+                      ? AppColors.border
+                      : AppColors.border.withOpacity(0.3),
+                ),
+                boxShadow: widget.isEnabled && widget.isPrimary
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.3),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                widget.icon,
+                color: widget.isEnabled
+                    ? (widget.isPrimary ? Colors.white : AppColors.textSecondary)
+                    : AppColors.textTertiary,
+                size: 18,
+              ),
+            ),
+          );
+        },
       ),
     );
   }
