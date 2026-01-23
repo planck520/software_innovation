@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
 
 /// stitch_login_screen 风格毛玻璃效果卡片组件
@@ -198,5 +199,66 @@ class NeonGlowCard extends StatelessWidget {
         child: child,
       ),
     );
+  }
+}
+
+/// 不背单词风格深色卡片组件
+class BubeiCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final double borderRadius;
+  final VoidCallback? onTap;
+  final Color? backgroundColor;
+  final double? width;
+  final double? height;
+  final Border? border;
+
+  const BubeiCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.borderRadius = 12,
+    this.onTap,
+    this.backgroundColor,
+    this.width,
+    this.height,
+    this.border,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final card = Container(
+      width: width,
+      height: height,
+      padding: padding ?? const EdgeInsets.all(16),
+      margin: margin,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? BubeiColors.surface,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: border ??
+            Border.all(
+              color: BubeiColors.divider,
+              width: 1,
+            ),
+      ),
+      child: child,
+    );
+
+    if (onTap != null) {
+      return Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(borderRadius),
+          splashColor: BubeiColors.primary.withOpacity(0.1),
+          highlightColor: BubeiColors.primary.withOpacity(0.05),
+          child: card,
+        ),
+      );
+    }
+
+    return card;
   }
 }

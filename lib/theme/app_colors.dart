@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../main.dart' show isDarkBackground;
+import '../config/app_config.dart' show isDarkBackground;
+import 'bubei_colors.dart';
 
 /// stitch_login_screen 风格配色系统 - 蓝紫赛博风格
 class AppColors {
@@ -198,4 +199,20 @@ class AppColors {
   static Color get inputBackground => isDarkBackground
       ? const Color(0xFF252b3b)
       : Colors.white.withOpacity(0.5);
+
+  // ==================== 不背单词风格深色主题 ====================
+  /// 获取不背单词风格的背景色
+  static Color get bubeiBackground => BubeiColors.background;
+
+  /// 获取不背单词风格的卡片色
+  static Color get bubeiSurface => BubeiColors.surface;
+
+  /// 获取不背单词风格的文字色
+  static Color get bubeiTextPrimary => BubeiColors.textPrimary;
+
+  /// 获取不背单词风格的次要文字色
+  static Color get bubeiTextSecondary => BubeiColors.textSecondary;
+
+  /// 获取不背单词风格的主题色
+  static Color get bubeiPrimary => BubeiColors.primary;
 }

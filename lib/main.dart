@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
@@ -14,9 +15,13 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// 导入配置（避免循环依赖）
+import 'config/app_config.dart';
+
 // 导入新的设计系统
 import 'theme/app_theme.dart';
 import 'theme/app_colors.dart';
+import 'theme/bubei_colors.dart';
 import 'theme/app_tokens.dart';
 import 'theme/app_text_styles.dart';
 
@@ -35,11 +40,9 @@ import 'widgets/cyber_loading_indicator.dart';
 import 'widgets/tech_selection_chip.dart';
 import 'widgets/section_header.dart';
 import 'widgets/tech_toggle_switch.dart';
+import 'widgets/glass_input_field.dart';
 
 List<CameraDescription> _cameras = [];
-
-// 全局主题模式：true为深色背景，false为浅色背景
-bool isDarkBackground = false;
 
 // 用于通知整个应用刷新主题的通知器
 final ValueNotifier<bool> themeNotifier = ValueNotifier<bool>(false);
@@ -71,6 +74,9 @@ Future<void> main() async {
   } catch (e) {
     debugPrint("相机初始化失败");
   }
+  // 初始化应用配置（包括深色背景设置）
+  await initAppConfig();
+  themeNotifier.value = isDarkBackground;
   // 在这里加载本地保存的用户数据
   await loadUserData();
 
@@ -94,15 +100,12 @@ Future<void> loadUserData() async {
     // 还原 globalUsers
     globalUsers = List<Map<String, dynamic>>.from(decoded);
   }
-  // 加载主题设置
-  isDarkBackground = prefs.getBool('is_dark_background') ?? false;
-  themeNotifier.value = isDarkBackground;
+  // 主题设置已在 initAppConfig() 中加载
 }
 
 // 保存主题设置
 Future<void> saveThemeSetting() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setBool('is_dark_background', isDarkBackground);
+  await toggleDarkBackground(isDarkBackground);
 }
 
 // --- 鉴权工具类 ---
@@ -134,7 +137,7 @@ class HusterviewApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Husterview',
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.bubeiDarkTheme,
           home: const LoginPage(),
         );
       },
@@ -178,6 +181,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
+  bool _agreedToTerms = false;
+
+  // 错误状态
+  String? _usernameError;
+  String? _passwordError;
 
   // 交错入场动画控制器
   late AnimationController _logoController;
@@ -279,11 +287,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   void _handleLogin() async {
+    // 清除之前的错误状态
+    setState(() {
+      _usernameError = null;
+      _passwordError = null;
+    });
+
+    // 检查是否同意服务条款
+    if (!_agreedToTerms) {
+      _showMsg("请先阅读并同意《服务条款》和《隐私协议》", BubeiColors.warning);
+      return;
+    }
+
     String inputUser = _userController.text.trim();
     String inputPass = _passController.text.trim();
 
-    if (inputUser.isEmpty || inputPass.isEmpty) {
-      _showMsg("请输入完整信息", AppColors.warning);
+    // 验证输入
+    if (inputUser.isEmpty) {
+      setState(() => _usernameError = "请输入账号");
+      return;
+    }
+
+    if (inputPass.isEmpty) {
+      setState(() => _passwordError = "请输入密码");
       return;
     }
 
@@ -301,9 +327,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       currentUserIndex = foundIndex;
       Navigator.pushReplacement(
           context,
-          TechPageTransitions.fadeScale(builder: (c) => const MainEntryPage())
+          TechPageTransitions.fadeScale(builder: (c) => const BubeiHomePage())
       );
     } else {
+      setState(() {
+        _usernameError = "账号或密码错误";
+        _passwordError = "账号或密码错误";
+      });
       _showMsg("身份验证失败", AppColors.error);
     }
   }
@@ -504,382 +534,350 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return TechBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: 430,
-                minHeight: MediaQuery.of(context).size.height - 100,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // 顶部导航栏
-                  _buildHeader(),
-                  const SizedBox(height: 12),
-                  // Logo 区域
-                  _buildLogoSection(),
-                  const SizedBox(height: 8),
-                  // 标题
-                  _buildTitle(),
-                  const SizedBox(height: 16),
-                  // 输入卡片
-                  _buildInputCard(),
-                  const SizedBox(height: 24),
-                  // 注册链接
-                  _buildRegisterLink(),
-                ],
+    return Scaffold(
+      backgroundColor: BubeiColors.background,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // 背景装饰
+            _buildBackgroundDecorations(),
+            // 主内容
+            Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 400),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      // Logo
+                      _buildLogo(),
+                      const SizedBox(height: 48),
+                      // 登录表单卡片
+                      _buildLoginForm(),
+                      const SizedBox(height: 16),
+                      // 服务条款和隐私协议
+                      _buildTermsAndPrivacy(),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
+            // 右上角游客登录按钮
+            Positioned(
+              top: 16,
+              right: 16,
+              child: _buildGuestLoginButton(),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  // ==================== Bubei风格登录页UI ====================
+
+  Widget _buildBackgroundDecorations() {
+    return const TechPioneersBackground(child: SizedBox.expand());
+  }
+
+  Widget _buildLogo() {
+    return Column(
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-              ),
-              child: const Icon(Icons.terminal, color: Colors.white, size: 16.8),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              "系统访问",
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ],
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: BubeiColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Image.asset('logo.png', fit: BoxFit.contain),
         ),
-        Row(
-          children: [
-            Text(
-              "在线",
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(Icons.sensors, color: AppColors.primary, size: 9.8),
-          ],
+        const SizedBox(height: 20),
+        // 艺术化 Husterview 标题
+        _buildAnimatedTitle(),
+        const SizedBox(height: 12),
+        Text(
+          "AI面试助手",
+          style: TextStyle(
+            color: BubeiColors.textSecondary,
+            fontSize: 14,
+            letterSpacing: 4,
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildLogoSection() {
+  // 艺术化标题组件 - 带发光脉冲动画
+  Widget _buildAnimatedTitle() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 800),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.scale(
+            scale: 0.8 + value * 0.2,
+            child: child,
+          ),
+        );
+      },
+      child: _buildGlowingTitle(),
+    );
+  }
+
+  Widget _buildGlowingTitle() {
     return AnimatedBuilder(
-      animation: Listenable.merge([_logoController, _logoScaleAnimation]),
+      animation: _logoController,
       builder: (context, child) {
-        return Transform.scale(
-          scale: _logoScaleAnimation.value,
-          child: Opacity(
-            opacity: _logoFadeAnimation.value,
-            child: _BreathingLogoContainer(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary.withOpacity(0.08),
-                      AppColors.cyberPurple.withOpacity(0.08),
-                    ],
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    // 背景装饰网格
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-                        child: CustomPaint(
-                          painter: _LogoGridPainter(),
-                        ),
-                      ),
-                    ),
-                    // 扫描线动画
-                    Positioned.fill(
-                      child: _ScanlineAnimation(
-                        color: AppColors.primary.withOpacity(0.15),
-                      ),
-                    ),
-                    // Logo图片
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Logo图片 - 更大尺寸
-                            Container(
-                              constraints: const BoxConstraints(maxWidth: 360, maxHeight: 180),
-                              child: Image.asset(
-                                'logo.png',
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                            const SizedBox(height: 0),
-                            // 状态标签 - 带脉冲效果
-                            _PulseStatusBadge(),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+        return Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: BubeiColors.primary.withOpacity(0.3),
+                blurRadius: 20 + _logoFadeAnimation.value * 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // 描边效果
+              Text(
+                "Husterview",
+                style: TextStyle(
+                  fontSize: 43,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 3,
+                  foreground: Paint()
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2
+                    ..color = BubeiColors.primary.withOpacity(0.5),
                 ),
               ),
-            ),
+              // 渐变填充
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [
+                    Color(0xFF00F5FF),  // 赛博青
+                    Color(0xFF3B82F6),  // 亮蓝
+                    Color(0xFF8B5CF6),  // 紫色
+                    Color(0xFFEC4899),  // 粉色
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  stops: [0.0, 0.3, 0.7, 1.0],
+                  tileMode: TileMode.mirror,
+                ).createShader(bounds),
+                blendMode: BlendMode.srcIn,
+                child: const Text(
+                  "Husterview",
+                  style: TextStyle(
+                    fontSize: 42,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 3,
+                    color: Colors.white,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
     );
   }
 
-  Widget _buildTitle() {
-    return SlideTransition(
-      position: _titleSlideAnimation,
+  Widget _buildLoginForm() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: BubeiColors.surface.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: BubeiColors.divider,
+          width: 1,
+        ),
+      ),
       child: Column(
         children: [
-          Text(
-            "AI 门户登录",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.5,
-            ),
+          // 账号输入 - 使用毛玻璃输入框
+          GlassInputField(
+            label: "账号",
+            controller: _userController,
+            hintText: "请输入账号 / 邮箱 / 手机号",
+            prefixIcon: Icons.person_outlined,
+            autoDetectType: true,
+            connectionStatus: ConnectionStatus.online,
+            errorText: _usernameError,
+            enableClearButton: true,
+          ),
+          const SizedBox(height: 16),
+          // 密码输入 - 使用毛玻璃输入框
+          GlassInputField(
+            label: "密码",
+            controller: _passController,
+            hintText: "请输入密码",
+            prefixIcon: Icons.lock_outline,
+            isPassword: true,
+            errorText: _passwordError,
+            showCapsLockHint: true,
           ),
           const SizedBox(height: 8),
-          Text(
-            "初始化您的认知会话",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInputCard() {
-    return SlideTransition(
-      position: _inputSlideAnimation,
-      child: Column(
-        children: [
-          // 用户名输入卡片
-          _buildUsernameCard(),
-          const SizedBox(height: 16),
-          // 密码输入卡片
-          _buildPasswordCard(),
-          const SizedBox(height: 16),
-          // 记住我和忘记密码行
-          _buildExtraOptions(),
-          const SizedBox(height: 16),
-          // 登录按钮
-          _buildLoginButton(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUsernameCard() {
-    return _AnimatedInputCard(
-      label: "邮箱或手机号",
-      hintText: "user_id@simulation.io",
-      icon: Icons.alternate_email,
-      controller: _userController,
-    );
-  }
-
-  Widget _buildPasswordCard() {
-    return _AnimatedInputCard(
-      label: "访问码",
-      hintText: "••••••••",
-      icon: Icons.lock_outline,
-      controller: _passController,
-      obscureText: _obscurePassword,
-      onTapIcon: () => setState(() => _obscurePassword = !_obscurePassword),
-      iconBuilder: (obscure) => Icon(
-        obscure ? Icons.visibility : Icons.visibility_off,
-        color: AppColors.textTertiary,
-        size: 14,
-      ),
-    );
-  }
-
-  Widget _buildExtraOptions() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        // 记住我选项
-        Row(
-          children: [
-            GestureDetector(
-              onTap: () => setState(() => _rememberMe = !_rememberMe),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: _rememberMe ? AppColors.primary : Colors.transparent,
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: _rememberMe ? AppColors.primary : AppColors.border,
-                    width: 1.5,
-                  ),
-                ),
-                child: _rememberMe
-                    ? const Icon(Icons.check, color: Colors.white, size: 12)
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => setState(() => _rememberMe = !_rememberMe),
+          // 忘记密码链接
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: _showForgotPasswordDialog,
               child: Text(
-                "记住我",
+                "忘记密码？",
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: BubeiColors.primary,
                   fontSize: 12,
                 ),
               ),
             ),
-          ],
-        ),
-        // 忘记密码链接
-        TextButton(
-          onPressed: _showForgotPasswordDialog,
-          child: Text(
-            "忘记密码?",
-            style: TextStyle(
-              color: AppColors.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          ),
+          const SizedBox(height: 16),
+          // 登录按钮
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _isLoading ? null : _handleLogin,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: BubeiColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: _isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : const Text(
+                      "登录",
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: 1.2),
+                    ),
             ),
           ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLoginButton() {
-    return FadeTransition(
-      opacity: _buttonFadeAnimation,
-      child: _isLoading
-          ? Container(
-              width: double.infinity,
-              height: 39,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: AppColors.primaryGradient,
-                ),
-                borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              ),
-              child: Center(
-                child: CyberLoadingIndicatorSmall(size: 24),
-              ),
-            )
-          : TechButton(
-              text: "进入",
-              icon: Icons.login,
-              onPressed: _handleLogin,
-              isFullWidth: true,
-            ),
-    );
-  }
-
-  Widget _buildBiometricSection() {
-    return Column(
-      children: [
-        // 分隔线
-        Row(
-          children: [
-            Expanded(child: Container(height: 1, color: AppColors.border.withOpacity(0.3))),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                "生物识别访问",
+          // 注册入口
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "还没有账号？",
                 style: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
+                  color: BubeiColors.textSecondary,
+                  fontSize: 13,
                 ),
               ),
-            ),
-            Expanded(child: Container(height: 1, color: AppColors.border.withOpacity(0.3))),
-          ],
-        ),
-        const SizedBox(height: 24),
-        // 人脸识别按钮
-        GestureDetector(
-          onTap: () => _showMsg("生物识别功能开发中", AppColors.warning),
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.cardBackground,
-              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-            ),
-            child: Icon(Icons.face, color: AppColors.primary, size: 22.4),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRegisterLink() {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            "新研究员？ ",
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                TechPageTransitions.fadeScale(builder: (c) => const RegisterPage()),
-              );
-            },
-            child: Text(
-              "注册账号",
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    TechPageTransitions.iosSlide(
+                      builder: (context) => const RegisterPage(),
+                    ),
+                  );
+                },
+                child: Text(
+                  " 立即注册",
+                  style: TextStyle(
+                    color: BubeiColors.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildTermsAndPrivacy() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // 黄色圆形Checkbox
+        GestureDetector(
+          onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
+          child: Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _agreedToTerms ? BubeiColors.warning : Colors.transparent,
+              border: Border.all(
+                color: _agreedToTerms ? BubeiColors.warning : BubeiColors.textTertiary,
+                width: 1.5,
+              ),
+            ),
+            child: _agreedToTerms
+                ? Icon(Icons.check, color: Colors.white, size: 14)
+                : null,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          "我已阅读并同意",
+          style: TextStyle(color: BubeiColors.textTertiary, fontSize: 12),
+        ),
+        TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            "《服务条款》",
+            style: TextStyle(color: BubeiColors.primary, fontSize: 12),
+          ),
+        ),
+        TextButton(
+          onPressed: () {},
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(
+            "《隐私协议》",
+            style: TextStyle(color: BubeiColors.primary, fontSize: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGuestLoginButton() {
+    return TextButton(
+      onPressed: () => Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const MainEntryPage()),
+      ),
+      style: TextButton.styleFrom(
+        foregroundColor: BubeiColors.textSecondary,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+      child: const Text(
+        "游客登录>",
+        style: TextStyle(fontSize: 11),
       ),
     );
   }
@@ -1248,6 +1246,12 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   int _currentStep = 0;
 
+  // 错误状态
+  String? _usernameError;
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -1258,25 +1262,67 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _handleRegister() async {
+    // 清除之前的错误状态
+    setState(() {
+      _usernameError = null;
+      _emailError = null;
+      _passwordError = null;
+      _confirmPasswordError = null;
+    });
+
     String username = _usernameController.text.trim();
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
 
-    if (username.isEmpty || email.isEmpty || password.isEmpty) {
-      _showMsg("请填写完整信息", AppColors.warning);
+    // 验证用户名
+    if (username.isEmpty) {
+      setState(() => _usernameError = "请输入用户名");
+      return;
+    }
+    if (username.length < 3) {
+      setState(() => _usernameError = "用户名至少3个字符");
       return;
     }
 
+    // 验证邮箱
+    if (email.isEmpty) {
+      setState(() => _emailError = "请输入邮箱地址");
+      return;
+    }
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+      setState(() => _emailError = "请输入有效的邮箱地址");
+      return;
+    }
+
+    // 验证密码
+    if (password.isEmpty) {
+      setState(() => _passwordError = "请输入密码");
+      return;
+    }
+    if (password.length < 6) {
+      setState(() => _passwordError = "密码至少6个字符");
+      return;
+    }
+    if (!password.contains(RegExp(r'[a-zA-Z]')) || !password.contains(RegExp(r'[0-9]'))) {
+      setState(() => _passwordError = "密码需包含字母和数字");
+      return;
+    }
+
+    // 验证确认密码
+    if (confirmPassword.isEmpty) {
+      setState(() => _confirmPasswordError = "请确认密码");
+      return;
+    }
     if (password != confirmPassword) {
-      _showMsg("两次密码不一致", AppColors.error);
+      setState(() => _confirmPasswordError = "两次密码不一致");
       return;
     }
 
     // 检查用户名是否已存在
     bool exists = globalUsers.any((u) => u['username'] == username);
     if (exists) {
-      _showMsg("用户名已存在", AppColors.error);
+      setState(() => _usernameError = "用户名已存在");
       return;
     }
 
@@ -1297,7 +1343,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() => _isLoading = false);
 
-    _showMsg("注册成功！", AppColors.success);
+    _showMsg("注册成功！", BubeiColors.success);
     await Future.delayed(const Duration(milliseconds: 500));
     Navigator.pop(context);
   }
@@ -1339,11 +1385,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   // 进度指示
                   _buildProgressIndicator(),
                   const SizedBox(height: 32),
-                  // 表单卡片
+                  // 表单卡片（包含返回登录链接）
                   _buildFormCard(),
-                  const SizedBox(height: 24),
-                  // 返回登录
-                  _buildBackToLogin(),
                 ],
               ),
             ),
@@ -1409,35 +1452,167 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _buildTitle() {
     return Column(
       children: [
-        Text(
-          "创建新档案",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        // 艺术化渐变标题
+        _buildGlowingRegisterTitle(),
         const SizedBox(height: 8),
-        Text(
-          "建立您的神经链路身份",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 11,
-          ),
-        ),
+        // 副标题
+        _buildSubtitle(),
       ],
     );
   }
 
+  // 极光渐变标题 - 流动渐变 + 微妙辉光
+  Widget _buildGlowingRegisterTitle() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 10 * (1 - value)),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(begin: -1.0, end: 1.0),
+              duration: const Duration(seconds: 4),
+              curve: Curves.easeInOut,
+              builder: (context, slideValue, child) {
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    // 微妙的辉光效果
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFF3B82F6).withOpacity(0.08),
+                        blurRadius: 16,
+                        spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Color(0xFF8B5CF6).withOpacity(0.05),
+                        blurRadius: 24,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: ShaderMask(
+                    shaderCallback: (bounds) {
+                      // 极光渐变 - 蓝绿到紫色的流动
+                      final double dx = slideValue * bounds.width;
+                      return LinearGradient(
+                        colors: const [
+                          Color(0xFF2DD4BF), // 青绿
+                          Color(0xFF3B82F6), // 亮蓝
+                          Color(0xFF6366F1), // 靛蓝
+                          Color(0xFF8B5CF6), // 紫色
+                          Color(0xFFA78BFA), // 浅紫
+                        ],
+                        stops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                        begin: Alignment(slideValue - 0.5, -0.5),
+                        end: Alignment(slideValue + 0.5, 0.5),
+                        tileMode: TileMode.mirror,
+                      ).createShader(bounds.shift(Offset(dx, 0)));
+                    },
+                    blendMode: BlendMode.srcIn,
+                    child: Text(
+                      "创建新档案",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 3,
+                        color: Colors.white,
+                        // 微妙的高光
+                        shadows: [
+                          Shadow(
+                            color: Color(0xFF2DD4BF).withOpacity(0.15),
+                            offset: Offset(0, 0),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 渐变副标题 - 低调内敛
+  Widget _buildSubtitle() {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 800),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 8 * (1 - value)),
+            child: Text(
+              "建立您的神经链路身份",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 13,
+                letterSpacing: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 计算表单进度
+  double _calculateProgress() {
+    int filledFields = 0;
+    int totalFields = 4;
+
+    if (_usernameController.text.trim().isNotEmpty) filledFields++;
+    if (_emailController.text.trim().isNotEmpty) filledFields++;
+    if (_passwordController.text.trim().isNotEmpty) filledFields++;
+    if (_confirmPasswordController.text.trim().isNotEmpty) filledFields++;
+
+    return filledFields / totalFields;
+  }
+
+  // 获取进度消息
+  String _getProgressMessage(double progress) {
+    if (progress == 0) return "等待输入...";
+    if (progress < 0.5) return "继续填写...";
+    if (progress < 1.0) return "即将完成...";
+    return "准备就绪";
+  }
+
   Widget _buildProgressIndicator() {
-    return Container(
+    final progress = _calculateProgress();
+    final progressMessage = _getProgressMessage(progress);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
         borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+        border: Border.all(
+          color: progress == 1.0
+              ? Color(0xFF00F5FF).withOpacity(0.5)
+              : AppColors.border.withOpacity(0.3),
+        ),
+        boxShadow: progress == 1.0
+            ? [
+                BoxShadow(
+                  color: Color(0xFF00F5FF).withOpacity(0.2),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ]
+            : null,
       ),
       child: Column(
         children: [
@@ -1446,11 +1621,19 @@ class _RegisterPageState extends State<RegisterPage> {
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: 1.0,
-                    backgroundColor: AppColors.surfaceDim,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                    minHeight: 6,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: progress),
+                    duration: const Duration(milliseconds: 300),
+                    builder: (context, value, child) {
+                      return LinearProgressIndicator(
+                        value: value,
+                        backgroundColor: AppColors.surfaceDim,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          progress == 1.0 ? Color(0xFF00F5FF) : AppColors.primary,
+                        ),
+                        minHeight: 6,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -1461,15 +1644,15 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "100% 已就绪",
+                "${(progress * 100).toInt()}% ${progressMessage}",
                 style: TextStyle(
-                  color: AppColors.primary,
+                  color: progress == 1.0 ? Color(0xFF00F5FF) : AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               Text(
-                "数据加密中...",
+                progress == 1.0 ? "可以激活" : "正在填充...",
                 style: TextStyle(
                   color: AppColors.textTertiary,
                   fontSize: 12,
@@ -1483,104 +1666,233 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget _buildFormCard() {
-    return GlassCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 用户别名
-          _buildInputField(
-            label: "用户别名",
-            hint: "neural_user_01",
-            controller: _usernameController,
-            icon: Icons.person_outline,
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 30 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 用户别名 - 使用毛玻璃输入框
+                  GlassInputField(
+                    label: "用户别名",
+                    controller: _usernameController,
+                    hintText: "neural_user_01",
+                    prefixIcon: Icons.person_outline,
+                    errorText: _usernameError,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 20),
+                  // 邮箱 - 使用毛玻璃输入框
+                  GlassInputField(
+                    label: "邮箱地址",
+                    controller: _emailController,
+                    hintText: "user@simulation.io",
+                    prefixIcon: Icons.alternate_email,
+                    keyboardType: TextInputType.emailAddress,
+                    autoDetectType: true,
+                    errorText: _emailError,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 20),
+                  // 密码 - 使用毛玻璃输入框
+                  GlassInputField(
+                    label: "访问密钥",
+                    controller: _passwordController,
+                    hintText: "••••••••",
+                    prefixIcon: Icons.lock_outline,
+                    isPassword: true,
+                    errorText: _passwordError,
+                    showCapsLockHint: true,
+                    onChanged: (value) {
+                      setState(() {
+                        _passwordStrength = _calculatePasswordStrength(value);
+                      });
+                    },
+                  ),
+                  // 密码强度指示器
+                  if (_passwordController.text.isNotEmpty)
+                    _buildPasswordStrengthIndicator(),
+                  if (_passwordController.text.isNotEmpty)
+                    const SizedBox(height: 16)
+                  else
+                    const SizedBox(height: 20),
+                  // 确认密码 - 使用毛玻璃输入框
+                  GlassInputField(
+                    label: "确认密钥",
+                    controller: _confirmPasswordController,
+                    hintText: "••••••••",
+                    prefixIcon: Icons.lock_outline,
+                    isPassword: true,
+                    errorText: _confirmPasswordError,
+                    showCapsLockHint: true,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 24),
+                  // 注册按钮
+                  _buildRegisterButton(),
+                  // 返回登录入口
+                  _buildBackToLoginLink(),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 20),
-          // 邮箱
-          _buildInputField(
-            label: "邮箱地址",
-            hint: "user@simulation.io",
-            controller: _emailController,
-            icon: Icons.alternate_email,
-            keyboardType: TextInputType.emailAddress,
-          ),
-          const SizedBox(height: 20),
-          // 密码
-          _buildInputField(
-            label: "访问密钥",
-            hint: "••••••••",
-            controller: _passwordController,
-            icon: Icons.lock_outline,
-            isPassword: true,
-          ),
-          const SizedBox(height: 20),
-          // 确认密码
-          _buildInputField(
-            label: "确认密钥",
-            hint: "••••••••",
-            controller: _confirmPasswordController,
-            icon: Icons.lock_outline,
-            isPassword: true,
-          ),
-          const SizedBox(height: 24),
-          // 注册按钮
-          _buildRegisterButton(),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildInputField({
-    required String label,
-    required String hint,
-    required TextEditingController controller,
-    required IconData icon,
-    bool isPassword = false,
-    TextInputType? keyboardType,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: TextStyle(
-            color: AppColors.textPrimary.withOpacity(0.7),
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.cardBackground,
-            borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-            border: Border.all(color: AppColors.border.withOpacity(0.5)),
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: isPassword && _obscurePassword,
-            keyboardType: keyboardType,
-            style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
-            decoration: InputDecoration(
-              hintText: hint,
-              hintStyle: TextStyle(color: AppColors.textTertiary),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.all(12),
-              prefixIcon: Icon(icon, color: AppColors.textTertiary),
-              suffixIcon: isPassword
-                  ? GestureDetector(
-                      onTap: () => setState(() => _obscurePassword = !_obscurePassword),
-                      child: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                        color: AppColors.textTertiary,
-                      ),
-                    )
-                  : null,
+  // 密码强度计算
+  int _passwordStrength = 0;
+
+  int _calculatePasswordStrength(String password) {
+    int strength = 0;
+    if (password.isEmpty) return 0;
+
+    // 长度检查
+    if (password.length >= 6) strength++;
+    if (password.length >= 10) strength++;
+
+    // 包含数字
+    if (password.contains(RegExp(r'[0-9]'))) strength++;
+
+    // 包含小写字母
+    if (password.contains(RegExp(r'[a-z]'))) strength++;
+
+    // 包含大写字母
+    if (password.contains(RegExp(r'[A-Z]'))) strength++;
+
+    // 包含特殊字符
+    if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) strength++;
+
+    return strength.clamp(0, 5);
+  }
+
+  // 密码强度指示器 - 带发光效果和动画
+  Widget _buildPasswordStrengthIndicator() {
+    String strengthText = "非常弱";
+    Color strengthColor = BubeiColors.error;
+    double strengthValue = 0.2;
+
+    switch (_passwordStrength) {
+      case 0:
+      case 1:
+        strengthText = "非常弱";
+        strengthColor = BubeiColors.error;
+        strengthValue = 0.2;
+        break;
+      case 2:
+        strengthText = "弱";
+        strengthColor = BubeiColors.error;
+        strengthValue = 0.4;
+        break;
+      case 3:
+        strengthText = "中等";
+        strengthColor = BubeiColors.warning;
+        strengthValue = 0.6;
+        break;
+      case 4:
+        strengthText = "强";
+        strengthColor = BubeiColors.info;
+        strengthValue = 0.8;
+        break;
+      case 5:
+        strengthText = "非常强";
+        strengthColor = BubeiColors.success;
+        strengthValue = 1.0;
+        break;
+    }
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: strengthValue),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+      builder: (context, value, child) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "密码强度",
+                  style: TextStyle(
+                    color: BubeiColors.textSecondary,
+                    fontSize: 11,
+                  ),
+                ),
+                Text(
+                  strengthText,
+                  style: TextStyle(
+                    color: strengthColor,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: [
+                  BoxShadow(
+                    color: strengthColor.withOpacity(0.4),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(2),
+                child: LinearProgressIndicator(
+                  value: value,
+                  backgroundColor: BubeiColors.inputBackground,
+                  valueColor: AlwaysStoppedAnimation<Color>(strengthColor),
+                  minHeight: 4,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // 返回登录链接
+  Widget _buildBackToLoginLink() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "已有账号？",
+            style: TextStyle(
+              color: BubeiColors.textSecondary,
+              fontSize: 13,
             ),
           ),
-        ),
-      ],
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Text(
+              " 立即登录",
+              style: TextStyle(
+                color: BubeiColors.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1613,34 +1925,9 @@ class _RegisterPageState extends State<RegisterPage> {
       isFullWidth: true,
     );
   }
-
-  Widget _buildBackToLogin() {
-    return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            "已有档案？ ",
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Text(
-              "返回登录",
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-// --- 主入口页 (科技风格美化) ---
+// --- 主入口页 (不背单词风格 - 3个Tab) ---
 class MainEntryPage extends StatefulWidget {
   const MainEntryPage({super.key});
 
@@ -1651,19 +1938,19 @@ class MainEntryPage extends StatefulWidget {
 class _MainEntryPageState extends State<MainEntryPage> {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
+
+  // 3个页面（首页不通过底部导航访问）
   final List<Widget> _pages = [
-    const SetupPage(),        // 首页 - 开始面试
-    const QuestionBankPage(), // 题库
-    const HistoryPage(),      // 历史
-    const ProfilePage(),      // 我的
+    const HistoryPage(),         // 历史
+    const QuestionBankPage(),    // 题库
+    const AchievementPage(),     // 成就
   ];
 
-  // 自定义底部导航项，与页面对应
+  // 3个底部导航项
   final List<NavItem> _navItems = const [
-    NavItem(icon: Icons.play_circle_outline, activeIcon: Icons.play_circle, label: "面试"),
-    NavItem(icon: Icons.quiz_outlined, activeIcon: Icons.quiz, label: "题库"),
-    NavItem(icon: Icons.history_outlined, activeIcon: Icons.history, label: "历史"),
-    NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "我的"),
+    NavItem(icon: Icons.history_outlined, activeIcon: Icons.history, label: ""),
+    NavItem(icon: Icons.quiz_outlined, activeIcon: Icons.quiz, label: ""),
+    NavItem(icon: Icons.emoji_events_outlined, activeIcon: Icons.emoji_events, label: ""),
   ];
 
   @override
@@ -1687,6 +1974,7 @@ class _MainEntryPageState extends State<MainEntryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: BubeiColors.background,
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
@@ -1699,6 +1987,821 @@ class _MainEntryPageState extends State<MainEntryPage> {
       ),
     );
   }
+}
+
+// --- 首页 (不背单词风格 - 签到 + 快捷入口) ---
+class BubeiHomePage extends StatefulWidget {
+  const BubeiHomePage({super.key});
+
+  @override
+  State<BubeiHomePage> createState() => _BubeiHomePageState();
+}
+
+class _BubeiHomePageState extends State<BubeiHomePage> {
+  bool _isCheckedIn = false;
+  int _checkInDays = 0;
+  bool _showExplosion = false;
+  final GlobalKey _checkInButtonKey = GlobalKey();
+
+  // 获取格式化的当前日��
+  String get _currentDate {
+    final now = DateTime.now();
+    return "${now.month}月${now.day}日";
+  }
+
+  // 名人名言列表
+  final List<String> _quotes = [
+    "代码如诗，逻辑如歌",
+    "今日代码，明日辉煌",
+    "编程不止，学习不亦乐乎",
+    "代���改变世界",
+    "Stay Hungry, Stay Foolish",
+    "Talk is cheap, show me the code",
+    "优秀是一种习惯",
+    "每天进步一点点",
+  ];
+
+  // 随机获取一条名言
+  String get _dailyQuote {
+    return _quotes[DateTime.now().day % _quotes.length];
+  }
+
+  void _handleCheckIn() {
+    // 获取按钮位置用于爆炸特效
+    final RenderBox? renderBox =
+        _checkInButtonKey.currentContext?.findRenderObject() as RenderBox?;
+    final Offset? buttonCenter = renderBox?.localToGlobal(
+      renderBox.size.center(Offset.zero),
+    );
+
+    setState(() {
+      _isCheckedIn = true;
+      _checkInDays++;
+      _showExplosion = true;
+    });
+
+    // 延迟显示 SnackBar，让爆炸效果先播放
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("签到成功！已连续签到 $_checkInDays 天"),
+            backgroundColor: BubeiColors.success,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          ),
+        );
+      }
+    });
+
+    // 重置爆炸状态
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) {
+        setState(() {
+          _showExplosion = false;
+        });
+      }
+    });
+  }
+
+  void _goToProfile() {
+    // 跳转到个人中心页面
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfilePage()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: BubeiColors.background,
+      body: DataWaveOverlay(
+        child: TechPioneersHomeBackground(
+          child: SafeArea(
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    // 顶部栏 - 头像
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: _goToProfile,
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: BubeiColors.surfaceElevated,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(color: BubeiColors.primary, width: 2),
+                              ),
+                              child: globalUsers[currentUserIndex]['avatarPath'] != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(22),
+                                      child: Image.asset(
+                                        globalUsers[currentUserIndex]['avatarPath'],
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (c, o, s) => Icon(Icons.person, color: BubeiColors.primary, size: 28),
+                                      ),
+                                    )
+                                  : Icon(Icons.person, color: BubeiColors.primary, size: 28),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Hi, ${globalUsers[currentUserIndex]['name']}",
+                                style: TextStyle(
+                                  color: BubeiColors.textPrimary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _dailyQuote,
+                                style: TextStyle(
+                                  color: BubeiColors.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 中央内容
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment(0, -0.35),
+                        child: _isCheckedIn
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: BackdropFilter(
+                                  filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                                  child: Container(
+                                    width: 110,
+                                    height: 85,
+                                    decoration: BoxDecoration(
+                                      // 多层渐变增强毛玻璃效果
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                        colors: [
+                                          TechEvolutionColors.glassGreen.withOpacity(0.25),
+                                          TechEvolutionColors.glassGreen.withOpacity(0.15),
+                                          Colors.white.withOpacity(0.1),
+                                        ],
+                                      ),
+                                      borderRadius: BorderRadius.circular(20),
+                                      // 增强投影
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.15),
+                                          offset: const Offset(0, 4),
+                                          blurRadius: 16,
+                                          spreadRadius: 0,
+                                        ),
+                                        BoxShadow(
+                                          color: TechEvolutionColors.glassGreen.withOpacity(0.2),
+                                          offset: const Offset(0, 2),
+                                          blurRadius: 8,
+                                          spreadRadius: 0,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.check, color: Colors.white, size: 28),
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          "今日已签到",
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.95),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          "连续签到 $_checkInDays 天",
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(0.5),
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: BackdropFilter(
+                                  filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                                  child: GestureDetector(
+                                    key: _checkInButtonKey,
+                                    onTap: _handleCheckIn,
+                                    child: Container(
+                                      width: 110,
+                                      height: 85,
+                                      decoration: BoxDecoration(
+                                        // 多层渐变增强毛玻璃效果
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            TechEvolutionColors.glassGreen.withOpacity(0.25),
+                                            TechEvolutionColors.glassGreen.withOpacity(0.15),
+                                            Colors.white.withOpacity(0.1),
+                                          ],
+                                        ),
+                                        borderRadius: BorderRadius.circular(20),
+                                        // 增强投影
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.15),
+                                            offset: const Offset(0, 4),
+                                            blurRadius: 16,
+                                            spreadRadius: 0,
+                                          ),
+                                          BoxShadow(
+                                            color: TechEvolutionColors.glassGreen.withOpacity(0.2),
+                                            offset: const Offset(0, 2),
+                                            blurRadius: 8,
+                                            spreadRadius: 0,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.calendar_today, color: Colors.white, size: 26),
+                                          const SizedBox(height: 6),
+                                          Text(
+                                            "签到",
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.95),
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            _currentDate,
+                                            style: TextStyle(
+                                              color: Colors.white.withOpacity(0.5),
+                                              fontSize: 9,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                      ),
+                    ),
+                    // 底部快捷入口 - 使用新的磨砂玻璃按钮
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: FrostedGlassButton(
+                              title: "面试房间",
+                              icon: Icons.play_circle_filled,
+                              style: GlassButtonStyle.interview,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const InterviewRoomPage()),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FrostedGlassButton(
+                              title: "定制面试",
+                              icon: Icons.settings,
+                              style: GlassButtonStyle.custom,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (_) => const SetupPage()),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 功能图标
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildFeatureIcon(
+                            Icons.history_outlined,
+                            "历史",
+                            () => _goToTab(1),
+                          ),
+                          _buildFeatureIcon(
+                            Icons.quiz_outlined,
+                            "题库",
+                            () => _goToTab(2),
+                          ),
+                          _buildFeatureIcon(
+                            Icons.emoji_events_outlined,
+                            "成就",
+                            () => _goToTab(3),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                // 爆炸特效层
+                if (_showExplosion)
+                  Builder(
+                    builder: (context) {
+                      final size = MediaQuery.of(context).size;
+                      return Positioned.fill(
+                        child: CheckInExplosion(
+                          trigger: _showExplosion,
+                          center: Offset(
+                            size.width / 2,
+                            size.height / 2 - 40,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeatureIcon(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: Colors.white.withOpacity(0.6),
+              size: 24,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _goToTab(int index) {
+    final mainEntryPageState = context.findAncestorStateOfType<_MainEntryPageState>();
+    if (mainEntryPageState != null) {
+      mainEntryPageState._onNavTap(index);
+    }
+  }
+}
+
+// --- 面试房间页 ---
+class InterviewRoomPage extends StatelessWidget {
+  const InterviewRoomPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: BubeiColors.background,
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: BubeiColors.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(Icons.meeting_room, color: BubeiColors.primary, size: 50),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  "面试房间",
+                  style: TextStyle(
+                    color: BubeiColors.textPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "准备好开始您的模拟面试了吗？",
+                  style: TextStyle(
+                    color: BubeiColors.textSecondary,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const SetupPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: BubeiColors.primary,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      "开始面试",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// --- 成就系统页 ---
+class AchievementPage extends StatefulWidget {
+  const AchievementPage({super.key});
+
+  @override
+  State<AchievementPage> createState() => _AchievementPageState();
+}
+
+class _AchievementPageState extends State<AchievementPage> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: BubeiColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 标题
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                "成就系统",
+                style: TextStyle(
+                  color: BubeiColors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            // Tab栏
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: BubeiColors.surface,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicator: BoxDecoration(
+                  color: BubeiColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: BubeiColors.textSecondary,
+                tabs: const [
+                  Tab(text: "勋章"),
+                  Tab(text: "等级"),
+                  Tab(text: "排行榜"),
+                ],
+              ),
+            ),
+            // Tab内容
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildBadgesTab(),
+                  _buildLevelTab(),
+                  _buildRankingTab(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBadgesTab() {
+    final badges = [
+      _BadgeData("首次登录", Icons.login, true),
+      _BadgeData("学习达人", Icons.school, true),
+      _BadgeData("面试专家", Icons.work, false),
+      _BadgeData("坚持打卡", Icons.calendar_today, true),
+      _BadgeData("满勤之星", Icons.star, false),
+    ];
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 1,
+      ),
+      itemCount: badges.length,
+      itemBuilder: (context, index) {
+        final badge = badges[index];
+        return Container(
+          decoration: BoxDecoration(
+            color: badge.unlocked ? BubeiColors.surface : BubeiColors.surfaceDim,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: badge.unlocked ? BubeiColors.primary : BubeiColors.divider,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                badge.icon,
+                color: badge.unlocked ? BubeiColors.primary : BubeiColors.textTertiary,
+                size: 32,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                badge.name,
+                style: TextStyle(
+                  color: badge.unlocked ? BubeiColors.textPrimary : BubeiColors.textTertiary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLevelTab() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          // 当前等级卡片
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: BubeiColors.primaryGradient,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  "Lv.5",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "初级面试者",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // 经验条
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "经验值",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: 0.6,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "600/1000",
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.8),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          // 等级特权
+          Text(
+            "等级特权",
+            style: TextStyle(
+              color: BubeiColors.textPrimary,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildPrivilegeItem("解锁高级题库", "Lv.10", false),
+          _buildPrivilegeItem("AI深度分析", "Lv.15", false),
+          _buildPrivilegeItem("专属面试官", "Lv.20", false),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPrivilegeItem(String title, String requirement, bool unlocked) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: BubeiColors.surface,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            unlocked ? Icons.check_circle : Icons.lock,
+            color: unlocked ? BubeiColors.success : BubeiColors.textTertiary,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: TextStyle(
+              color: unlocked ? BubeiColors.textPrimary : BubeiColors.textTertiary,
+              fontSize: 14,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            requirement,
+            style: TextStyle(
+              color: BubeiColors.primary,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankingTab() {
+    final rankings = [
+      _RankingData("用户A", 9800, 1),
+      _RankingData("用户B", 9500, 2),
+      _RankingData("用户C", 9200, 3),
+      _RankingData("用户D", 8900, 4),
+      _RankingData("我", 600, 99),
+    ];
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: rankings.length,
+      itemBuilder: (context, index) {
+        final user = rankings[index];
+        final isMe = user.name == "我";
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isMe ? BubeiColors.primary.withOpacity(0.1) : BubeiColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: isMe
+                ? Border.all(color: BubeiColors.primary)
+                : null,
+          ),
+          child: Row(
+            children: [
+              Text(
+                "${user.rank}",
+                style: TextStyle(
+                  color: user.rank <= 3 ? BubeiColors.primary : BubeiColors.textSecondary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  user.name,
+                  style: TextStyle(
+                    color: isMe ? BubeiColors.primary : BubeiColors.textPrimary,
+                    fontSize: 14,
+                    fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+              Text(
+                "${user.score}分",
+                style: TextStyle(
+                  color: BubeiColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// 排行榜数据类
+class _RankingData {
+  final String name;
+  final int score;
+  final int rank;
+
+  const _RankingData(this.name, this.score, this.rank);
+}
+
+// 勋章数据类
+class _BadgeData {
+  final String name;
+  final IconData icon;
+  final bool unlocked;
+
+  const _BadgeData(this.name, this.icon, this.unlocked);
 }
 
 // --- 历史记录页 (stitch interview_history 风格) ---
@@ -3414,6 +4517,20 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
+          // 返回按钮
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+                border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              ),
+              child: Icon(Icons.arrow_back_ios_new, color: AppColors.textSecondary, size: 14),
+            ),
+          ),
+          const SizedBox(width: 12),
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
