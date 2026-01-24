@@ -123,8 +123,8 @@ class AppTokens {
   static const double chipHeightSmall = 28.0;
 
   // ==================== 开关尺寸 ====================
-  static const double toggleWidth = 56.0;
-  static const double toggleHeight = 32.0;
+  static const double toggleWidth = 44.0;
+  static const double toggleHeight = 24.0;
 
   // ==================== 图标尺寸 ====================
   static const double iconSm = 11.2;
