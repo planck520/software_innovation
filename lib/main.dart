@@ -648,7 +648,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             children: [
               // 描边效果
               Text(
-                "MockMate",
+                "Ntervue",
                 style: TextStyle(
                   fontSize: 43,
                   fontWeight: FontWeight.w900,
@@ -675,7 +675,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 ).createShader(bounds),
                 blendMode: BlendMode.srcIn,
                 child: const Text(
-                  "MockMate",
+                  "Ntervue",
                   style: TextStyle(
                     fontSize: 42,
                     fontWeight: FontWeight.w900,
