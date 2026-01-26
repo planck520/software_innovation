@@ -21,7 +21,8 @@ class NavItem {
 /// - 3 个标签页布局
 /// - 透明背景
 /// - 白色图标，橙色选中态
-class IosBottomNav extends StatelessWidget {
+/// - 点击闪烁和缩放动画效果
+class IosBottomNav extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
   final List<NavItem> items;
@@ -38,6 +39,29 @@ class IosBottomNav extends StatelessWidget {
     ],
     this.showBlur = true,
   });
+
+  @override
+  State<IosBottomNav> createState() => _IosBottomNavState();
+}
+
+class _IosBottomNavState extends State<IosBottomNav> {
+  final Set<int> _flashing = {};
+  static const Color _flashColor = Color(0xFFFFD54F); // 明亮黄
+  final Map<int, double> _scaleTargets = {}; // 图标缩放目标
+
+  void _handleTap(int index) {
+    setState(() => _flashing.add(index));
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _flashing.remove(index));
+    });
+    widget.onTap(index);
+
+    // 缩放动画
+    setState(() => _scaleTargets[index] = 0.8);
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) setState(() => _scaleTargets[index] = 1.0);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +85,7 @@ class IosBottomNav extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: AppTokens.space2, vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: items.asMap().entries.map((entry) {
+                  children: widget.items.asMap().entries.map((entry) {
                     final index = entry.key;
                     final item = entry.value;
                     return _buildNavItem(index, item);
@@ -76,18 +100,21 @@ class IosBottomNav extends StatelessWidget {
   }
 
   Widget _buildNavItem(int index, NavItem item) {
-    final isSelected = currentIndex == index;
+    final isSelected = widget.currentIndex == index;
+    final isFlashing = _flashing.contains(index);
+    final iconScale = _scaleTargets[index] ?? 1.0;
 
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () => _handleTap(index),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: AppTokens.space4, vertical: 8),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+        child: AnimatedScale(
+          scale: iconScale,
+          duration: const Duration(milliseconds: 100),
           child: Icon(
             isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-            color: isSelected ? const Color(0xFFFF8C00) : Colors.white.withOpacity(0.6),
+            color: isFlashing ? _flashColor : (isSelected ? const Color(0xFFFF8C00) : Colors.white.withOpacity(0.6)),
             size: 28,
           ),
         ),
