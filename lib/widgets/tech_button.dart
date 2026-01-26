@@ -1,6 +1,16 @@
+import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
+
+/// 磨砂玻璃按钮样式
+enum GlassButtonStyle {
+  checkIn,   // 签到按钮 - 绿色主题
+  interview, // 面试房间 - 蓝紫渐变
+  custom,    // 定制面试 - 青色渐变
+}
 
 /// stitch_login_screen 风格科技按钮组件
 /// - 蓝紫渐变
@@ -466,6 +476,522 @@ class _PulseMicButtonState extends State<PulseMicButton>
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 不背单词风格按钮
+class BubeiButton extends StatelessWidget {
+  final String text;
+  final VoidCallback? onPressed;
+  final IconData? icon;
+  final bool isSecondary;
+  final bool isOutlined;
+  final bool isDanger;
+  final bool isLoading;
+  final double? width;
+  final double height;
+  final bool isFullWidth;
+
+  const BubeiButton({
+    super.key,
+    required this.text,
+    this.onPressed,
+    this.icon,
+    this.isSecondary = false,
+    this.isOutlined = false,
+    this.isDanger = false,
+    this.isLoading = false,
+    this.width,
+    this.height = 48,
+    this.isFullWidth = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onPressed != null && !isLoading;
+
+    Color backgroundColor;
+    Color foregroundColor;
+
+    if (isDanger) {
+      backgroundColor = BubeiColors.error;
+      foregroundColor = Colors.white;
+    } else if (isOutlined) {
+      backgroundColor = Colors.transparent;
+      foregroundColor = BubeiColors.primary;
+    } else if (isSecondary) {
+      backgroundColor = BubeiColors.surfaceElevated;
+      foregroundColor = BubeiColors.textPrimary;
+    } else {
+      backgroundColor = BubeiColors.primary;
+      foregroundColor = Colors.white;
+    }
+
+    if (!enabled) {
+      backgroundColor = BubeiColors.surfaceDim;
+      foregroundColor = BubeiColors.textTertiary;
+    }
+
+    Widget buttonChild = Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        if (isLoading)
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          )
+        else ...[
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: foregroundColor,
+            ),
+          ),
+          if (icon != null) ...[
+            const SizedBox(width: 8),
+            Icon(icon, color: foregroundColor, size: 18),
+          ],
+        ],
+      ],
+    );
+
+    return SizedBox(
+      width: isFullWidth ? double.infinity : width,
+      height: height,
+      child: ElevatedButton(
+        onPressed: enabled ? onPressed : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+          disabledBackgroundColor: BubeiColors.surfaceDim,
+          shadowColor: Colors.transparent,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: buttonChild,
+      ),
+    );
+  }
+}
+
+// ==================== 科技进化风磨砂玻璃按钮 ====================
+
+/// 磨砂玻璃按钮 - 科技进化风
+/// - BackdropFilter 模糊效果 (sigmaX: 10, sigmaY: 10)
+/// - 半透明背景 (40%透明度)
+/// - 渐变边框 (动态流光效果)
+/// - 图标动画 (脉冲/旋转/播放)
+class FrostedGlassButton extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback? onTap;
+  final GlassButtonStyle style;
+  final bool showArrow;
+
+  const FrostedGlassButton({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.onTap,
+    this.style = GlassButtonStyle.interview,
+    this.showArrow = true,
+  });
+
+  @override
+  State<FrostedGlassButton> createState() => _FrostedGlassButtonState();
+}
+
+class _FrostedGlassButtonState extends State<FrostedGlassButton>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  bool _isPressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Color get _glassColor {
+    // 根据按钮类型返回不同颜色
+    switch (widget.style) {
+      case GlassButtonStyle.checkIn:
+        return TechEvolutionColors.glassGreenDim;  // 绿色 40%
+      case GlassButtonStyle.interview:
+        return TechEvolutionColors.glassBlue;       // 蓝紫色 40%
+      case GlassButtonStyle.custom:
+        return TechEvolutionColors.glassCyan;       // 青色 40%
+    }
+  }
+
+  Color get _iconColor {
+    // 图标使用白色
+    return Colors.white.withOpacity(0.95);
+  }
+
+  void _handlePressDown() {
+    if (_isPressed || widget.onTap == null) return;
+    setState(() => _isPressed = true);
+    _controller.forward();
+  }
+
+  void _handlePressUp() {
+    if (!_isPressed) return;
+    setState(() => _isPressed = false);
+    _controller.reverse();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: widget.onTap != null ? (_) => _handlePressDown() : null,
+      onTapUp: widget.onTap != null ? (_) => _handlePressUp() : null,
+      onTapCancel: widget.onTap != null ? _handlePressUp : null,
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _isPressed ? 0.97 : 1.0,
+            child: _buildButton(),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildButton() {
+    // 获取按钮对应的颜色
+    Color buttonColor;
+    switch (widget.style) {
+      case GlassButtonStyle.checkIn:
+        buttonColor = TechEvolutionColors.glassGreen;
+        break;
+      case GlassButtonStyle.interview:
+        buttonColor = const Color(0xFF135bec);
+        break;
+      case GlassButtonStyle.custom:
+        buttonColor = const Color(0xFF80DEEA);
+        break;
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            // 多层渐变增强毛玻璃效果
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                buttonColor.withOpacity(0.25),  // 更强的颜色
+                buttonColor.withOpacity(0.15),
+                Colors.white.withOpacity(0.1),   // 白色光泽层
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            // 增强投影，更明显的悬浮效果
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                offset: const Offset(0, 4),
+                blurRadius: 16,
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: buttonColor.withOpacity(0.2),
+                offset: const Offset(0, 2),
+                blurRadius: 8,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              _buildIcon(),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.95),
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (widget.showArrow) ...[
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white.withOpacity(0.4),
+                  size: 12,
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIcon() {
+    // 获取按钮对应的颜色
+    Color iconBgColor;
+    switch (widget.style) {
+      case GlassButtonStyle.checkIn:
+        iconBgColor = TechEvolutionColors.glassGreen;
+        break;
+      case GlassButtonStyle.interview:
+        iconBgColor = const Color(0xFF135bec);
+        break;
+      case GlassButtonStyle.custom:
+        iconBgColor = const Color(0xFF80DEEA);
+        break;
+    }
+
+    switch (widget.style) {
+      case GlassButtonStyle.checkIn:
+        return _PulseIcon(
+          icon: widget.icon,
+          color: _iconColor,
+          bgColor: iconBgColor,
+        );
+      case GlassButtonStyle.interview:
+        return _PlayRippleIcon(
+          icon: widget.icon,
+          color: _iconColor,
+          bgColor: iconBgColor,
+        );
+      case GlassButtonStyle.custom:
+        return _RotatingIcon(
+          icon: widget.icon,
+          color: _iconColor,
+          bgColor: iconBgColor,
+        );
+    }
+  }
+}
+
+/// 脉冲呼吸图标 - 签到按钮
+class _PulseIcon extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  const _PulseIcon({required this.icon, required this.color, required this.bgColor});
+
+  @override
+  State<_PulseIcon> createState() => _PulseIconState();
+}
+
+class _PulseIconState extends State<_PulseIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _scaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: widget.bgColor.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(widget.icon, color: widget.color, size: 20),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// 播放波纹图标 - 面试房间按钮
+class _PlayRippleIcon extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  const _PlayRippleIcon({required this.icon, required this.color, required this.bgColor});
+
+  @override
+  State<_PlayRippleIcon> createState() => _PlayRippleIconState();
+}
+
+class _PlayRippleIconState extends State<_PlayRippleIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _rippleController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rippleController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _rippleController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 32,
+      height: 32,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 第一个波纹圆环
+          AnimatedBuilder(
+            animation: _rippleController,
+            builder: (context, child) {
+              final progress = _rippleController.value;
+              return Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: widget.bgColor.withOpacity((1 - progress) * 0.3),
+                    width: 1,
+                  ),
+                ),
+              );
+            },
+          ),
+          // 第二个波纹圆环 (错开相位)
+          AnimatedBuilder(
+            animation: _rippleController,
+            builder: (context, child) {
+              final progress = (_rippleController.value + 0.5) % 1.0;
+              return Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: widget.bgColor.withOpacity((1 - progress) * 0.2),
+                    width: 1,
+                  ),
+                ),
+              );
+            },
+          ),
+          // 中心图标
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              color: widget.bgColor.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(widget.icon, color: widget.color, size: 16),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 旋转齿轮图标 - 定制面试按钮
+class _RotatingIcon extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final Color bgColor;
+
+  const _RotatingIcon({required this.icon, required this.color, required this.bgColor});
+
+  @override
+  State<_RotatingIcon> createState() => _RotatingIconState();
+}
+
+class _RotatingIconState extends State<_RotatingIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _rotationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 8),
+      vsync: this,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _rotationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _rotationController,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _rotationController.value * 2 * math.pi,
+          alignment: Alignment.center,
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: widget.bgColor.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(widget.icon, color: widget.color, size: 18),
+          ),
+        );
+      },
     );
   }
 }

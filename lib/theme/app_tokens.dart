@@ -69,12 +69,17 @@ class AppTokens {
   static const int durationNormal = 250;
   static const int durationSlow = 350;
   static const int durationSlower = 500;
+  static const int durationStagger = 100;    // 交错动画间隔
+  static const int durationPulse = 1500;     // 脉冲动画周期
+  static const int durationEntry = 900;      // 入场动画总时长
 
   // ==================== 动画曲线 ====================
   static const Curve curveIOS = Cubic(0.25, 0.1, 0.25, 1.0);
   static const Curve curveSpring = Cubic(0.175, 0.885, 0.32, 1.275);
   static const Curve curveEaseOut = Cubic(0.0, 0.0, 0.2, 1.0);
   static const Curve curveEaseInOut = Cubic(0.4, 0.0, 0.2, 1.0);
+  static const Curve curveBounce = Cubic(0.68, -0.55, 0.265, 1.55);  // 弹跳效果
+  static const Curve curveDecelerate = Cubic(0.0, 0.0, 0.2, 1.0);    // 减速曲线
 
   // ==================== 渐变 (stitch 风格) ====================
   static const LinearGradient primaryGradient = LinearGradient(
@@ -112,6 +117,14 @@ class AppTokens {
   static const double buttonHeight = 39.0;       // 缩小30%: 56 * 0.7 = 39.2 ≈ 39
   static const double buttonHeightSm = 28.0;     // 缩小30%: 40 * 0.7 = 28
   static const double buttonHeightLg = 45.0;     // 缩小30%: 64 * 0.7 = 44.8 ≈ 45
+
+  // ==================== 芯片尺寸 ====================
+  static const double chipHeight = 36.0;
+  static const double chipHeightSmall = 28.0;
+
+  // ==================== 开关尺寸 ====================
+  static const double toggleWidth = 44.0;
+  static const double toggleHeight = 24.0;
 
   // ==================== 图标尺寸 ====================
   static const double iconSm = 11.2;

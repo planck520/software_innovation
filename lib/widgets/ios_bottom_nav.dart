@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
 
 /// 底部导航项数据类
@@ -16,11 +17,12 @@ class NavItem {
   });
 }
 
-/// stitch_login_screen 风格底部导航栏
-/// - 5 个标签页布局
-/// - 玻璃态背景
-/// - 蓝色选中态
-class IosBottomNav extends StatelessWidget {
+/// 不背单词风格底部导航栏
+/// - 3 个标签页布局
+/// - 透明背景
+/// - 白色图标，橙色选中态
+/// - 点击闪烁和缩放动画效果
+class IosBottomNav extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
   final List<NavItem> items;
@@ -31,96 +33,90 @@ class IosBottomNav extends StatelessWidget {
     required this.currentIndex,
     required this.onTap,
     this.items = const [
-      NavItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: "首页"),
-      NavItem(icon: Icons.play_circle_outline, activeIcon: Icons.play_circle, label: "开始"),
-      NavItem(icon: Icons.history_outlined, activeIcon: Icons.history, label: "历史"),
-      NavItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "我的"),
+      NavItem(icon: Icons.history_outlined, activeIcon: Icons.history, label: ""),
+      NavItem(icon: Icons.quiz_outlined, activeIcon: Icons.quiz, label: ""),
+      NavItem(icon: Icons.emoji_events_outlined, activeIcon: Icons.emoji_events, label: ""),
     ],
     this.showBlur = true,
   });
 
   @override
+  State<IosBottomNav> createState() => _IosBottomNavState();
+}
+
+class _IosBottomNavState extends State<IosBottomNav> {
+  final Set<int> _flashing = {};
+  static const Color _flashColor = Color(0xFFFFD54F); // 明亮黄
+  final Map<int, double> _scaleTargets = {}; // 图标缩放目标
+
+  void _handleTap(int index) {
+    setState(() => _flashing.add(index));
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _flashing.remove(index));
+    });
+    widget.onTap(index);
+
+    // 缩放动画
+    setState(() => _scaleTargets[index] = 0.8);
+    Future.delayed(const Duration(milliseconds: 150), () {
+      if (mounted) setState(() => _scaleTargets[index] = 1.0);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final navBar = Container(
+    return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.9),
+        color: Colors.transparent,
         border: Border(
           top: BorderSide(
-            color: AppColors.border.withOpacity(0.2),
-            width: 1,
+            color: Colors.white.withOpacity(0.1),
+            width: 0.5,
           ),
         ),
       ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppTokens.space2, vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: items.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              return _buildNavItem(index, item);
-            }).toList(),
+      child: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            color: Colors.transparent,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppTokens.space2, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: widget.items.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final item = entry.value;
+                    return _buildNavItem(index, item);
+                  }).toList(),
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
-
-    if (showBlur) {
-      return ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: navBar,
-        ),
-      );
-    }
-
-    return navBar;
   }
 
   Widget _buildNavItem(int index, NavItem item) {
-    final isSelected = currentIndex == index;
+    final isSelected = widget.currentIndex == index;
+    final isFlashing = _flashing.contains(index);
+    final iconScale = _scaleTargets[index] ?? 1.0;
 
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () => _handleTap(index),
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppTokens.space3, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 图标
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              child: Icon(
-                isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-                color: isSelected ? AppColors.primary : AppColors.textTertiary,
-                size: 16.8,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // 标签
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? AppColors.primary : AppColors.textTertiary,
-              ),
-              child: Text(item.label),
-            ),
-            // 选中指示点
-            const SizedBox(height: 2),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: isSelected ? 4 : 0,
-              height: isSelected ? 4 : 0,
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
+        padding: const EdgeInsets.symmetric(horizontal: AppTokens.space4, vertical: 8),
+        child: AnimatedScale(
+          scale: iconScale,
+          duration: const Duration(milliseconds: 100),
+          child: Icon(
+            isSelected ? (item.activeIcon ?? item.icon) : item.icon,
+            color: isFlashing ? _flashColor : (isSelected ? const Color(0xFFFF8C00) : Colors.white.withOpacity(0.6)),
+            size: 28,
+          ),
         ),
       ),
     );
@@ -151,7 +147,7 @@ class IosFloatingNav extends StatelessWidget {
       margin: const EdgeInsets.all(AppTokens.space4),
       padding: const EdgeInsets.symmetric(horizontal: AppTokens.space3, vertical: AppTokens.space2),
       decoration: BoxDecoration(
-        color: AppColors.surface.withOpacity(0.9),
+        color: BubeiColors.surface,
         borderRadius: BorderRadius.circular(AppTokens.radius2xl),
         border: Border.all(color: AppColors.border.withOpacity(0.3)),
         boxShadow: [

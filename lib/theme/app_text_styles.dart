@@ -115,4 +115,61 @@ class AppTextStyles {
     letterSpacing: 0.5,
     height: 1.2,
   );
+
+  static const TextStyle labelTiny = TextStyle(
+    fontSize: 9,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.5,
+    height: 1.2,
+  );
+
+  // ==================== 芯片/按钮样式 ====================
+  static const TextStyle chipLabel = TextStyle(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.3,
+    height: 1.3,
+  );
+
+  static const TextStyle chipLabelSmall = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.w500,
+    letterSpacing: 0.5,
+    height: 1.2,
+  );
+
+  // ==================== Tab栏样式 ====================
+  static TextStyle get tabBarLabel => TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    letterSpacing: 0,
+    color: AppColors.textPrimary,
+    height: 1.3,
+  );
+
+  // ==================== 分节标题样式 ====================
+  static TextStyle get sectionTitle => TextStyle(
+    fontSize: 18,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.2,
+    color: AppColors.textPrimary,
+    height: 1.3,
+  );
+
+  static TextStyle get sectionSubtitle => TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.2,
+    color: AppColors.textSecondary,
+    height: 1.4,
+  );
+
+  // ==================== 下拉选项样式 ====================
+  static TextStyle get dropdownItem => TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.w400,
+    letterSpacing: 0.2,
+    color: AppColors.textPrimary,
+    height: 1.4,
+  );
 }
