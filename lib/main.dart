@@ -10650,7 +10650,7 @@ class _EmotionCurvePainter extends CustomPainter {
   }
 }
 
-// 迷你情绪曲线绘制器 (用于视频角落)...
+// 迷你情绪曲线绘制器 (用于视频角落)
 class _MiniEmotionCurvePainter extends CustomPainter {
   final List<double> data;
 
