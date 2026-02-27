@@ -1581,8 +1581,9 @@ class _RegisterPageState extends State<RegisterPage>
             "初始化档案",
             style: TextStyle(
               color: AppColors.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
             ),
           ),
         ),
@@ -1625,9 +1626,9 @@ class _RegisterPageState extends State<RegisterPage>
                       "AES-256",
                       style: TextStyle(
                         color: AppColors.success,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.4,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.7,
                       ),
                     ),
                   ],
@@ -1691,9 +1692,9 @@ class _RegisterPageState extends State<RegisterPage>
               Text(
                 labels[index],
                 style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
                   color: tone,
                 ),
               ),
@@ -1766,9 +1767,10 @@ class _RegisterPageState extends State<RegisterPage>
                           "创建新档案",
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 31,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 3.2,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2.8,
+                            height: 1.08,
                             color: Colors.white,
                             shadows: [
                               Shadow(
@@ -1889,9 +1891,10 @@ class _RegisterPageState extends State<RegisterPage>
                         "建立您的神经链路身份",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 12,
-                          letterSpacing: 2.2,
+                          fontSize: 12.5,
+                          letterSpacing: 2.0,
                           fontWeight: FontWeight.w300,
+                          height: 1.25,
                           color: Colors.white,
                           shadows: [
                             Shadow(
@@ -2026,13 +2029,18 @@ class _RegisterPageState extends State<RegisterPage>
                   color: progress == 1.0
                       ? const Color(0xFF00F5FF)
                       : AppColors.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.4,
                 ),
               ),
               Text(
                 progress == 1.0 ? "可以激活" : "正在填充...",
-                style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                style: TextStyle(
+                  color: AppColors.textTertiary,
+                  fontSize: 11,
+                  letterSpacing: 0.3,
+                ),
               ),
             ],
           ),
@@ -2076,7 +2084,9 @@ class _RegisterPageState extends State<RegisterPage>
               Text(
                 labels[index],
                 style: TextStyle(
-                  fontSize: 9,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w500,
+                  letterSpacing: 0.3,
                   color: tone.withOpacity(active ? 0.95 : 0.75),
                 ),
               ),
@@ -2333,15 +2343,17 @@ class _RegisterPageState extends State<RegisterPage>
                   "密码强度",
                   style: TextStyle(
                     color: BubeiColors.textSecondary,
-                    fontSize: 11,
+                    fontSize: 10.5,
+                    letterSpacing: 0.4,
                   ),
                 ),
                 Text(
                   strengthText,
                   style: TextStyle(
                     color: strengthColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
                   ),
                 ),
               ],
@@ -2383,7 +2395,11 @@ class _RegisterPageState extends State<RegisterPage>
         children: [
           Text(
             "已有账号？",
-            style: TextStyle(color: BubeiColors.textSecondary, fontSize: 13),
+            style: TextStyle(
+              color: BubeiColors.textSecondary,
+              fontSize: 12.5,
+              letterSpacing: 0.2,
+            ),
           ),
           GestureDetector(
             onTap: () => Navigator.pop(context),
@@ -2392,7 +2408,8 @@ class _RegisterPageState extends State<RegisterPage>
               style: TextStyle(
                 color: BubeiColors.primary,
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.4,
               ),
             ),
           ),
