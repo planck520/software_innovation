@@ -56,6 +56,7 @@ List<Map<String, dynamic>> globalUsers = [
     "name": "系统管理员",
     "avatarPath": null,
     "history": <Map<String, dynamic>>[], // 明确指定类型
+    "badges": _createDefaultBadges(),
   },
   {
     "username": "huster",
@@ -63,8 +64,389 @@ List<Map<String, dynamic>> globalUsers = [
     "name": "面试者小王",
     "avatarPath": null,
     "history": <Map<String, dynamic>>[], // 明确指定类型
+    "badges": _createDefaultBadges(),
   },
 ];
+
+List<Map<String, dynamic>> _createDefaultBadges() {
+  return [
+    {
+      'name': '首次登录',
+      'icon': Icons.login.codePoint,
+      'obtained': false,
+      'desc': '完成首次登录获得',
+      'progress': '未完成',
+      'date': '',
+    },
+    {
+      'name': '学习达人',
+      'icon': Icons.school.codePoint,
+      'obtained': false,
+      'desc': '连续7天进行模拟面试获得',
+      'progress': '当前进度: 0/7',
+      'date': '',
+    },
+    {
+      'name': '面试专家',
+      'icon': Icons.work.codePoint,
+      'obtained': false,
+      'desc': '完成50次面试获得',
+      'progress': '当前进度: 32/50',
+      'date': '',
+    },
+    {
+      'name': '坚持打卡',
+      'icon': Icons.calendar_today.codePoint,
+      'obtained': false,
+      'desc': '主页面签到满30天获得',
+      'progress': '当前进度: 0/30',
+      'date': '',
+    },
+    {
+      'name': '满勤之星',
+      'icon': Icons.star.codePoint,
+      'obtained': false,
+      'desc': '当月每天都进行模拟面试即可永久获得',
+      'progress': '当前进度: 0/30',
+      'date': '',
+    },
+    {
+      'name': '代码大师',
+      'icon': Icons.code.codePoint,
+      'obtained': false,
+      'desc': '提交100道代码题获得',
+      'progress': '当前进度: 78/100',
+      'date': '',
+    },
+  ];
+}
+
+List<Map<String, dynamic>> _normalizeUserBadges(dynamic rawBadges) {
+  final defaults = _createDefaultBadges();
+
+  final existing = rawBadges is List
+      ? rawBadges
+            .whereType<Map>()
+            .map((e) => Map<String, dynamic>.from(e))
+            .toList()
+      : <Map<String, dynamic>>[];
+
+  final Map<String, Map<String, dynamic>> existingByName = {
+    for (final badge in existing)
+      if (badge['name'] is String) badge['name'] as String: badge,
+  };
+
+  return defaults.map((defaultBadge) {
+    final name = defaultBadge['name'] as String;
+    final matched = existingByName[name];
+    if (matched == null) {
+      return Map<String, dynamic>.from(defaultBadge);
+    }
+
+    return {
+      ...defaultBadge,
+      'obtained': matched['obtained'] == true,
+      'progress': (matched['progress'] ?? defaultBadge['progress']).toString(),
+      'date': (matched['date'] ?? defaultBadge['date']).toString(),
+    };
+  }).toList();
+}
+
+DateTime _dayOnly(DateTime dateTime) {
+  return DateTime(dateTime.year, dateTime.month, dateTime.day);
+}
+
+String _fmtDay(DateTime dateTime) {
+  return DateFormat('yyyy-MM-dd').format(dateTime);
+}
+
+DateTime? _parseAnyDate(dynamic raw) {
+  if (raw is! String || raw.trim().isEmpty) {
+    return null;
+  }
+  return DateTime.tryParse(raw.trim());
+}
+
+List<DateTime> _sortedUniqueInterviewDays(dynamic rawHistory) {
+  if (rawHistory is! List) {
+    return <DateTime>[];
+  }
+
+  final Set<DateTime> uniqueDays = {};
+  for (final item in rawHistory) {
+    if (item is! Map) continue;
+    final parsed = _parseAnyDate(item['date']);
+    if (parsed == null) continue;
+    uniqueDays.add(_dayOnly(parsed));
+  }
+
+  final result = uniqueDays.toList()..sort();
+  return result;
+}
+
+List<DateTime> _sortedInterviewDateTimes(dynamic rawHistory) {
+  if (rawHistory is! List) {
+    return <DateTime>[];
+  }
+
+  final List<DateTime> result = [];
+  for (final item in rawHistory) {
+    if (item is! Map) continue;
+    final parsed = _parseAnyDate(item['date']);
+    if (parsed == null) continue;
+    result.add(parsed);
+  }
+  result.sort();
+  return result;
+}
+
+List<DateTime> _sortedUniqueCheckInDays(dynamic rawCheckIns) {
+  if (rawCheckIns is! List) {
+    return <DateTime>[];
+  }
+
+  final Set<DateTime> uniqueDays = {};
+  for (final item in rawCheckIns) {
+    final parsed = _parseAnyDate(item);
+    if (parsed == null) continue;
+    uniqueDays.add(_dayOnly(parsed));
+  }
+
+  final result = uniqueDays.toList()..sort();
+  return result;
+}
+
+int _maxConsecutiveDays(List<DateTime> sortedUniqueDays) {
+  if (sortedUniqueDays.isEmpty) return 0;
+
+  int best = 1;
+  int streak = 1;
+  for (int i = 1; i < sortedUniqueDays.length; i++) {
+    final gap = sortedUniqueDays[i].difference(sortedUniqueDays[i - 1]).inDays;
+    if (gap == 1) {
+      streak += 1;
+    } else {
+      streak = 1;
+    }
+    if (streak > best) {
+      best = streak;
+    }
+  }
+  return best;
+}
+
+int _currentConsecutiveDaysEndingToday(List<DateTime> sortedUniqueDays) {
+  if (sortedUniqueDays.isEmpty) return 0;
+
+  final Set<DateTime> daySet = sortedUniqueDays.toSet();
+  int streak = 0;
+  DateTime cursor = _dayOnly(DateTime.now());
+
+  while (daySet.contains(cursor)) {
+    streak += 1;
+    cursor = cursor.subtract(const Duration(days: 1));
+  }
+
+  return streak;
+}
+
+DateTime? _firstDateReachConsecutiveDays(
+  List<DateTime> sortedUniqueDays,
+  int targetDays,
+) {
+  if (sortedUniqueDays.isEmpty || targetDays <= 0) return null;
+
+  int streak = 1;
+  if (targetDays == 1) {
+    return sortedUniqueDays.first;
+  }
+
+  for (int i = 1; i < sortedUniqueDays.length; i++) {
+    final gap = sortedUniqueDays[i].difference(sortedUniqueDays[i - 1]).inDays;
+    if (gap == 1) {
+      streak += 1;
+      if (streak >= targetDays) {
+        return sortedUniqueDays[i];
+      }
+    } else {
+      streak = 1;
+    }
+  }
+  return null;
+}
+
+DateTime? _firstMonthPerfectInterviewDate(List<DateTime> sortedUniqueDays) {
+  if (sortedUniqueDays.isEmpty) return null;
+
+  final Map<String, Set<int>> monthDays = {};
+  final Map<String, DateTime> monthStart = {};
+  for (final day in sortedUniqueDays) {
+    final key = '${day.year}-${day.month.toString().padLeft(2, '0')}';
+    monthDays.putIfAbsent(key, () => <int>{}).add(day.day);
+    monthStart.putIfAbsent(key, () => DateTime(day.year, day.month, 1));
+  }
+
+  final keys = monthDays.keys.toList()..sort();
+  for (final key in keys) {
+    final start = monthStart[key]!;
+    final daysInMonth = DateTime(start.year, start.month + 1, 0).day;
+    final attendedDays = monthDays[key]!.length;
+    if (attendedDays >= daysInMonth) {
+      return DateTime(start.year, start.month, daysInMonth);
+    }
+  }
+  return null;
+}
+
+int _currentMonthInterviewDays(List<DateTime> sortedUniqueDays) {
+  final now = DateTime.now();
+  return sortedUniqueDays
+      .where((day) => day.year == now.year && day.month == now.month)
+      .length;
+}
+
+void _refreshUserBadgesByIndex(int userIndex) {
+  if (userIndex < 0 || userIndex >= globalUsers.length) {
+    return;
+  }
+
+  final user = globalUsers[userIndex];
+  final normalized = _normalizeUserBadges(user['badges']);
+  final Map<String, Map<String, dynamic>> badgeByName = {
+    for (final badge in normalized)
+      if (badge['name'] is String) badge['name'] as String: badge,
+  };
+
+  final history = user['history'];
+  final checkIns = user['checkIns'];
+  final interviewDays = _sortedUniqueInterviewDays(history);
+  final interviewDateTimes = _sortedInterviewDateTimes(history);
+  final checkInDays = _sortedUniqueCheckInDays(checkIns);
+  final totalInterviewCount = history is List ? history.length : 0;
+
+  String existingDate(String name) {
+    return (badgeByName[name]?['date'] ?? '').toString();
+  }
+
+  bool existingObtained(String name) {
+    return badgeByName[name]?['obtained'] == true;
+  }
+
+  void updateBadge({
+    required String name,
+    required bool obtained,
+    required String progress,
+    required String date,
+  }) {
+    final target = badgeByName[name];
+    if (target == null) return;
+    target['obtained'] = obtained;
+    target['progress'] = progress;
+    target['date'] = date;
+  }
+
+  final firstLoginObtained = existingObtained('首次登录');
+  final firstLoginDate = existingDate('首次登录');
+  updateBadge(
+    name: '首次登录',
+    obtained: firstLoginObtained,
+    progress: firstLoginObtained
+        ? (firstLoginDate.isNotEmpty ? '已完成于 $firstLoginDate' : '已完成')
+        : '未完成',
+    date: firstLoginDate,
+  );
+
+  final currentInterviewStreak = _currentConsecutiveDaysEndingToday(interviewDays);
+  final learnReachedDate = _firstDateReachConsecutiveDays(interviewDays, 7);
+  final learnObtained = existingObtained('学习达人') || learnReachedDate != null;
+  final learnDate = existingDate('学习达人').isNotEmpty
+      ? existingDate('学习达人')
+      : (learnReachedDate == null ? '' : _fmtDay(learnReachedDate));
+  updateBadge(
+    name: '学习达人',
+    obtained: learnObtained,
+    progress: learnObtained
+        ? (learnDate.isNotEmpty ? '已完成于 $learnDate' : '已完成')
+      : '当前进度: ${currentInterviewStreak.clamp(0, 7)}/7',
+    date: learnDate,
+  );
+
+  final expertReachedDate = interviewDateTimes.length >= 50
+      ? interviewDateTimes[49]
+      : null;
+  final expertObtained = existingObtained('面试专家') || totalInterviewCount >= 50;
+  final expertDate = existingDate('面试专家').isNotEmpty
+      ? existingDate('面试专家')
+      : (expertReachedDate == null ? '' : _fmtDay(expertReachedDate));
+  updateBadge(
+    name: '面试专家',
+    obtained: expertObtained,
+    progress: expertObtained
+        ? (expertDate.isNotEmpty ? '已完成于 $expertDate' : '已完成')
+        : '当前进度: ${totalInterviewCount.clamp(0, 50)}/50',
+    date: expertDate,
+  );
+
+  final checkInReachedDate = checkInDays.length >= 30 ? checkInDays[29] : null;
+  final checkInObtained = existingObtained('坚持打卡') || checkInReachedDate != null;
+  final checkInDate = existingDate('坚持打卡').isNotEmpty
+      ? existingDate('坚持打卡')
+      : (checkInReachedDate == null ? '' : _fmtDay(checkInReachedDate));
+  updateBadge(
+    name: '坚持打卡',
+    obtained: checkInObtained,
+    progress: checkInObtained
+        ? (checkInDate.isNotEmpty ? '已完成于 $checkInDate' : '已完成')
+        : '当前进度: ${checkInDays.length.clamp(0, 30)}/30',
+    date: checkInDate,
+  );
+
+  final perfectMonthDate = _firstMonthPerfectInterviewDate(interviewDays);
+  final fullAttendanceObtained =
+      existingObtained('满勤之星') || perfectMonthDate != null;
+  final fullAttendanceDate = existingDate('满勤之星').isNotEmpty
+      ? existingDate('满勤之星')
+      : (perfectMonthDate == null ? '' : _fmtDay(perfectMonthDate));
+  final currentMonthDays = DateTime(
+    DateTime.now().year,
+    DateTime.now().month + 1,
+    0,
+  ).day;
+  final currentMonthInterviewCount = _currentMonthInterviewDays(interviewDays);
+  updateBadge(
+    name: '满勤之星',
+    obtained: fullAttendanceObtained,
+    progress: fullAttendanceObtained
+        ? (fullAttendanceDate.isNotEmpty ? '已完成于 $fullAttendanceDate' : '已完成')
+        : '当前进度: $currentMonthInterviewCount/$currentMonthDays',
+    date: fullAttendanceDate,
+  );
+
+  final codeMasterObtained = existingObtained('代码大师');
+  final codeMasterDate = existingDate('代码大师');
+  updateBadge(
+    name: '代码大师',
+    obtained: codeMasterObtained,
+    progress: codeMasterObtained
+        ? (codeMasterDate.isNotEmpty ? '已完成于 $codeMasterDate' : '已完成')
+        : '当前进度: 78/100',
+    date: codeMasterDate,
+  );
+
+  user['badges'] = _createDefaultBadges().map((defaultBadge) {
+    final name = defaultBadge['name'] as String;
+    final updated = badgeByName[name];
+    if (updated == null) {
+      return Map<String, dynamic>.from(defaultBadge);
+    }
+    return {
+      ...defaultBadge,
+      'obtained': updated['obtained'] == true,
+      'progress': (updated['progress'] ?? defaultBadge['progress']).toString(),
+      'date': (updated['date'] ?? defaultBadge['date']).toString(),
+    };
+  }).toList();
+}
 
 // 记录当前登录的用户索引
 int currentUserIndex = -1;
@@ -102,6 +484,20 @@ Future<void> loadUserData() async {
     // 还原 globalUsers
     globalUsers = List<Map<String, dynamic>>.from(decoded);
   }
+
+  bool changed = false;
+  for (int i = 0; i < globalUsers.length; i++) {
+    final oldEncoded = jsonEncode(globalUsers[i]['badges']);
+    _refreshUserBadgesByIndex(i);
+    final newEncoded = jsonEncode(globalUsers[i]['badges']);
+    if (oldEncoded != newEncoded) {
+      changed = true;
+    }
+  }
+  if (changed) {
+    await saveUserData();
+  }
+
   // 主题设置已在 initAppConfig() 中加载
 }
 
@@ -342,6 +738,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     if (foundIndex != -1) {
       currentUserIndex = foundIndex;
+      final user = globalUsers[currentUserIndex];
+      final userBadges = _normalizeUserBadges(user['badges']);
+      final firstLoginIndex = userBadges.indexWhere(
+        (b) => b['name'] == '首次登录',
+      );
+
+      if (firstLoginIndex != -1 && userBadges[firstLoginIndex]['obtained'] != true) {
+        final now = DateFormat('yyyy-MM-dd').format(DateTime.now());
+        userBadges[firstLoginIndex]['obtained'] = true;
+        userBadges[firstLoginIndex]['date'] = now;
+        userBadges[firstLoginIndex]['progress'] = '已完成于 $now';
+      }
+      user['badges'] = userBadges;
+      _refreshUserBadgesByIndex(currentUserIndex);
+      await saveUserData();
       Navigator.pushReplacement(
         context,
         TechPageTransitions.fadeScale(builder: (c) => const BubeiHomePage()),
@@ -913,6 +1324,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         'email': null,
         'avatarPath': null,
         'history': <Map<String, dynamic>>[],
+        'badges': _createDefaultBadges(),
         'checkIns': <String>[],
         'schedules': <Map<String, dynamic>>[],
         'resumePath': null,
@@ -1457,6 +1869,7 @@ class _RegisterPageState extends State<RegisterPage>
       "email": email,
       "avatarPath": null,
       "history": <Map<String, dynamic>>[],
+      "badges": _createDefaultBadges(),
     });
 
     await saveUserData();
@@ -2689,6 +3102,7 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
   // 同步签到数据
   void _syncCheckInData() {
     globalUsers[currentUserIndex]['checkIns'] = _checkIns;
+    _refreshUserBadgesByIndex(currentUserIndex);
     saveUserData();
   }
 
@@ -3384,20 +3798,32 @@ class _AchievementPageState extends State<AchievementPage>
   late AnimationController _slideController;
   int _selectedBadgeIndex = -1;
 
-  final List<_BadgeData> badges = [
-    _BadgeData("首次登录", Icons.login, true, "完成首次登录获得", "已完成于 2024-01-15"),
-    _BadgeData("学习达人", Icons.school, true, "连续学习7天获得", "已完成于 2024-01-20"),
-    _BadgeData("面试专家", Icons.work, false, "完成50次面试获得", "当前进度: 32/50"),
-    _BadgeData(
-      "坚持打卡",
-      Icons.calendar_today,
-      true,
-      "连续打卡30天获得",
-      "已完成于 2024-01-18",
-    ),
-    _BadgeData("满勤之星", Icons.star, false, "月度全勤获得", "当前进度: 25/30天"),
-    _BadgeData("代码大师", Icons.code, false, "提交100道代码题获得", "当前进度: 78/100"),
-  ];
+  List<_BadgeData> get badges {
+    final userBadges =
+        (currentUserIndex >= 0 && currentUserIndex < globalUsers.length)
+        ? _normalizeUserBadges(globalUsers[currentUserIndex]['badges'])
+        : _createDefaultBadges();
+
+    return userBadges.map((badge) {
+      final iconCode = badge['icon'];
+      final icon = iconCode is int
+          ? IconData(iconCode, fontFamily: 'MaterialIcons')
+          : Icons.emoji_events;
+      final unlocked = badge['obtained'] == true;
+      final condition = (badge['desc'] ?? '').toString();
+      final date = (badge['date'] ?? '').toString();
+      final defaultProgress = unlocked ? '已完成' : '未完成';
+      final progress = badge['progress']?.toString() ?? defaultProgress;
+
+      return _BadgeData(
+        (badge['name'] ?? '未知成就').toString(),
+        icon,
+        unlocked,
+        condition,
+        date.isNotEmpty && unlocked ? '已完成于 $date' : progress,
+      );
+    }).toList();
+  }
 
   @override
   void initState() {
@@ -5406,6 +5832,7 @@ class _HistoryPageState extends State<HistoryPage> {
               for (int index in sortedIndices) {
                 globalUsers[currentUserIndex]['history'].removeAt(index);
               }
+              _refreshUserBadgesByIndex(currentUserIndex);
               saveUserData();
               Navigator.pop(context);
               setState(() {
@@ -6244,6 +6671,7 @@ class _ProfilePageState extends State<ProfilePage> {
   void _syncProfileData() {
     globalUsers[currentUserIndex]['checkIns'] = _checkIns;
     globalUsers[currentUserIndex]['schedules'] = _schedules;
+    _refreshUserBadgesByIndex(currentUserIndex);
     saveUserData();
   }
 
@@ -12031,6 +12459,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
       "qaDetails": qaDetails,
     };
     globalUsers[currentUserIndex]['history'].insert(0, newReport);
+    _refreshUserBadgesByIndex(currentUserIndex);
     saveUserData();
     Navigator.pushReplacement(
       context,
