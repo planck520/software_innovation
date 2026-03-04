@@ -44,6 +44,10 @@ import 'widgets/section_header.dart';
 import 'widgets/tech_toggle_switch.dart';
 import 'widgets/glass_input_field.dart';
 
+// 导入代码编辑器
+import 'pages/code_editor_page.dart';
+import 'pages/problem_detail_page.dart';
+
 List<CameraDescription> _cameras = [];
 
 // 用于通知整个应用刷新主题的通知器
@@ -6953,6 +6957,87 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
       {'q': '100扇门初始全关，依次切换倍数门的开关，最后哪些门是开的？', 'a': '只有完全平方数编号的门保持开启（1,4,9,...,100），因为其约数个数为奇数，开关被切换奇数次。', 'difficulty': '基础', 'hot': false},
       {'q': '两列火车相向而行相距100公里，蜜蜂以100公里/小时来回飞，火车1小时后相遇，蜜蜂共飞了多远？', 'a': '直接算时间×速度，1小时×100公里/小时=100公里。', 'difficulty': '基础', 'hot': false},
     ],
+    // 算法编程题
+    '算法编程': [
+      // 基础难度
+      {'q': '两数之和',
+       'a': '''给定一个整数数组 nums 和一个整数目标值 target，请你在该数组中找出和为目标值 target 的那两个整数，并返回它们的数组下标。
+
+你可以假设每种输入只会对应一个答案，并且你不能使用两次相同的元素。
+
+你可以按任意顺序返回答案。''',
+       'type': 'coding',
+       'difficulty': '基础',
+       'hot': true,
+       'language': 'python',
+       'template': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        # 使用哈希表优化时间复杂度\n        num_map = {}\n        \n        for i, num in enumerate(nums):\n            complement = target - num\n            if complement in num_map:\n                return [num_map[complement], i]\n            num_map[num] = i\n        \n        return []\n',
+       'testCases': [
+         {'input': '[2,7,11,15]\n9', 'output': '[0,1]', 'explanation': 'nums[0] + nums[1] = 2 + 7 = 9'},
+         {'input': '[3,2,4]\n6', 'output': '[1,2]', 'explanation': 'nums[1] + nums[2] = 2 + 4 = 6'},
+         {'input': '[3,3]\n6', 'output': '[0,1]', 'explanation': 'nums[0] + nums[1] = 3 + 3 = 6'}
+       ],
+       'tags': ['数组', '哈希表'],
+       'advancedUnderstanding': '这道题目需要找出数组中两个数的和等于目标值。关键点是使用哈希表来优化查找效率，避免使用双重循环导致的时间复杂度O(n²)。通过一次遍历，将已遍历的数值和索引存储在哈希表中，对于每个数，检查目标值减去当前数是否在哈希表中。如果在，就找到了答案。',
+       'solutionApproach': '使用哈希表存储已遍历数值及其索引。对于数组中的每个数，计算其补数(target - num)。如果补数已经存在于哈希表中，说明找到了一对和等于target的数。如果没有，将当前数及其索引存入哈希表继续查找。',
+       'solutionCode': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        # 创建哈希表存储数值和索引\n        num_map = {}\n        \n        for i, num in enumerate(nums):\n            complement = target - num\n            if complement in num_map:\n                return [num_map[complement], i]\n            num_map[num] = i\n        \n        return []\n',
+       'timeComplexity': 'O(n) - 只需要一次遍历数组',
+       'spaceComplexity': 'O(n) - 哈希表最坏情况存储n个键值对',
+       'keyPoints': ['哈希表查找是O(1)', '一次遍历', '空间换时间', '避免暴力枚举'],
+       'edgeCases': ['数组长度为2的最小情况', '答案包含第一个或最后一个元素', '存在负数的情况', '目标值为负数的情况', '存在多个相同值的情况']
+      },
+      {'q': '反转字符串', 'a': '''编写一个函数，其作用是将输入的字符串反转过来。输入字符串以字符数组 s 的形式给出。
+
+不要给另外的数组分配额外的空间，你必须原地修改输入数组、使用 O(1) 的额外空间解决这一问题。''', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def reverseString(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'hello', 'output': 'olleh'}, {'input': 'Hannah', 'output': 'hennaH'}]},
+      {'q': '斐波那契数列', 'a': '''编写一个函数，输入 n (n>=0)，返回斐波那契数列的第 n 项。
+
+斐波那契数列的定义如下：
+- F(0) = 0
+- F(1) = 1
+- F(n) = F(n-1) + F(n-2) (n > 1)
+
+答案需要取模 10^9 + 7。''', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def fib(n):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '2', 'output': '1'}, {'input': '3', 'output': '2'}, {'input': '4', 'output': '3'}]},
+      {'q': '回文数', 'a': '''给你一个整数 x ，如果 x 是一个回文整数，返回 true ；否则返回 false 。
+
+回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数。
+
+例如，121 是回文数，而 -121 不是。''', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def isPalindrome(x):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '121', 'output': 'True'}, {'input': '-121', 'output': 'False'}, {'input': '10', 'output': 'False'}]},
+      {'q': '最大子数组和', 'a': '''给你一个整数数组 nums ，请你找出一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+
+子数组是数组中元素的连续非空序列。''', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def maxSubArray(nums):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[-2,1,-3,4,-1,2,1,-5,4]', 'output': '6'}, {'input': '[1]', 'output': '1'}, {'input': '[5,4,-1,7,8]', 'output': '23'}]},
+      // 中等难度
+      {'q': '两数相加', 'a': '''给你两个非空链表，表示两个非负整数。它们每位数字都是按照逆序方式存储的，并且每个节点只能存储一位数字。
+
+请你将两个数相加，并以相同形式返回一个表示和的链表。
+
+你可以假设除了数字 0 之外，这两个数都不会以 0 开头。''', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef addTwoNumbers(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[2,4,3]\n[5,6,4]', 'output': '[7,0,8]'}, {'input': '[0]\n[0]', 'output': '[0]'}, {'input': '[9,9,9,9,9,9,9]\n[1]', 'output': '[0,0,0,0,0,0,0,1]'}]},
+      {'q': '无重复字符的最长子串', 'a': '''给定一个字符串 s ，请你找出其中不含有重复字符的最长子串的长度。
+
+子串是指字符串中某段连续字符的序列，子序列则是可以不连续但保持相对位置的字符序列。本题要求找的是子串。''', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def lengthOfLongestSubstring(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'abcabcbb', 'output': '3'}, {'input': 'bbbbb', 'output': '1'}, {'input': 'pwwkew', 'output': '3'}]},
+      {'q': 'LRU缓存机制', 'a': '''请你设计并实现一个满足 LRU (最近最少使用) 缓存约束的数据结构。
+
+实现 LRUCache 类：
+- LRUCache(int capacity) 以正整数 capacity 初始化 LRU 缓存
+- int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1
+- void put(int key, int value) 如果关键字 key 已存在，则变更其数据值 value ；如果不存在，则插入该组 key-value
+
+当缓存容量达到 capacity 时，在插入新组数据之前，应删除最近最少使用的数据腾出空间。''', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'class LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}]},
+      {'q': '有效括号', 'a': '''给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串 s ，判断字符串 s 是否有效。
+
+有效字符串需满足：
+1. 左括号必须用相同类型的右括号闭合
+2. 左括号必须以正确的顺序闭合''', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def isValid(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '()', 'output': 'True'}, {'input': '()[]{}', 'output': 'True'}, {'input': '(]', 'output': 'False'}]},
+      // 困难难度
+      {'q': '合并两个有序链表', 'a': '''将两个升序链表合并为一个新的升序链表并返回。新链表是通过拼接给定的两个链表的所有节点组成的。
+
+两个链表的节点数目范围是 [0, 50]
+-100 <= Node.val <= 100
+-10^4 <= l1, l2 <= 10^4''', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef mergeTwoLists(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[1,2,4]\n[1,3,4]', 'output': '[1,1,2,3,4,4]'}, {'input': '[]\n[]', 'output': '[]'}, {'input': '[]\n[0]', 'output': '[0]'}]},
+      {'q': '买卖股票最佳时机', 'a': '''给定一个数组 prices ，它的第 i 个元素 prices[i] 表示一支给定股票第 i 天的价格。
+
+你只能选择某一天买入这只股票，并选择在未来的某一个不同的日子卖出该股票。设计一个算法来计算你所能获取的最大利润。
+
+返回你可以从这笔交易中获取的最大利润。如果你不能获取任何利润，返回 0 。''', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': 'def maxProfit(prices):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[7,1,5,3,6,4]', 'output': '5'}, {'input': '[7,6,4,3,1]', 'output': '0'}]},
+    ],
   };
 
   List<String> get categories => ['全部', ...questionBank.keys];
@@ -7170,7 +7255,8 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
       itemCount: questions.length,
       itemBuilder: (context, index) {
         final q = questions[index];
-        return _buildQuestionCard(q, index + 1);
+        final questionWithIndex = {...q, 'displayIndex': index + 1};
+        return _buildQuestionCard(questionWithIndex, index + 1);
       },
     );
   }
@@ -7178,6 +7264,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
   Widget _buildQuestionCard(Map<String, dynamic> question, int index) {
     final difficulty = question['difficulty'] as String;
     final isHot = question['hot'] == true;
+    final isCoding = question['type'] == 'coding';
 
     Color difficultyColor;
     switch (difficulty) {
@@ -7247,6 +7334,32 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                     ),
                   ),
                 ),
+                if (isCoding) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4EC9B0).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.code, size: 8.4, color: const Color(0xFF4EC9B0)),
+                        const SizedBox(width: 4),
+                        Text(
+                          "编程",
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF4EC9B0),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // 热门标签 - 对于所有类型的题目都显示
                 if (isHot) ...[
                   const SizedBox(width: 6),
                   Container(
@@ -7261,7 +7374,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                         Icon(Icons.local_fire_department, size: 8.4, color: AppColors.error),
                         const SizedBox(width: 4),
                         Text(
-                          "高频热门",
+                          "热门",
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -7295,6 +7408,21 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
   }
 
   void _showQuestionDetail(Map<String, dynamic> question) {
+    // 如果是编程题，跳转到问题详情页面
+    if (question['type'] == 'coding') {
+      // 只有当有底部sheet打开时才关闭
+      if (ModalRoute.of(context)?.isCurrent == false) {
+        Navigator.pop(context);
+      }
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProblemDetailPage(question: question),
+        ),
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -7667,7 +7795,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   // 难度选择
   String selectedDifficulty = '自适应';
-  final List<String> difficultyLevels = ['简单', '中等', '困难', '自适应'];
+  final List<String> difficultyLevels = ['基础', '中等', '困难', '自适应'];
 
   // 时间限制
   String timeLimit = '60秒';
@@ -9865,6 +9993,8 @@ Map<String, String> _buildSystemPrompt() {
             _currentStatus = "就绪";
             _currentQuestionIndex = (_currentQuestionIndex + 1).clamp(0, _totalQuestions - 1);
           });
+          // 检测是否是编程题并自动跳转
+          _checkAndNavigateToCodingQuestion(fullReply);
           channel.sink.close();
         }
       }
@@ -9880,6 +10010,130 @@ Map<String, String> _buildSystemPrompt() {
       "parameter": {"chat": {"domain": "generalv3.5", "temperature": 0.5}},
       "payload": {"message": {"text": payloadMessages}}
     }));
+  }
+
+  // 检测AI回答中是否涉及编程题，如果是则自动跳转到代码编辑器
+  void _checkAndNavigateToCodingQuestion(String questionContent) {
+    // 编程题关键词
+    final codingKeywords = [
+      '请编写代码',
+      '请实现',
+      '实现函数',
+      '写一个算法',
+      '写代码',
+      '编写程序',
+      '实现一个',
+      '写一个',
+      '代码实现',
+      '用代码',
+      '编写',
+      '算法题',
+      '编程题',
+    ];
+
+    final lowerContent = questionContent.toLowerCase();
+    final isCodingQuestion = codingKeywords.any((keyword) => lowerContent.contains(keyword));
+
+    if (isCodingQuestion) {
+      // 编程题列表（与QuestionBankPage中的算法编程分类保持一致）
+      final codingQuestions = <Map<String, dynamic>>[
+        {'q': '两数之和', 'a': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        for i in range(len(nums)):\n            for j in range(i+1, len(nums)):\n                if nums[i] + nums[j] == target:\n                    return [i, j]\n        return []', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        # Write your code here\n        pass\n', 'testCases': [{'input': '[2,7,11,15]\n9', 'output': '[0,1]'}, {'input': '[3,2,4]\n6', 'output': '[1,2]'}, {'input': '[3,3]\n6', 'output': '[0,1]'}]},
+        {'q': '反转字符串', 'a': 'def reverseString(s):\n    return s[::-1]', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def reverseString(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'hello', 'output': 'olleh'}, {'input': 'Hannah', 'output': 'hennaH'}]},
+        {'q': '斐波那契数列', 'a': 'def fib(n):\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n+1):\n        a, b = b, a + b\n    return b', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def fib(n):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '2', 'output': '1'}, {'input': '3', 'output': '2'}, {'input': '4', 'output': '3'}]},
+        {'q': '回文数', 'a': 'def isPalindrome(x):\n    if x < 0:\n        return False\n    return str(x) == str(x)[::-1]', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def isPalindrome(x):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '121', 'output': 'True'}, {'input': '-121', 'output': 'False'}, {'input': '10', 'output': 'False'}]},
+        {'q': '最大子数组和', 'a': 'def maxSubArray(nums):\n    max_sum = nums[0]\n    current_sum = nums[0]\n    for num in nums[1:]:\n        current_sum = max(num, current_sum + num)\n        max_sum = max(max_sum, current_sum)\n    return max_sum', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def maxSubArray(nums):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[-2,1,-3,4,-1,2,1,-5,4]', 'output': '6'}, {'input': '[1]', 'output': '1'}, {'input': '[5,4,-1,7,8]', 'output': '23'}]},
+        {'q': '两数相加', 'a': 'def addTwoNumbers(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    carry = 0\n    while l1 or l2 or carry:\n        val = carry\n        if l1:\n            val += l1.val\n            l1 = l1.next\n        if l2:\n            val += l2.val\n            l2 = l2.next\n        carry = val // 10\n        cur.next = ListNode(val % 10)\n        cur = cur.next\n    return dummy.next', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef addTwoNumbers(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[2,4,3]\n[5,6,4]', 'output': '[7,0,8]'}, {'input': '[0]\n[0]', 'output': '[0]'}, {'input': '[9,9,9,9,9,9,9]\n[1]', 'output': '[0,0,0,0,0,0,0,1]'}]},
+        {'q': '无重复字符的最长子串', 'a': 'def lengthOfLongestSubstring(s):\n    char_set = set()\n    left = 0\n    max_len = 0\n    for right in range(len(s)):\n        while s[right] in char_set:\n            char_set.remove(s[left])\n            left += 1\n        char_set.add(s[right])\n        max_len = max(max_len, right - left + 1)\n    return max_len', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def lengthOfLongestSubstring(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'abcabcbb', 'output': '3'}, {'input': 'bbbbb', 'output': '1'}, {'input': 'pwwkew', 'output': '3'}]},
+        {'q': 'LRU缓存机制', 'a': 'from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key):\n        if key not in self.cache:\n            return -1\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key, value):\n        if key in self.cache:\n            self.cache.move_to_end(key)\n        self.cache[key] = value\n        if len(self.cache) > self.capacity:\n            self.cache.popitem(last=False)', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'class LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}]},
+        {'q': '有效括号', 'a': 'def isValid(s):\n    stack = []\n    mapping = {")": "(", "]": "[", "}": "{"}\n    for char in s:\n        if char in mapping:\n            if not stack or stack.pop() != mapping[char]:\n                return False\n        else:\n            stack.append(char)\n    return not stack', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def isValid(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '()', 'output': 'True'}, {'input': '()[]{}', 'output': 'True'}, {'input': '(]', 'output': 'False'}]},
+        {'q': '合并两个有序链表', 'a': 'def mergeTwoLists(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            cur.next = l1\n            l1 = l1.next\n        else:\n            cur.next = l2\n            l2 = l2.next\n        cur = cur.next\n    cur.next = l1 or l2\n    return dummy.next', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef mergeTwoLists(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[1,2,4]\n[1,3,4]', 'output': '[1,1,2,3,4,4]'}, {'input': '[]\n[]', 'output': '[]'}, {'input': '[]\n[0]', 'output': '[0]'}]},
+        {'q': '买卖股票最佳时机', 'a': 'def maxProfit(prices):\n    min_price = float("inf")\n    max_profit = 0\n    for price in prices:\n        min_price = min(min_price, price)\n        max_profit = max(max_profit, price - min_price)\n    return max_profit', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': 'def maxProfit(prices):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[7,1,5,3,6,4]', 'output': '5'}, {'input': '[7,6,4,3,1]', 'output': '0'}]},
+      ];
+
+      if (codingQuestions.isNotEmpty) {
+        // 根据问题内容选择合适的题目
+        Map<String, dynamic>? matchedQuestion;
+        for (var q in codingQuestions) {
+          final qTitle = q['q'].toString().toLowerCase();
+          if (lowerContent.contains('两数之和') || lowerContent.contains('two sum')) {
+            if (qTitle.contains('两数之和')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('反转') || lowerContent.contains('reverse')) {
+            if (qTitle.contains('反转')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('斐波那契') || lowerContent.contains('fibonacci')) {
+            if (qTitle.contains('斐波那契')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('回文') || lowerContent.contains('palindrome')) {
+            if (qTitle.contains('回文')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('最大子数组') || lowerContent.contains('最大和')) {
+            if (qTitle.contains('最大子数组')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('两数相加') || lowerContent.contains('add two')) {
+            if (qTitle.contains('两数相加')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('无重复字符') || lowerContent.contains('最长子串')) {
+            if (qTitle.contains('无重复字符')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('lru')) {
+            if (qTitle.contains('lru')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('括号') || lowerContent.contains('bracket')) {
+            if (qTitle.contains('括号')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('合并') && lowerContent.contains('链表')) {
+            if (qTitle.contains('合并') && qTitle.contains('链表')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('股票') || lowerContent.contains('stock')) {
+            if (qTitle.contains('合并') && qTitle.contains('链表')) {
+              matchedQuestion = q;
+              break;
+            }
+          } else if (lowerContent.contains('股票') || lowerContent.contains('stock')) {
+            if (qTitle.contains('股票')) {
+              matchedQuestion = q;
+              break;
+            }
+          }
+        }
+
+        // 如果没有匹配到具体题目，随机选择一道
+        matchedQuestion ??= codingQuestions[DateTime.now().millisecond % codingQuestions.length];
+
+        // 延迟一下跳转，让用户先看到问题
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProblemDetailPage(question: matchedQuestion!),
+              ),
+            );
+          }
+        });
+      }
+    }
   }
 
   void _handleTextSend() {
