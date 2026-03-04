@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell:*)",
+      "Bash(jar:*)",
+      "Bash(findstr:*)",
+      "Bash(gradlew.bat:*)",
+      "Bash(Select-Object -First 50)",
+      "Bash(cmd /c \"cd /d D:\\\\software_innovation\\\\android && gradlew.bat compileDebugKotlin 2>&1\")",
+      "Bash(cmd:*)",
+      "Bash(dir:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)",
+      "Bash(del \"D:\\\\software_innovation\\\\lib\\\\avatar_controller.dart\")",
+      "Bash(cd:*)",
+      "Bash(powershell.exe -Command \"cd ''D:\\\\software_innovation''; flutter analyze 2>&1\")",
+      "Bash(powershell.exe -Command \"& ''C:\\\\Users\\\\31939\\\\flutter\\\\bin\\\\flutter.bat'' analyze ''D:\\\\software_innovation'' 2>&1\")",
+      "Bash(cmd.exe /c \"cd /d D:\\\\software_innovation && flutter analyze 2>&1\")",
+      "Bash(cmd.exe /c \"cd /d D:\\\\software_innovation && flutter analyze\")",
+      "Bash(find:*)",
+      "WebFetch(domain:www.dicebear.com)",
+      "WebFetch(domain:api.dicebear.com)",
+      "WebSearch",
+      "Bash(where:*)",
+      "Bash(dart analyze:*)",
+      "Bash(python:*)",
+      "Bash(git checkout:*)",
+      "Bash(flutter build:*)",
+      "Bash(检查语法错误)",
+      "Bash(flutter clean:*)"
+    ]
+  }
+}
