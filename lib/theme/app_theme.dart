@@ -318,7 +318,6 @@ class AppTheme {
         onSurface: BubeiColors.textPrimary,
         error: BubeiColors.error,
         onError: Colors.white,
-        background: BubeiColors.background,
       ),
 
       // AppBar 主题

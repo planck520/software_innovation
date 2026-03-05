@@ -22,7 +22,7 @@ Future<void> toggleDarkBackground(bool value) async {
 
 /// 主题变更通知器
 class ThemeNotifier extends ValueNotifier<bool> {
-  ThemeNotifier(bool value) : super(value);
+  ThemeNotifier(super.value);
 
   void updateTheme(bool isDark) {
     value = isDark;

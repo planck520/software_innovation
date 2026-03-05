@@ -13,7 +13,7 @@ class XfVoiceHandler {
 
   // 生成讯飞鉴权 URL
   String _getAuthUrl() {
-    final date = DateFormat('EEE, dd MMM yyyy HH:mm:ss ' + 'GMT').format(DateTime.now().toUtc());
+    final date = DateFormat('EEE, dd MMM yyyy HH:mm:ss ' 'GMT').format(DateTime.now().toUtc());
     final signatureOrigin = "host: iat-api.xfyun.cn\ndate: $date\nGET /v2/iat HTTP/1.1";
     final hmacSha256 = Hmac(sha256, utf8.encode(apiSecret));
     final signature = base64.encode(hmacSha256.convert(utf8.encode(signatureOrigin)).bytes);

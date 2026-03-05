@@ -27,8 +27,8 @@ class TechBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     // 根据全局设置选择背景色
     final backgroundColor = isDarkBackground
-        ? const Color(0xFF101622)  // 深色背景
-        : AppColors.background;     // 浅色背景
+        ? const Color(0xFF101622) // 深色背景
+        : AppColors.background; // 浅色背景
 
     final gridColor = isDarkBackground
         ? AppColors.primary.withOpacity(0.08)
@@ -86,11 +86,7 @@ class _BlurOrb extends StatelessWidget {
   final Color color;
   final double blur;
 
-  const _BlurOrb({
-    required this.size,
-    required this.color,
-    required this.blur,
-  });
+  const _BlurOrb({required this.size, required this.color, required this.blur});
 
   @override
   Widget build(BuildContext context) {
@@ -118,10 +114,7 @@ class _CyberGridPainter extends CustomPainter {
   final Color color;
   final double gridSize;
 
-  _CyberGridPainter({
-    required this.color,
-    required this.gridSize,
-  });
+  _CyberGridPainter({required this.color, required this.gridSize});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -190,16 +183,20 @@ class _ParticleBackgroundState extends State<ParticleBackground>
           return AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              final offset = (_controller.value + index / widget.particleCount) % 1.0;
+              final offset =
+                  (_controller.value + index / widget.particleCount) % 1.0;
               return Positioned(
                 left: _random.nextDouble() * MediaQuery.of(context).size.width,
-                top: (offset * MediaQuery.of(context).size.height) % MediaQuery.of(context).size.height,
+                top:
+                    (offset * MediaQuery.of(context).size.height) %
+                    MediaQuery.of(context).size.height,
                 child: Container(
                   width: _random.nextDouble() * 4 + 2,
                   height: _random.nextDouble() * 4 + 2,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: (widget.particleColor ?? AppColors.primary).withOpacity(0.2),
+                    color: (widget.particleColor ?? AppColors.primary)
+                        .withOpacity(0.2),
                   ),
                 ),
               );
@@ -239,10 +236,8 @@ class _ScanlineOverlayState extends State<ScanlineOverlay>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    )..repeat();
+    _controller = AnimationController(duration: widget.duration, vsync: this)
+      ..repeat();
     _animation = Tween<double>(begin: -0.1, end: 1.1).animate(_controller);
   }
 
@@ -326,11 +321,7 @@ class GradientDivider extends StatelessWidget {
   final double height;
   final EdgeInsetsGeometry? margin;
 
-  const GradientDivider({
-    super.key,
-    this.height = 1,
-    this.margin,
-  });
+  const GradientDivider({super.key, this.height = 1, this.margin});
 
   @override
   Widget build(BuildContext context) {
@@ -409,7 +400,8 @@ class TechCodeBackgroundPainter extends CustomPainter {
       ],
     );
     final backgroundRect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final backgroundPaint = Paint()..shader = backgroundGradient.createShader(backgroundRect);
+    final backgroundPaint = Paint()
+      ..shader = backgroundGradient.createShader(backgroundRect);
     canvas.drawRect(backgroundRect, backgroundPaint);
 
     // 代码流颜色（绿色矩阵风格）
@@ -435,16 +427,15 @@ class TechCodeBackgroundPainter extends CustomPainter {
       fontSize: 10,
       fontFamily: 'Courier',
     );
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
+    final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     final random = math.Random(42); // 固定种子保证一致性
     final columns = (size.width / gridSize).floor();
 
     for (int col = 0; col < columns; col++) {
       // 每列代码流的偏移（模拟流动）
-      final offset = (animationValue * 100 + col * 13) % (size.height / gridSize + 20);
+      final offset =
+          (animationValue * 100 + col * 13) % (size.height / gridSize + 20);
 
       for (int row = -5; row < size.height / gridSize + 5; row++) {
         final y = (row - offset) * gridSize;
@@ -455,17 +446,17 @@ class TechCodeBackgroundPainter extends CustomPainter {
 
         // 根据距离顶部的位置调整透明度
         final distanceFromTop = y.abs();
-        final alpha = (1.0 - (distanceFromTop / size.height) * 0.8).clamp(0.1, 0.5);
+        final alpha = (1.0 - (distanceFromTop / size.height) * 0.8).clamp(
+          0.1,
+          0.5,
+        );
 
         textPainter.text = TextSpan(
           text: code,
           style: textStyle.copyWith(color: codeColor.withOpacity(alpha)),
         );
         textPainter.layout();
-        textPainter.paint(
-          canvas,
-          Offset(col * gridSize + gridSize / 2 - 3, y),
-        );
+        textPainter.paint(canvas, Offset(col * gridSize + gridSize / 2 - 3, y));
       }
     }
 
@@ -496,10 +487,7 @@ class TechCodeBackgroundPainter extends CustomPainter {
 class TechCodeBackground extends StatefulWidget {
   final Widget child;
 
-  const TechCodeBackground({
-    super.key,
-    required this.child,
-  });
+  const TechCodeBackground({super.key, required this.child});
 
   @override
   State<TechCodeBackground> createState() => _TechCodeBackgroundState();
@@ -550,10 +538,10 @@ class _TechCodeBackgroundState extends State<TechCodeBackground>
 
 /// 代码字符类型（用于语法高亮）
 enum _CodeCharType {
-  digit,      // 数字 - 青色
-  keyword,    // 关键字 - 绿色
-  symbol,     // 符号 - 黄色
-  bracket,    // 括号 - 紫色
+  digit, // 数字 - 青色
+  keyword, // 关键字 - 绿色
+  symbol, // 符号 - 黄色
+  bracket, // 括号 - 紫色
 }
 
 /// 代码字符及其类型
@@ -600,10 +588,10 @@ class TechPioneersBackgroundPainter extends CustomPainter {
 
   // 语法高亮颜色映射
   static const Map<_CodeCharType, Color> _colorMap = {
-    _CodeCharType.digit: Color(0xFF00FFFF),    // 青色
-    _CodeCharType.keyword: Color(0xFF00FF41),  // 绿色
-    _CodeCharType.symbol: Color(0xFFFFFF00),   // 黄色
-    _CodeCharType.bracket: Color(0xFFFF00FF),  // 紫色
+    _CodeCharType.digit: Color(0xFF00FFFF), // 青色
+    _CodeCharType.keyword: Color(0xFF00FF41), // 绿色
+    _CodeCharType.symbol: Color(0xFFFFFF00), // 黄色
+    _CodeCharType.bracket: Color(0xFFFF00FF), // 紫色
   };
 
   TechPioneersBackgroundPainter({required this.animationValue});
@@ -621,7 +609,8 @@ class TechPioneersBackgroundPainter extends CustomPainter {
       ],
     );
     final backgroundRect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final backgroundPaint = Paint()..shader = backgroundGradient.createShader(backgroundRect);
+    final backgroundPaint = Paint()
+      ..shader = backgroundGradient.createShader(backgroundRect);
     canvas.drawRect(backgroundRect, backgroundPaint);
 
     // 绘制星空粒子背景
@@ -640,9 +629,9 @@ class TechPioneersBackgroundPainter extends CustomPainter {
     _drawPulseRings(canvas, size);
 
     // 绘制代码雨效果 - 多层带语法高亮
-    _drawCodeRainLayer(canvas, size, 1.0, 0.15, 12);  // 主层
-    _drawCodeRainLayer(canvas, size, 0.7, 0.08, 10);  // 中层
-    _drawCodeRainLayer(canvas, size, 0.4, 0.05, 8);   // 远层
+    _drawCodeRainLayer(canvas, size, 1.0, 0.15, 12); // 主层
+    _drawCodeRainLayer(canvas, size, 0.7, 0.08, 10); // 中层
+    _drawCodeRainLayer(canvas, size, 0.4, 0.05, 8); // 远层
 
     // 绘制斜向代码雨
     _drawDiagonalCodeRain(canvas, size);
@@ -709,7 +698,13 @@ class TechPioneersBackgroundPainter extends CustomPainter {
     }
   }
 
-  void _drawCodeRainLayer(Canvas canvas, Size size, double speedMultiplier, double baseOpacity, int fontSize) {
+  void _drawCodeRainLayer(
+    Canvas canvas,
+    Size size,
+    double speedMultiplier,
+    double baseOpacity,
+    int fontSize,
+  ) {
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     // 代码雨列数
@@ -721,7 +716,11 @@ class TechPioneersBackgroundPainter extends CustomPainter {
       // 每列的起始偏移（基于列索引的伪随机）
       final columnOffset = (col * 73.7) % 100 / 100;
       // 计算当前列的整体移动位置
-      final flowPosition = ((animationValue * speedMultiplier * 200 + columnOffset * size.height) % (size.height + 100)) - 50;
+      final flowPosition =
+          ((animationValue * speedMultiplier * 200 +
+                  columnOffset * size.height) %
+              (size.height + 100)) -
+          50;
 
       // 在该列绘制多个字符形成雨滴效果
       final dropLength = 15 + (col % 5) * 3; // 每列的雨滴长度
@@ -743,14 +742,18 @@ class TechPioneersBackgroundPainter extends CustomPainter {
           charColor = const Color(0xFFFFFFFF).withOpacity(alpha * 1.5);
         } else {
           // 选择字符（基于位置的伪随机）
-          final charIndex = ((col * 7 + i * 3 + animationValue * 10) % _codeChars.length).floor();
+          final charIndex =
+              ((col * 7 + i * 3 + animationValue * 10) % _codeChars.length)
+                  .floor();
           final codeChar = _codeChars[charIndex];
           // 使用语法高亮颜色
           charColor = _colorMap[codeChar.type]!.withOpacity(alpha);
         }
 
         // 选择字符
-        final charIndex = ((col * 7 + i * 3 + animationValue * 10) % _codeChars.length).floor();
+        final charIndex =
+            ((col * 7 + i * 3 + animationValue * 10) % _codeChars.length)
+                .floor();
         final char = _codeChars[charIndex].value;
 
         final textStyle = TextStyle(
@@ -762,7 +765,13 @@ class TechPioneersBackgroundPainter extends CustomPainter {
 
         textPainter.text = TextSpan(text: char, style: textStyle);
         textPainter.layout();
-        textPainter.paint(canvas, Offset(col * columnWidth + columnWidth / 2 - textPainter.width / 2, charY));
+        textPainter.paint(
+          canvas,
+          Offset(
+            col * columnWidth + columnWidth / 2 - textPainter.width / 2,
+            charY,
+          ),
+        );
       }
     }
   }
@@ -793,7 +802,8 @@ class TechPioneersBackgroundPainter extends CustomPainter {
 
     for (int i = 0; i < snippets.length; i++) {
       // 每个代码片段独立的运动轨迹
-      final snippetOffset = (animationValue * 30 + i * 50) % (size.height + 100);
+      final snippetOffset =
+          (animationValue * 30 + i * 50) % (size.height + 100);
       final x = (i * 103.7) % (size.width - 150) + 20;
       final y = snippetOffset - 50;
 
@@ -822,10 +832,7 @@ class TechPioneersBackgroundPainter extends CustomPainter {
         final cursorX = x + textPainter.width + 2;
         final cursorPaint = Paint()
           ..color = const Color(0xFF00FF41).withOpacity(alpha.clamp(0.0, 0.4));
-        canvas.drawRect(
-          Rect.fromLTWH(cursorX, y, 6, 10),
-          cursorPaint,
-        );
+        canvas.drawRect(Rect.fromLTWH(cursorX, y, 6, 10), cursorPaint);
       }
     }
   }
@@ -862,9 +869,17 @@ class TechPioneersBackgroundPainter extends CustomPainter {
       final edgeFade = t < 0.1 ? t * 10 : (t > 0.9 ? (1 - t) * 10 : 1.0);
 
       // 绘制粒子光晕
-      canvas.drawCircle(Offset(x, y), 6 * edgeFade, glowPaint..color = const Color(0xFF00FFFF).withOpacity(0.3 * edgeFade));
+      canvas.drawCircle(
+        Offset(x, y),
+        6 * edgeFade,
+        glowPaint..color = const Color(0xFF00FFFF).withOpacity(0.3 * edgeFade),
+      );
       // 绘制粒子核心
-      canvas.drawCircle(Offset(x, y), 2 * edgeFade, particlePaint..color = const Color(0xFF00FFFF).withOpacity(edgeFade));
+      canvas.drawCircle(
+        Offset(x, y),
+        2 * edgeFade,
+        particlePaint..color = const Color(0xFF00FFFF).withOpacity(edgeFade),
+      );
     }
   }
 
@@ -924,19 +939,21 @@ class TechPioneersBackgroundPainter extends CustomPainter {
     final glitchCycle = (animationValue * 100) % 20;
     if (glitchCycle < 0.5) {
       // 随机水平偏移
-      final offset = (math.Random(animationValue.toInt()).nextDouble() - 0.5) * 10;
+      final offset =
+          (math.Random(animationValue.toInt()).nextDouble() - 0.5) * 10;
 
       // 绘制偏移的条纹
       final glitchPaint = Paint()
         ..color = const Color(0xFF00FF41).withOpacity(0.1);
 
       for (int i = 0; i < 5; i++) {
-        final y = (math.Random(animationValue.toInt() + i).nextDouble() * size.height).floor().toDouble();
-        final h = (math.Random(animationValue.toInt() + i + 1).nextDouble() * 5 + 1);
-        canvas.drawRect(
-          Rect.fromLTWH(offset, y, size.width, h),
-          glitchPaint,
-        );
+        final y =
+            (math.Random(animationValue.toInt() + i).nextDouble() * size.height)
+                .floor()
+                .toDouble();
+        final h =
+            (math.Random(animationValue.toInt() + i + 1).nextDouble() * 5 + 1);
+        canvas.drawRect(Rect.fromLTWH(offset, y, size.width, h), glitchPaint);
       }
     }
   }
@@ -957,12 +974,14 @@ class TechPioneersBackgroundPainter extends CustomPainter {
       // 闪烁效果 - 不同星星有不同的闪烁周期
       final twinklePhase = ((animationValue * 2 + i * 0.1) % 1.0);
       // 确保brightness在0-1范围内
-      final brightness = 0.3 + 0.7 * ((math.sin(twinklePhase * math.pi * 2) + 1) / 2);
+      final brightness =
+          0.3 + 0.7 * ((math.sin(twinklePhase * math.pi * 2) + 1) / 2);
 
       canvas.drawCircle(
         Offset(x, y),
         1.0 * brightness,
-        starPaint..color = const Color(0xFF00FF41).withOpacity(0.15 * brightness),
+        starPaint
+          ..color = const Color(0xFF00FF41).withOpacity(0.15 * brightness),
       );
     }
   }
@@ -1055,7 +1074,12 @@ class TechPioneersBackgroundPainter extends CustomPainter {
         final trailX = x - j * 12;
         final trailY = y - j * 12;
 
-        if (trailX < -20 || trailX > size.width + 20 || trailY < -20 || trailY > size.height + 20) continue;
+        if (trailX < -20 ||
+            trailX > size.width + 20 ||
+            trailY < -20 ||
+            trailY > size.height + 20) {
+          continue;
+        }
 
         final alpha = (1 - j / 8) * 0.2;
         final charIndex = ((i * 7 + j) % _codeChars.length);
@@ -1172,10 +1196,7 @@ class TechPioneersBackgroundPainter extends CustomPainter {
 class TechPioneersBackground extends StatefulWidget {
   final Widget child;
 
-  const TechPioneersBackground({
-    super.key,
-    required this.child,
-  });
+  const TechPioneersBackground({super.key, required this.child});
 
   @override
   State<TechPioneersBackground> createState() => _TechPioneersBackgroundState();
@@ -1244,7 +1265,8 @@ class TechGridBackgroundPainter extends CustomPainter {
       stops: const [0.0, 0.5, 1.0],
     );
     final backgroundRect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final backgroundPaint = Paint()..shader = backgroundGradient.createShader(backgroundRect);
+    final backgroundPaint = Paint()
+      ..shader = backgroundGradient.createShader(backgroundRect);
     canvas.drawRect(backgroundRect, backgroundPaint);
 
     // 网格线颜色
@@ -1305,7 +1327,8 @@ class TechGridBackgroundPainter extends CustomPainter {
     // 绘制节点
     for (final node in nodes) {
       // 呼吸效果
-      final breathe = (math.sin(animationValue * math.pi * 2 + node.dx * 0.01) + 1) / 2;
+      final breathe =
+          (math.sin(animationValue * math.pi * 2 + node.dx * 0.01) + 1) / 2;
       final glowRadius = 4.0 + breathe * 3.0;
 
       // 绘制光晕
@@ -1344,10 +1367,7 @@ class TechGridBackgroundPainter extends CustomPainter {
 class TechGridBackground extends StatefulWidget {
   final Widget child;
 
-  const TechGridBackground({
-    super.key,
-    required this.child,
-  });
+  const TechGridBackground({super.key, required this.child});
 
   @override
   State<TechGridBackground> createState() => _TechGridBackgroundState();
@@ -1398,11 +1418,11 @@ class _TechGridBackgroundState extends State<TechGridBackground>
 
 /// 代码字符类型（用于语法高亮）
 enum _HomeCodeCharType {
-  digit,      // 数字 - 青色
-  keyword,    // 关键字 - 绿色
-  symbol,     // 符号 - 黄色
-  bracket,    // 括号 - 橙色
-  string,     // 字符串 - 粉色
+  digit, // 数字 - 青色
+  keyword, // 关键字 - 绿色
+  symbol, // 符号 - 黄色
+  bracket, // 括号 - 橙色
+  string, // 字符串 - 粉色
 }
 
 /// 代码字符及其类型
@@ -1449,11 +1469,11 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
 
   // 语法高亮颜色映射（绿色主题）
   static const Map<_HomeCodeCharType, Color> _colorMap = {
-    _HomeCodeCharType.digit: Color(0xFF80DEEA),       // 浅青色
-    _HomeCodeCharType.keyword: Color(0xFF4CAF50),     // 绿色
-    _HomeCodeCharType.symbol: Color(0xFFFFEB3B),      // 黄色
-    _HomeCodeCharType.bracket: Color(0xFFFF9800),     // 橙色
-    _HomeCodeCharType.string: Color(0xFFF48FB1),      // 粉色
+    _HomeCodeCharType.digit: Color(0xFF80DEEA), // 浅青色
+    _HomeCodeCharType.keyword: Color(0xFF4CAF50), // 绿色
+    _HomeCodeCharType.symbol: Color(0xFFFFEB3B), // 黄色
+    _HomeCodeCharType.bracket: Color(0xFFFF9800), // 橙色
+    _HomeCodeCharType.string: Color(0xFFF48FB1), // 粉色
   };
 
   TechPioneersHomeBackgroundPainter({required this.animationValue});
@@ -1472,7 +1492,8 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
       stops: const [0.0, 0.5, 1.0],
     );
     final backgroundRect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final backgroundPaint = Paint()..shader = backgroundGradient.createShader(backgroundRect);
+    final backgroundPaint = Paint()
+      ..shader = backgroundGradient.createShader(backgroundRect);
     canvas.drawRect(backgroundRect, backgroundPaint);
 
     // 绘制星空粒子背景
@@ -1522,8 +1543,16 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
     final hexHeight = hexSize * math.sqrt(3);
     final hexWidth = hexSize * 2;
 
-    for (int row = -1; row < (size.height / hexHeight * 0.75).ceil() + 1; row++) {
-      for (int col = -1; col < (size.width / (hexWidth * 0.75)).ceil() + 1; col++) {
+    for (
+      int row = -1;
+      row < (size.height / hexHeight * 0.75).ceil() + 1;
+      row++
+    ) {
+      for (
+        int col = -1;
+        col < (size.width / (hexWidth * 0.75)).ceil() + 1;
+        col++
+      ) {
         final x = col * hexWidth * 0.75;
         final y = row * hexHeight + (col % 2 == 0 ? 0 : hexHeight / 2);
 
@@ -1561,7 +1590,9 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
     for (final center in centers) {
       // 每个源点产生多个扩散圆环
       for (int i = 0; i < 2; i++) {
-        final ringPhase = ((animationValue * 0.4 + i * 0.5 + centers.indexOf(center) * 0.25) % 1.0);
+        final ringPhase =
+            ((animationValue * 0.4 + i * 0.5 + centers.indexOf(center) * 0.25) %
+            1.0);
         final radius = ringPhase * 180;
         final alpha = (1 - ringPhase) * 0.12;
 
@@ -1576,7 +1607,13 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
     }
   }
 
-  void _drawCodeRainLayer(Canvas canvas, Size size, double speed, double baseOpacity, int fontSize) {
+  void _drawCodeRainLayer(
+    Canvas canvas,
+    Size size,
+    double speed,
+    double baseOpacity,
+    int fontSize,
+  ) {
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
 
     // 代码雨列数
@@ -1588,7 +1625,10 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
       // 每列的起始偏移（基于列索引的伪随机）
       final columnOffset = (col * 83.7) % 100 / 100;
       // 计算当前列的整体移动位置
-      final flowPosition = ((animationValue * speed * 150 + columnOffset * size.height) % (size.height + 80)) - 40;
+      final flowPosition =
+          ((animationValue * speed * 150 + columnOffset * size.height) %
+              (size.height + 80)) -
+          40;
 
       // 在该列绘制多个字符形成雨滴效果
       final dropLength = 12 + (col % 4) * 4;
@@ -1607,17 +1647,25 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
         Color charColor;
 
         if (isHead) {
-          charColor = const Color(0xFFFFFFFF).withOpacity((alpha * 1.8).clamp(0.0, 1.0));
+          charColor = const Color(
+            0xFFFFFFFF,
+          ).withOpacity((alpha * 1.8).clamp(0.0, 1.0));
         } else {
           // 选择字符（基于位置的伪随机）
-          final charIndex = ((col * 11 + i * 5 + animationValue * 8) % _codeChars.length).floor();
+          final charIndex =
+              ((col * 11 + i * 5 + animationValue * 8) % _codeChars.length)
+                  .floor();
           final codeChar = _codeChars[charIndex];
           // 使用语法高亮颜色
-          charColor = _colorMap[codeChar.type]!.withOpacity(alpha.clamp(0.0, 1.0));
+          charColor = _colorMap[codeChar.type]!.withOpacity(
+            alpha.clamp(0.0, 1.0),
+          );
         }
 
         // 选择字符
-        final charIndex = ((col * 11 + i * 5 + animationValue * 8) % _codeChars.length).floor();
+        final charIndex =
+            ((col * 11 + i * 5 + animationValue * 8) % _codeChars.length)
+                .floor();
         final char = _codeChars[charIndex].value;
 
         final textStyle = TextStyle(
@@ -1629,7 +1677,13 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
 
         textPainter.text = TextSpan(text: char, style: textStyle);
         textPainter.layout();
-        textPainter.paint(canvas, Offset(col * columnWidth + columnWidth / 2 - textPainter.width / 2, charY));
+        textPainter.paint(
+          canvas,
+          Offset(
+            col * columnWidth + columnWidth / 2 - textPainter.width / 2,
+            charY,
+          ),
+        );
       }
     }
   }
@@ -1694,10 +1748,7 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
         final cursorX = x + textPainter.width + 2;
         final cursorPaint = Paint()
           ..color = const Color(0xFF4CAF50).withOpacity(alpha.clamp(0.0, 0.35));
-        canvas.drawRect(
-          Rect.fromLTWH(cursorX, y, 5, 9),
-          cursorPaint,
-        );
+        canvas.drawRect(Rect.fromLTWH(cursorX, y, 5, 9), cursorPaint);
       }
     }
   }
@@ -1734,9 +1785,17 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
       final edgeFade = t < 0.15 ? t / 0.15 : (t > 0.85 ? (1 - t) / 0.15 : 1.0);
 
       // 绘制粒子光晕
-      canvas.drawCircle(Offset(x, y), 5 * edgeFade, glowPaint..color = const Color(0xFF80DEEA).withOpacity(0.25 * edgeFade));
+      canvas.drawCircle(
+        Offset(x, y),
+        5 * edgeFade,
+        glowPaint..color = const Color(0xFF80DEEA).withOpacity(0.25 * edgeFade),
+      );
       // 绘制粒子核心
-      canvas.drawCircle(Offset(x, y), 1.5 * edgeFade, particlePaint..color = const Color(0xFF80DEEA).withOpacity(edgeFade));
+      canvas.drawCircle(
+        Offset(x, y),
+        1.5 * edgeFade,
+        particlePaint..color = const Color(0xFF80DEEA).withOpacity(edgeFade),
+      );
     }
   }
 
@@ -1775,7 +1834,10 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
           canvas.drawLine(
             nodes[i],
             nodes[j],
-            linePaint..color = const Color(0xFF4CAF50).withOpacity(lineAlpha.clamp(0.0, 0.18)),
+            linePaint
+              ..color = const Color(
+                0xFF4CAF50,
+              ).withOpacity(lineAlpha.clamp(0.0, 0.18)),
           );
         }
       }
@@ -1830,12 +1892,14 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
 
       final twinklePhase = ((animationValue * 1.5 + i * 0.15) % 1.0);
       // 确保brightness在0-1范围内
-      final brightness = 0.3 + 0.7 * ((math.sin(twinklePhase * math.pi * 2) + 1) / 2);
+      final brightness =
+          0.3 + 0.7 * ((math.sin(twinklePhase * math.pi * 2) + 1) / 2);
 
       canvas.drawCircle(
         Offset(x, y),
         0.8 * brightness,
-        starPaint..color = const Color(0xFF4CAF50).withOpacity(0.1 * brightness),
+        starPaint
+          ..color = const Color(0xFF4CAF50).withOpacity(0.1 * brightness),
       );
     }
   }
@@ -1945,13 +2009,11 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
 class TechPioneersHomeBackground extends StatefulWidget {
   final Widget child;
 
-  const TechPioneersHomeBackground({
-    super.key,
-    required this.child,
-  });
+  const TechPioneersHomeBackground({super.key, required this.child});
 
   @override
-  State<TechPioneersHomeBackground> createState() => _TechPioneersHomeBackgroundState();
+  State<TechPioneersHomeBackground> createState() =>
+      _TechPioneersHomeBackgroundState();
 }
 
 class _TechPioneersHomeBackgroundState extends State<TechPioneersHomeBackground>
@@ -1993,6 +2055,114 @@ class _TechPioneersHomeBackgroundState extends State<TechPioneersHomeBackground>
       ],
     );
   }
+}
+
+/// 静态高级黑纹理背景（主页面）
+class PremiumStaticBackground extends StatelessWidget {
+  final Widget child;
+
+  const PremiumStaticBackground({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const Positioned.fill(
+          child: CustomPaint(painter: _PremiumTexturePainter()),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(0.0, -0.8),
+                  radius: 1.2,
+                  colors: [Colors.white.withOpacity(0.07), Colors.transparent],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Positioned.fill(
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF8B93A3).withOpacity(0.05),
+                    Colors.transparent,
+                    const Color(0xFF6F7786).withOpacity(0.035),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
+
+class _PremiumTexturePainter extends CustomPainter {
+  const _PremiumTexturePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+
+    final bgPaint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFF21262F), Color(0xFF191D24), Color(0xFF14181E)],
+        stops: [0.0, 0.45, 1.0],
+      ).createShader(rect);
+    canvas.drawRect(rect, bgPaint);
+
+    final softSpotPaint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(0, -0.35),
+        radius: 0.8,
+        colors: [const Color(0xFF9BA3B3).withOpacity(0.08), Colors.transparent],
+      ).createShader(rect);
+    canvas.drawRect(rect, softSpotPaint);
+
+    final grainPaint = Paint()..style = PaintingStyle.fill;
+    for (int i = 0; i < 340; i++) {
+      final x = ((i * 47.3) % size.width);
+      final y = ((i * 91.7 + (i % 9) * 13.0) % size.height);
+      final alpha = (i % 4 == 0) ? 0.07 : 0.045;
+      grainPaint.color = Colors.white.withOpacity(alpha);
+      canvas.drawCircle(Offset(x, y), 0.7, grainPaint);
+    }
+
+    final linePaint = Paint()
+      ..color = Colors.white.withOpacity(0.05)
+      ..strokeWidth = 1;
+    const step = 24.0;
+    for (double y = -size.width; y < size.height; y += step) {
+      canvas.drawLine(
+        Offset(0, y),
+        Offset(size.width, y + size.width * 0.06),
+        linePaint,
+      );
+    }
+
+    final vignettePaint = Paint()
+      ..shader = RadialGradient(
+        center: Alignment.center,
+        radius: 0.95,
+        colors: [Colors.transparent, Colors.black.withOpacity(0.2)],
+        stops: const [0.68, 1.0],
+      ).createShader(rect);
+    canvas.drawRect(rect, vignettePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ==================== 科技进化风特效组件 ====================
@@ -2061,16 +2231,20 @@ class _CheckInExplosionState extends State<CheckInExplosion>
     for (int i = 0; i < 40; i++) {
       final angle = random.nextDouble() * 2 * math.pi;
       final speed = 200 + random.nextDouble() * 300;
-      final colorIndex = random.nextInt(TechEvolutionColors.explosionColors.length);
+      final colorIndex = random.nextInt(
+        TechEvolutionColors.explosionColors.length,
+      );
       final shapeIndex = random.nextInt(3); // 0: 圆形, 1: 星形, 2: 三角形
 
-      _particles.add(ExplosionParticle(
-        angle: angle,
-        speed: speed,
-        color: TechEvolutionColors.explosionColors[colorIndex],
-        shape: shapeIndex,
-        size: 4 + random.nextDouble() * 6,
-      ));
+      _particles.add(
+        ExplosionParticle(
+          angle: angle,
+          speed: speed,
+          color: TechEvolutionColors.explosionColors[colorIndex],
+          shape: shapeIndex,
+          size: 4 + random.nextDouble() * 6,
+        ),
+      );
     }
   }
 
@@ -2152,7 +2326,14 @@ class _ExplosionPainter extends CustomPainter {
     }
   }
 
-  void _drawParticleShape(Canvas canvas, double x, double y, double size, int shape, Paint paint) {
+  void _drawParticleShape(
+    Canvas canvas,
+    double x,
+    double y,
+    double size,
+    int shape,
+    Paint paint,
+  ) {
     switch (shape) {
       case 0: // 圆形
         canvas.drawCircle(Offset(x, y), size / 2, paint);
@@ -2188,13 +2369,25 @@ class _ExplosionPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawTriangle(Canvas canvas, double x, double y, double size, Paint paint) {
+  void _drawTriangle(
+    Canvas canvas,
+    double x,
+    double y,
+    double size,
+    Paint paint,
+  ) {
     final path = Path();
     final radius = size / 2;
 
     path.moveTo(x, y - radius);
-    path.lineTo(x + radius * math.sin(math.pi / 3), y + radius * math.cos(math.pi / 3));
-    path.lineTo(x - radius * math.sin(math.pi / 3), y + radius * math.cos(math.pi / 3));
+    path.lineTo(
+      x + radius * math.sin(math.pi / 3),
+      y + radius * math.cos(math.pi / 3),
+    );
+    path.lineTo(
+      x - radius * math.sin(math.pi / 3),
+      y + radius * math.cos(math.pi / 3),
+    );
     path.close();
 
     canvas.drawPath(path, paint);
@@ -2214,10 +2407,7 @@ class _ExplosionPainter extends CustomPainter {
 class DataWaveOverlay extends StatefulWidget {
   final Widget child;
 
-  const DataWaveOverlay({
-    super.key,
-    required this.child,
-  });
+  const DataWaveOverlay({super.key, required this.child});
 
   @override
   State<DataWaveOverlay> createState() => _DataWaveOverlayState();
@@ -2253,9 +2443,7 @@ class _DataWaveOverlayState extends State<DataWaveOverlay>
               animation: _controller,
               builder: (context, child) {
                 return CustomPaint(
-                  painter: _DataWavePainter(
-                    animationValue: _controller.value,
-                  ),
+                  painter: _DataWavePainter(animationValue: _controller.value),
                 );
               },
             ),
@@ -2299,10 +2487,7 @@ class _DataWavePainter extends CustomPainter {
         begin: Alignment.centerLeft,
         end: Alignment.centerRight,
         colors: i % 2 == 0
-            ? [
-                TechEvolutionColors.dataWave,
-                TechEvolutionColors.dataWaveAccent,
-              ]
+            ? [TechEvolutionColors.dataWave, TechEvolutionColors.dataWaveAccent]
             : [
                 TechEvolutionColors.dataWaveAccent,
                 TechEvolutionColors.dataWave,
@@ -2310,14 +2495,17 @@ class _DataWavePainter extends CustomPainter {
       );
 
       final paint = Paint()
-        ..shader = gradient.createShader(Rect.fromLTWH(0, baseY - 50, size.width, 100))
+        ..shader = gradient.createShader(
+          Rect.fromLTWH(0, baseY - 50, size.width, 100),
+        )
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
       // 绘制波浪
       for (double x = 0; x <= size.width; x += 2) {
-        final y = baseY +
+        final y =
+            baseY +
             math.sin(x * frequency + phase * 2 * math.pi) * amplitude +
             math.sin(x * frequency * 0.5 + phase * math.pi) * amplitude * 0.5;
 
@@ -2342,9 +2530,13 @@ class _DataWavePainter extends CustomPainter {
 
     fillPath.moveTo(0, size.height);
     for (double x = 0; x <= size.width; x += 2) {
-      final y = baseY +
-          math.sin(x * baseFrequency + basePhase * 2 * math.pi) * baseAmplitude +
-          math.sin(x * baseFrequency * 0.5 + basePhase * math.pi) * baseAmplitude * 0.5;
+      final y =
+          baseY +
+          math.sin(x * baseFrequency + basePhase * 2 * math.pi) *
+              baseAmplitude +
+          math.sin(x * baseFrequency * 0.5 + basePhase * math.pi) *
+              baseAmplitude *
+              0.5;
       fillPath.lineTo(x, y);
     }
     fillPath.lineTo(size.width, size.height);
@@ -2361,7 +2553,9 @@ class _DataWavePainter extends CustomPainter {
     );
 
     final fillPaint = Paint()
-      ..shader = fillGradient.createShader(Rect.fromLTWH(0, baseY - 50, size.width, size.height - baseY + 50))
+      ..shader = fillGradient.createShader(
+        Rect.fromLTWH(0, baseY - 50, size.width, size.height - baseY + 50),
+      )
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(fillPath, fillPaint);

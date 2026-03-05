@@ -356,7 +356,9 @@ void _refreshUserBadgesByIndex(int userIndex) {
     date: firstLoginDate,
   );
 
-  final currentInterviewStreak = _currentConsecutiveDaysEndingToday(interviewDays);
+  final currentInterviewStreak = _currentConsecutiveDaysEndingToday(
+    interviewDays,
+  );
   final learnReachedDate = _firstDateReachConsecutiveDays(interviewDays, 7);
   final learnObtained = existingObtained('学习达人') || learnReachedDate != null;
   final learnDate = existingDate('学习达人').isNotEmpty
@@ -367,7 +369,7 @@ void _refreshUserBadgesByIndex(int userIndex) {
     obtained: learnObtained,
     progress: learnObtained
         ? (learnDate.isNotEmpty ? '已完成于 $learnDate' : '已完成')
-      : '当前进度: ${currentInterviewStreak.clamp(0, 7)}/7',
+        : '当前进度: ${currentInterviewStreak.clamp(0, 7)}/7',
     date: learnDate,
   );
 
@@ -388,7 +390,8 @@ void _refreshUserBadgesByIndex(int userIndex) {
   );
 
   final checkInReachedDate = checkInDays.length >= 30 ? checkInDays[29] : null;
-  final checkInObtained = existingObtained('坚持打卡') || checkInReachedDate != null;
+  final checkInObtained =
+      existingObtained('坚持打卡') || checkInReachedDate != null;
   final checkInDate = existingDate('坚持打卡').isNotEmpty
       ? existingDate('坚持打卡')
       : (checkInReachedDate == null ? '' : _fmtDay(checkInReachedDate));
@@ -515,11 +518,7 @@ class XfAuth {
   static String getUrl(String hostUrl) {
     Uri uri = Uri.parse(hostUrl);
     String date =
-        DateFormat(
-          'EEE, dd MMM yyyy HH:mm:ss',
-          'en_US',
-        ).format(DateTime.now().toUtc()) +
-        " GMT";
+        "${DateFormat('EEE, dd MMM yyyy HH:mm:ss', 'en_US').format(DateTime.now().toUtc())} GMT";
     String signatureOrigin =
         "host: ${uri.host}\ndate: $date\nGET ${uri.path} HTTP/1.1";
     var hmacSha256 = Hmac(sha256, utf8.encode(apiSecret));
@@ -589,8 +588,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
   bool _isLoading = false;
-  bool _obscurePassword = true;
-  bool _rememberMe = false;
+  final bool _obscurePassword = true;
+  final bool _rememberMe = false;
   bool _agreedToTerms = false;
 
   // 错误状态
@@ -740,11 +739,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       currentUserIndex = foundIndex;
       final user = globalUsers[currentUserIndex];
       final userBadges = _normalizeUserBadges(user['badges']);
-      final firstLoginIndex = userBadges.indexWhere(
-        (b) => b['name'] == '首次登录',
-      );
+      final firstLoginIndex = userBadges.indexWhere((b) => b['name'] == '首次登录');
 
-      if (firstLoginIndex != -1 && userBadges[firstLoginIndex]['obtained'] != true) {
+      if (firstLoginIndex != -1 &&
+          userBadges[firstLoginIndex]['obtained'] != true) {
         final now = DateFormat('yyyy-MM-dd').format(DateTime.now());
         userBadges[firstLoginIndex]['obtained'] = true;
         userBadges[firstLoginIndex]['date'] = now;
@@ -1307,7 +1305,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Widget _buildGuestLoginButton() {
-    int _ensureGuestUserIndex() {
+    int ensureGuestUserIndex() {
       const guestUsername = '__guest__';
       final existingIndex = globalUsers.indexWhere(
         (u) => u['username'] == guestUsername,
@@ -1336,7 +1334,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     return TextButton(
       onPressed: () {
-        currentUserIndex = _ensureGuestUserIndex();
+        currentUserIndex = ensureGuestUserIndex();
         Navigator.push(
           context,
           TechPageTransitions.fadeScale(builder: (_) => const BubeiHomePage()),
@@ -1727,12 +1725,11 @@ class _RegisterPageState extends State<RegisterPage>
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  int _currentStep = 0;
+  bool _obscureConfirmPassword = true;
 
   late AnimationController _introController;
   late Animation<double> _introOpacity;
   late Animation<Offset> _introSlide;
-  late AnimationController _backgroundFlowController;
   late AnimationController _buttonPulseController;
   late AnimationController _subtitleShimmerController;
 
@@ -1761,11 +1758,6 @@ class _RegisterPageState extends State<RegisterPage>
           ),
         );
 
-    _backgroundFlowController = AnimationController(
-      duration: const Duration(seconds: 12),
-      vsync: this,
-    )..repeat();
-
     _buttonPulseController = AnimationController(
       duration: const Duration(milliseconds: 1800),
       vsync: this,
@@ -1782,7 +1774,6 @@ class _RegisterPageState extends State<RegisterPage>
   @override
   void dispose() {
     _introController.dispose();
-    _backgroundFlowController.dispose();
     _buttonPulseController.dispose();
     _subtitleShimmerController.dispose();
     _usernameController.dispose();
@@ -1895,76 +1886,72 @@ class _RegisterPageState extends State<RegisterPage>
 
   @override
   Widget build(BuildContext context) {
-    return TechBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            Positioned.fill(
-              child: IgnorePointer(
-                child: AnimatedBuilder(
-                  animation: _backgroundFlowController,
-                  builder: (context, child) {
-                    return CustomPaint(
-                      painter: _NeuralFlowPainter(
-                        progress: _backgroundFlowController.value,
-                        color: AppColors.cyberCyan.withOpacity(0.16),
-                      ),
-                    );
-                  },
+    return Scaffold(
+      backgroundColor: const Color(0xFF121417),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [const Color(0xFF171A20), const Color(0xFF121417)],
+                  ),
                 ),
               ),
             ),
-            Positioned.fill(
-              child: IgnorePointer(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.topRight,
-                      radius: 1.15,
-                      colors: [
-                        AppColors.cyberCyan.withOpacity(0.06),
-                        Colors.transparent,
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    center: Alignment.topRight,
+                    radius: 1.1,
+                    colors: [
+                      Colors.white.withOpacity(0.03),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: FadeTransition(
+              opacity: _introOpacity,
+              child: SlideTransition(
+                position: _introSlide,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: 430,
+                      minHeight: MediaQuery.of(context).size.height - 100,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(),
+                        const SizedBox(height: 32),
+                        _buildTitle(),
+                        const SizedBox(height: 24),
+                        _buildProgressIndicator(),
+                        const SizedBox(height: 32),
+                        _buildFormCard(),
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-            SafeArea(
-              child: FadeTransition(
-                opacity: _introOpacity,
-                child: SlideTransition(
-                  position: _introSlide,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 32,
-                    ),
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        maxWidth: 430,
-                        minHeight: MediaQuery.of(context).size.height - 100,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          _buildHeader(),
-                          const SizedBox(height: 32),
-                          _buildTitle(),
-                          const SizedBox(height: 24),
-                          _buildProgressIndicator(),
-                          const SizedBox(height: 32),
-                          _buildFormCard(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1977,23 +1964,19 @@ class _RegisterPageState extends State<RegisterPage>
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: const Color(0xFF2A2E36),
               borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              border: Border.all(color: const Color(0xFF535862)),
             ),
-            child: Icon(
-              Icons.arrow_back,
-              color: AppColors.textPrimary,
-              size: 9.8,
-            ),
+            child: Icon(Icons.arrow_back, color: Colors.white, size: 9.8),
           ),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Text(
-            "初始化档案",
+            "档案注册",
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: Colors.white,
               fontSize: 17,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
@@ -2013,14 +1996,12 @@ class _RegisterPageState extends State<RegisterPage>
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: Colors.white.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-                  border: Border.all(
-                    color: AppColors.success.withOpacity(0.35),
-                  ),
+                  border: Border.all(color: const Color(0xFF5D6169)),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.success.withOpacity(0.18 * value),
+                      color: Colors.black.withOpacity(0.18 * value),
                       blurRadius: 10,
                       spreadRadius: 0.5,
                     ),
@@ -2031,14 +2012,14 @@ class _RegisterPageState extends State<RegisterPage>
                   children: [
                     Icon(
                       Icons.lock_outline_rounded,
-                      color: AppColors.success,
+                      color: const Color(0xFFE3E6ED),
                       size: 10.5,
                     ),
                     const SizedBox(width: 5),
                     Text(
                       "AES-256",
                       style: TextStyle(
-                        color: AppColors.success,
+                        color: const Color(0xFFE3E6ED),
                         fontSize: 10.5,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.7,
@@ -2057,11 +2038,64 @@ class _RegisterPageState extends State<RegisterPage>
   Widget _buildTitle() {
     return Column(
       children: [
-        // 艺术化渐变标题
-        _buildGlowingRegisterTitle(),
-        const SizedBox(height: 8),
-        // 副标题
-        _buildSubtitle(),
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Text(
+              "创建账号",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                foreground: Paint()
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 1.2
+                  ..color = const Color(0xFF8A92A1),
+              ),
+            ),
+            ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFFF0F2F7),
+                  Color(0xFFC9CFDB),
+                  Color(0xFF8A93A5),
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ).createShader(bounds),
+              blendMode: BlendMode.srcIn,
+              child: const Text(
+                "创建账号",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 29,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                  shadows: [
+                    Shadow(
+                      color: Color(0x52000000),
+                      offset: Offset(0, 1),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          "请完善以下注册信息",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: const Color(0xFFAEB4BF),
+            fontSize: 13,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
         const SizedBox(height: 12),
         _buildSignalBadges(),
       ],
@@ -2069,7 +2103,7 @@ class _RegisterPageState extends State<RegisterPage>
   }
 
   Widget _buildSignalBadges() {
-    final labels = ['神经接口', '量子签名', '安全握手'];
+    final labels = ['接口', '签名', '安全'];
     final icons = [
       Icons.memory_rounded,
       Icons.hub_outlined,
@@ -2082,16 +2116,18 @@ class _RegisterPageState extends State<RegisterPage>
       alignment: WrapAlignment.center,
       children: List.generate(labels.length, (index) {
         final isPrimary = index == 0;
-        final tone = isPrimary ? AppColors.cyberCyan : AppColors.cyberPurple;
+        final tone = isPrimary
+            ? const Color(0xFFE5E7EC)
+            : const Color(0xFFB0B4BD);
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: tone.withOpacity(0.08),
+            color: const Color(0xFF3A3D45).withOpacity(0.72),
             borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-            border: Border.all(color: tone.withOpacity(0.35)),
+            border: Border.all(color: const Color(0xFF5A5F68)),
             boxShadow: [
               BoxShadow(
-                color: tone.withOpacity(0.12),
+                color: Colors.black.withOpacity(0.25),
                 blurRadius: 8,
                 spreadRadius: 0,
               ),
@@ -2163,13 +2199,11 @@ class _RegisterPageState extends State<RegisterPage>
                           final double dx = slideValue * bounds.width;
                           return LinearGradient(
                             colors: const [
-                              Color(0xFF2DD4BF),
-                              Color(0xFF3B82F6),
-                              Color(0xFF00F5FF),
-                              Color(0xFF8B5CF6),
-                              Color(0xFFA78BFA),
+                              Color(0xFF4A5160),
+                              Color(0xFFD8DCE5),
+                              Color(0xFF949CAA),
                             ],
-                            stops: const [0.0, 0.25, 0.48, 0.75, 1.0],
+                            stops: const [0.0, 0.5, 1.0],
                             begin: Alignment(slideValue - 0.5, -0.5),
                             end: Alignment(slideValue + 0.5, 0.5),
                             tileMode: TileMode.mirror,
@@ -2187,7 +2221,7 @@ class _RegisterPageState extends State<RegisterPage>
                             color: Colors.white,
                             shadows: [
                               Shadow(
-                                color: AppColors.cyberCyan.withOpacity(0.22),
+                                color: Colors.white.withOpacity(0.12),
                                 offset: const Offset(0, 0),
                                 blurRadius: 10,
                               ),
@@ -2198,7 +2232,7 @@ class _RegisterPageState extends State<RegisterPage>
                       Positioned.fill(
                         child: IgnorePointer(
                           child: ScanlineOverlay(
-                            lineColor: AppColors.cyberCyan,
+                            lineColor: Colors.white,
                             lineThickness: 1,
                             duration: const Duration(milliseconds: 2200),
                             child: const SizedBox.expand(),
@@ -2238,7 +2272,7 @@ class _RegisterPageState extends State<RegisterPage>
                           gradient: LinearGradient(
                             colors: [
                               Colors.transparent,
-                              AppColors.cyberCyan.withOpacity(0.35 * value),
+                              Colors.white.withOpacity(0.26 * value),
                               Colors.transparent,
                             ],
                           ),
@@ -2250,11 +2284,11 @@ class _RegisterPageState extends State<RegisterPage>
                       width: 4,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AppColors.cyberCyan.withOpacity(0.7 * value),
+                        color: Colors.white.withOpacity(0.6 * value),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.cyberCyan.withOpacity(0.4 * value),
+                            color: Colors.white.withOpacity(0.2 * value),
                             blurRadius: 8,
                           ),
                         ],
@@ -2267,7 +2301,7 @@ class _RegisterPageState extends State<RegisterPage>
                           gradient: LinearGradient(
                             colors: [
                               Colors.transparent,
-                              AppColors.cyberPurple.withOpacity(0.35 * value),
+                              Colors.white.withOpacity(0.18 * value),
                               Colors.transparent,
                             ],
                           ),
@@ -2291,9 +2325,9 @@ class _RegisterPageState extends State<RegisterPage>
                           end: Alignment.centerRight,
                           colors: [
                             AppColors.textSecondary.withOpacity(0.82),
-                            AppColors.cyberCyan.withOpacity(0.96),
+                            Colors.white.withOpacity(0.9),
                             Colors.white.withOpacity(0.96),
-                            AppColors.cyberCyan.withOpacity(0.96),
+                            Colors.white.withOpacity(0.9),
                             AppColors.textSecondary.withOpacity(0.82),
                           ],
                           stops: [0.0, left, center, right, 1.0],
@@ -2311,7 +2345,7 @@ class _RegisterPageState extends State<RegisterPage>
                           color: Colors.white,
                           shadows: [
                             Shadow(
-                              color: AppColors.cyberCyan.withOpacity(0.2 * value),
+                              color: Colors.white.withOpacity(0.14 * value),
                               blurRadius: 6,
                             ),
                           ],
@@ -2357,17 +2391,17 @@ class _RegisterPageState extends State<RegisterPage>
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: const Color(0xFF2E323A).withOpacity(0.9),
         borderRadius: BorderRadius.circular(AppTokens.radiusMd),
         border: Border.all(
           color: progress == 1.0
-              ? Color(0xFF00F5FF).withOpacity(0.5)
-              : AppColors.border.withOpacity(0.3),
+              ? Colors.white.withOpacity(0.65)
+              : const Color(0xFF4F545E),
         ),
         boxShadow: progress == 1.0
             ? [
                 BoxShadow(
-                  color: Color(0xFF00F5FF).withOpacity(0.2),
+                  color: Colors.white.withOpacity(0.12),
                   blurRadius: 10,
                   spreadRadius: 1,
                 ),
@@ -2390,11 +2424,11 @@ class _RegisterPageState extends State<RegisterPage>
                         children: [
                           LinearProgressIndicator(
                             value: value,
-                            backgroundColor: AppColors.surfaceDim,
+                            backgroundColor: const Color(0xFF1F232A),
                             valueColor: AlwaysStoppedAnimation<Color>(
                               progress == 1.0
-                                  ? const Color(0xFF00F5FF)
-                                  : AppColors.primary,
+                                  ? Colors.white
+                                  : const Color(0xFFC9CDD6),
                             ),
                             minHeight: 7,
                           ),
@@ -2414,7 +2448,7 @@ class _RegisterPageState extends State<RegisterPage>
                                         end: Alignment(flow + 0.2, 0),
                                         colors: [
                                           Colors.transparent,
-                                          AppColors.cyberCyan.withOpacity(0.45),
+                                          Colors.white.withOpacity(0.24),
                                           Colors.transparent,
                                         ],
                                       ),
@@ -2437,11 +2471,11 @@ class _RegisterPageState extends State<RegisterPage>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${(progress * 100).toInt()}% ${progressMessage}",
+                "${(progress * 100).toInt()}% $progressMessage",
                 style: TextStyle(
                   color: progress == 1.0
-                      ? const Color(0xFF00F5FF)
-                      : AppColors.primary,
+                      ? Colors.white
+                      : const Color(0xFFC4C8D1),
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.4,
@@ -2450,7 +2484,7 @@ class _RegisterPageState extends State<RegisterPage>
               Text(
                 progress == 1.0 ? "可以激活" : "正在填充...",
                 style: TextStyle(
-                  color: AppColors.textTertiary,
+                  color: const Color(0xFF8A909B),
                   fontSize: 11,
                   letterSpacing: 0.3,
                 ),
@@ -2458,20 +2492,25 @@ class _RegisterPageState extends State<RegisterPage>
             ],
           ),
           const SizedBox(height: 10),
-          _buildProgressNodes(progress),
+          _buildProgressNodes(),
         ],
       ),
     );
   }
 
-  Widget _buildProgressNodes(double progress) {
-    final labels = ['别名', '邮箱', '密钥', '确认'];
-    final activeCount = (progress * labels.length).floor();
+  Widget _buildProgressNodes() {
+    final labels = ['用户名', '邮箱', '密码', '确认'];
+    final activeStates = [
+      _usernameController.text.trim().isNotEmpty,
+      _emailController.text.trim().isNotEmpty,
+      _passwordController.text.trim().isNotEmpty,
+      _confirmPasswordController.text.trim().isNotEmpty,
+    ];
 
     return Row(
       children: List.generate(labels.length, (index) {
-        final active = index < activeCount || (progress >= 1.0 && index == labels.length - 1);
-        final tone = active ? AppColors.cyberCyan : AppColors.textTertiary;
+        final active = activeStates[index];
+        final tone = active ? const Color(0xFFE8EBF1) : const Color(0xFF7E848E);
         return Expanded(
           child: Column(
             children: [
@@ -2481,7 +2520,9 @@ class _RegisterPageState extends State<RegisterPage>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: active ? tone : Colors.transparent,
-                  border: Border.all(color: tone.withOpacity(active ? 0.9 : 0.45)),
+                  border: Border.all(
+                    color: tone.withOpacity(active ? 0.9 : 0.45),
+                  ),
                   boxShadow: active
                       ? [
                           BoxShadow(
@@ -2531,14 +2572,14 @@ class _RegisterPageState extends State<RegisterPage>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Colors.white.withOpacity(0.35),
-                        AppColors.cyberCyan.withOpacity(0.25),
-                        AppColors.cyberPurple.withOpacity(0.2),
+                        const Color(0xFF595F6A),
+                        const Color(0xFF3F434C),
+                        const Color(0xFF2D3037),
                       ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.cyberCyan.withOpacity(0.14),
+                        color: Colors.black.withOpacity(0.24),
                         blurRadius: 20,
                         spreadRadius: 0,
                       ),
@@ -2546,74 +2587,90 @@ class _RegisterPageState extends State<RegisterPage>
                   ),
                   child: GlassCard(
                     padding: const EdgeInsets.all(16),
-                    backgroundColor: AppColors.cardBackground.withOpacity(0.86),
+                    backgroundColor: const Color(0xFF2C2F36).withOpacity(0.94),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.18),
+                      color: const Color(0xFF4F545E),
                       width: 1,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    // 用户别名 - 使用毛玻璃输入框
-                    GlassInputField(
-                      label: "用户别名",
-                      controller: _usernameController,
-                      hintText: "neural_user_01",
-                      prefixIcon: Icons.person_2_outlined,
-                      errorText: _usernameError,
-                      onChanged: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: 20),
-                    // 邮箱 - 使用毛玻璃输入框
-                    GlassInputField(
-                      label: "邮箱地址",
-                      controller: _emailController,
-                      hintText: "user@simulation.io",
-                      prefixIcon: Icons.mark_email_unread_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      autoDetectType: true,
-                      errorText: _emailError,
-                      onChanged: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: 20),
-                    // 密码 - 使用毛玻璃输入框
-                    GlassInputField(
-                      label: "访问密钥",
-                      controller: _passwordController,
-                      hintText: "••••••••",
-                      prefixIcon: Icons.key_outlined,
-                      isPassword: true,
-                      errorText: _passwordError,
-                      showCapsLockHint: true,
-                      onChanged: (value) {
-                        setState(() {
-                          _passwordStrength = _calculatePasswordStrength(value);
-                        });
-                      },
-                    ),
-                    // 密码强度指示器
-                    if (_passwordController.text.isNotEmpty)
-                      _buildPasswordStrengthIndicator(),
-                    if (_passwordController.text.isNotEmpty)
-                      const SizedBox(height: 16)
-                    else
-                      const SizedBox(height: 20),
-                    // 确认密码 - 使用毛玻璃输入框
-                    GlassInputField(
-                      label: "确认密钥",
-                      controller: _confirmPasswordController,
-                      hintText: "••••••••",
-                      prefixIcon: Icons.verified_user_outlined,
-                      isPassword: true,
-                      errorText: _confirmPasswordError,
-                      showCapsLockHint: true,
-                      onChanged: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: 24),
-                    // 注册按钮
-                    _buildRegisterButton(),
-                    // 返回登录入口
-                    _buildBackToLoginLink(),
+                        _buildRegisterInputField(
+                          controller: _usernameController,
+                          hintText: "请输入用户名",
+                          icon: Icons.person_outline,
+                          errorText: _usernameError,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildRegisterInputField(
+                          controller: _emailController,
+                          hintText: "请输入邮箱",
+                          icon: Icons.alternate_email,
+                          keyboardType: TextInputType.emailAddress,
+                          errorText: _emailError,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 20),
+                        _buildRegisterInputField(
+                          controller: _passwordController,
+                          hintText: "请输入密码",
+                          icon: Icons.lock_outline,
+                          obscureText: _obscurePassword,
+                          suffixIcon: GestureDetector(
+                            onTap: () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
+                            child: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: const Color(0xFFA2A7B2),
+                              size: 18,
+                            ),
+                          ),
+                          errorText: _passwordError,
+                          onChanged: (value) {
+                            setState(() {
+                              _passwordStrength = _calculatePasswordStrength(
+                                value,
+                              );
+                            });
+                          },
+                        ),
+                        // 密码强度指示器
+                        if (_passwordController.text.isNotEmpty)
+                          _buildPasswordStrengthIndicator(),
+                        if (_passwordController.text.isNotEmpty)
+                          const SizedBox(height: 16)
+                        else
+                          const SizedBox(height: 20),
+                        _buildRegisterInputField(
+                          controller: _confirmPasswordController,
+                          hintText: "请再次输入密码",
+                          icon: Icons.lock_person_outlined,
+                          obscureText: _obscureConfirmPassword,
+                          suffixIcon: GestureDetector(
+                            onTap: () => setState(
+                              () => _obscureConfirmPassword =
+                                  !_obscureConfirmPassword,
+                            ),
+                            child: Icon(
+                              _obscureConfirmPassword
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                              color: const Color(0xFFA2A7B2),
+                              size: 18,
+                            ),
+                          ),
+                          errorText: _confirmPasswordError,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 24),
+                        // 注册按钮
+                        _buildRegisterButton(),
+                        // 返回登录入口
+                        _buildBackToLoginLink(),
                       ],
                     ),
                   ),
@@ -2621,22 +2678,22 @@ class _RegisterPageState extends State<RegisterPage>
                 _buildCornerBracket(
                   top: -2,
                   left: -2,
-                  color: AppColors.cyberCyan.withOpacity(0.65),
+                  color: const Color(0xFF757B86),
                 ),
                 _buildCornerBracket(
                   top: -2,
                   right: -2,
-                  color: AppColors.cyberPurple.withOpacity(0.65),
+                  color: const Color(0xFF757B86),
                 ),
                 _buildCornerBracket(
                   bottom: -2,
                   left: -2,
-                  color: AppColors.cyberPurple.withOpacity(0.65),
+                  color: const Color(0xFF757B86),
                 ),
                 _buildCornerBracket(
                   bottom: -2,
                   right: -2,
-                  color: AppColors.cyberCyan.withOpacity(0.65),
+                  color: const Color(0xFF757B86),
                 ),
               ],
             ),
@@ -2663,20 +2720,86 @@ class _RegisterPageState extends State<RegisterPage>
         height: 18,
         decoration: BoxDecoration(
           border: Border(
-            top: top != null ? BorderSide(color: color, width: 1.4) : BorderSide.none,
-            left: left != null ? BorderSide(color: color, width: 1.4) : BorderSide.none,
-            right: right != null ? BorderSide(color: color, width: 1.4) : BorderSide.none,
-            bottom: bottom != null ? BorderSide(color: color, width: 1.4) : BorderSide.none,
+            top: top != null
+                ? BorderSide(color: color, width: 1.4)
+                : BorderSide.none,
+            left: left != null
+                ? BorderSide(color: color, width: 1.4)
+                : BorderSide.none,
+            right: right != null
+                ? BorderSide(color: color, width: 1.4)
+                : BorderSide.none,
+            bottom: bottom != null
+                ? BorderSide(color: color, width: 1.4)
+                : BorderSide.none,
           ),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.25),
+              color: Colors.black.withOpacity(0.26),
               blurRadius: 6,
               spreadRadius: 0,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildRegisterInputField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    String? errorText,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    ValueChanged<String>? onChanged,
+  }) {
+    final hasError = errorText != null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          keyboardType: keyboardType,
+          obscureText: obscureText,
+          onChanged: onChanged,
+          style: const TextStyle(color: Colors.white, fontSize: 16),
+          decoration: InputDecoration(
+            hintText: hintText,
+            hintStyle: TextStyle(color: const Color(0xFFA4A9B3), fontSize: 16),
+            prefixIcon: Icon(icon, color: const Color(0xFFBEC3CC), size: 20),
+            suffixIcon: suffixIcon,
+            filled: true,
+            fillColor: const Color(0xFF3A3D45),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 14,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasError ? BubeiColors.error : const Color(0xFF5A5F68),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasError ? BubeiColors.error : Colors.white,
+                width: 1.6,
+              ),
+            ),
+          ),
+        ),
+        if (hasError)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, left: 6),
+            child: Text(
+              errorText,
+              style: TextStyle(color: BubeiColors.error, fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 
@@ -2755,7 +2878,7 @@ class _RegisterPageState extends State<RegisterPage>
                 Text(
                   "密码强度",
                   style: TextStyle(
-                    color: BubeiColors.textSecondary,
+                    color: const Color(0xFFA7ADB8),
                     fontSize: 10.5,
                     letterSpacing: 0.4,
                   ),
@@ -2787,7 +2910,7 @@ class _RegisterPageState extends State<RegisterPage>
                 borderRadius: BorderRadius.circular(2),
                 child: LinearProgressIndicator(
                   value: value,
-                  backgroundColor: BubeiColors.inputBackground,
+                  backgroundColor: const Color(0xFF23262D),
                   valueColor: AlwaysStoppedAnimation<Color>(strengthColor),
                   minHeight: 4,
                 ),
@@ -2809,7 +2932,7 @@ class _RegisterPageState extends State<RegisterPage>
           Text(
             "已有账号？",
             style: TextStyle(
-              color: BubeiColors.textSecondary,
+              color: const Color(0xFFAAB0BA),
               fontSize: 12.5,
               letterSpacing: 0.2,
             ),
@@ -2819,7 +2942,7 @@ class _RegisterPageState extends State<RegisterPage>
             child: Text(
               " 立即登录",
               style: TextStyle(
-                color: BubeiColors.primary,
+                color: Colors.white,
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.4,
@@ -2835,10 +2958,11 @@ class _RegisterPageState extends State<RegisterPage>
     if (_isLoading) {
       return Container(
         width: double.infinity,
-        height: 39,
+        height: 54,
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: AppColors.primaryGradient),
+          color: const Color(0xFF14171C),
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+          border: Border.all(color: const Color(0xFF242932)),
         ),
         child: const Center(
           child: SizedBox(
@@ -2865,20 +2989,42 @@ class _RegisterPageState extends State<RegisterPage>
             borderRadius: BorderRadius.circular(AppTokens.radiusMd),
             boxShadow: [
               BoxShadow(
-                color: (isReady ? AppColors.cyberCyan : AppColors.primary)
-                    .withOpacity(
-                      isReady ? 0.28 + pulse * 0.22 : 0.12 + pulse * 0.08,
-                    ),
-                blurRadius: isReady ? 16 + pulse * 14 : 8 + pulse * 8,
-                spreadRadius: isReady ? 1.2 : 0,
+                color: Colors.black.withOpacity(
+                  isReady ? 0.30 + pulse * 0.08 : 0.18 + pulse * 0.05,
+                ),
+                blurRadius: isReady ? 14 + pulse * 8 : 9 + pulse * 4,
+                spreadRadius: 0,
               ),
             ],
           ),
-          child: TechButton(
-            text: "激活档案",
-            icon: Icons.rocket_launch,
-            onPressed: _handleRegister,
-            isFullWidth: true,
+          child: SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: _handleRegister,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF14171C),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+                  side: const BorderSide(color: Color(0xFF242932)),
+                ),
+              ),
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  "注册",
+                  strutStyle: StrutStyle(height: 1.2, forceStrutHeight: true),
+                  style: TextStyle(
+                    fontSize: 20,
+                    height: 1.2,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -3199,12 +3345,21 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.08),
-            AppColors.cyberPurple.withOpacity(0.06),
+            const Color(0xFF2D3139).withOpacity(0.96),
+            const Color(0xFF23272F).withOpacity(0.96),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+        border: Border.all(color: const Color(0xFF505560)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -3215,14 +3370,14 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
-                colors: [Color(0xFF1b3cff), Color(0xFF0ad4ff)],
+                colors: [Color(0xFF5F6572), Color(0xFF3D424D)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.cyberBlue.withOpacity(0.35),
-                  blurRadius: 18,
+                  color: Colors.black.withOpacity(0.35),
+                  blurRadius: 14,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -3239,13 +3394,10 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
+                _buildMetallicText(
                   checked ? "今天已签到" : "每日签到",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -3262,13 +3414,13 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
                   children: [
                     _buildChip(
                       "保持习惯",
-                      AppColors.primary.withOpacity(0.12),
-                      AppColors.primary,
+                      const Color(0xFF3A3F49),
+                      const Color(0xFFE1E5EC),
                     ),
                     _buildChip(
                       "提升面试状态",
-                      AppColors.success.withOpacity(0.12),
-                      AppColors.success,
+                      const Color(0xFF353A44),
+                      const Color(0xFFCED3DD),
                     ),
                   ],
                 ),
@@ -3282,14 +3434,21 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: checked ? AppColors.surfaceDim : AppColors.primary,
+                color: checked
+                    ? const Color(0xFF2A2E36)
+                    : const Color(0xFF15181E),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: checked
+                      ? const Color(0xFF484D58)
+                      : const Color(0xFF303540),
+                ),
                 boxShadow: checked
                     ? null
                     : [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.35),
-                          blurRadius: 16,
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 14,
                           offset: const Offset(0, 8),
                         ),
                       ],
@@ -3297,7 +3456,9 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
               child: Text(
                 checked ? "已完成" : "签到",
                 style: TextStyle(
-                  color: checked ? AppColors.textSecondary : Colors.white,
+                  color: checked
+                      ? const Color(0xFFBAC0CB)
+                      : const Color(0xFFF2F4F8),
                   fontWeight: FontWeight.w700,
                   fontSize: 12,
                 ),
@@ -3327,184 +3488,177 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: BubeiColors.background,
-      body: DataWaveOverlay(
-        child: TechPioneersHomeBackground(
-          child: SafeArea(
-            child: Stack(
-              children: [
-                Column(
-                  children: [
-                    // 顶部栏 - 头像
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          GestureDetector(
-                            onTap: _goToProfile,
-                            child: Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: BubeiColors.surfaceElevated,
-                                borderRadius: BorderRadius.circular(24),
-                                border: Border.all(
-                                  color: BubeiColors.primary,
-                                  width: 2,
-                                ),
+      body: PremiumStaticBackground(
+        child: SafeArea(
+          child: Stack(
+            children: [
+              Column(
+                children: [
+                  // 顶部栏 - 头像
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        GestureDetector(
+                          onTap: _goToProfile,
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2C3038),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: const Color(0xFF5A616F),
+                                width: 2,
                               ),
-                              child:
-                                  globalUsers[currentUserIndex]['avatarPath'] !=
-                                      null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(22),
-                                      child: Image.file(
-                                        File(
-                                          globalUsers[currentUserIndex]['avatarPath'],
-                                        ),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (c, o, s) => Icon(
-                                          Icons.person,
-                                          color: BubeiColors.primary,
-                                          size: 28,
-                                        ),
+                            ),
+                            child:
+                                globalUsers[currentUserIndex]['avatarPath'] !=
+                                    null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(22),
+                                    child: Image.file(
+                                      File(
+                                        globalUsers[currentUserIndex]['avatarPath'],
                                       ),
-                                    )
-                                  : Icon(
-                                      Icons.person,
-                                      color: BubeiColors.primary,
-                                      size: 28,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (c, o, s) => Icon(
+                                        Icons.person,
+                                        color: const Color(0xFFD8DCE5),
+                                        size: 28,
+                                      ),
                                     ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Hi, ${globalUsers[currentUserIndex]['name']}",
-                                style: TextStyle(
-                                  color: BubeiColors.textPrimary,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                _dailyQuote,
-                                style: TextStyle(
-                                  color: BubeiColors.textSecondary,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 中央内容 - 个人中心风格签到卡片
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment(0, -0.35),
-                        child: _buildCheckInCard(),
-                      ),
-                    ),
-                    // 底部快捷入口 - 使用新的磨砂玻璃按钮
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: FrostedGlassButton(
-                              title: "面试房间",
-                              icon: Icons.play_circle_filled,
-                              style: GlassButtonStyle.interview,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const InterviewRoomPage(),
+                                  )
+                                : Icon(
+                                    Icons.person,
+                                    color: const Color(0xFFD8DCE5),
+                                    size: 28,
                                   ),
-                                );
-                              },
-                            ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: FrostedGlassButton(
-                              title: "定制面试",
-                              icon: Icons.settings,
-                              style: GlassButtonStyle.custom,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => const SetupPage(),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 功能图标
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 8,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildFeatureIcon(
-                            Icons.history_outlined,
-                            "历史",
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const HistoryPage(),
-                              ),
-                            ),
-                          ),
-                          _buildFeatureIcon(
-                            Icons.quiz_outlined,
-                            "题库",
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const QuestionBankPage(),
-                              ),
-                            ),
-                          ),
-                          _buildFeatureIcon(
-                            Icons.emoji_events_outlined,
-                            "成就",
-                            () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const AchievementPage(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                // 爆炸特效层
-                if (_showExplosion)
-                  Builder(
-                    builder: (context) {
-                      final size = MediaQuery.of(context).size;
-                      return Positioned.fill(
-                        child: CheckInExplosion(
-                          trigger: _showExplosion,
-                          center: Offset(size.width / 2, size.height / 2 - 40),
                         ),
-                      );
-                    },
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildMetallicText(
+                              "Hi, ${globalUsers[currentUserIndex]['name']}",
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            Text(
+                              _dailyQuote,
+                              style: TextStyle(
+                                color: const Color(0xFFACB2BE),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-              ],
-            ),
+                  // 中央内容 - 个人中心风格签到卡片
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment(0, -0.35),
+                      child: _buildCheckInCard(),
+                    ),
+                  ),
+                  // 底部快捷入口 - 使用新的磨砂玻璃按钮
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _buildHomeActionButton(
+                            title: "面试房间",
+                            icon: Icons.play_circle_filled,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const InterviewRoomPage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildHomeActionButton(
+                            title: "定制面试",
+                            icon: Icons.settings,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SetupPage(),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 功能图标
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 8,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildFeatureIcon(
+                          Icons.history_outlined,
+                          "历史",
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const HistoryPage(),
+                            ),
+                          ),
+                        ),
+                        _buildFeatureIcon(
+                          Icons.quiz_outlined,
+                          "题库",
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const QuestionBankPage(),
+                            ),
+                          ),
+                        ),
+                        _buildFeatureIcon(
+                          Icons.emoji_events_outlined,
+                          "成就",
+                          () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AchievementPage(),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              // 爆炸特效层
+              if (_showExplosion)
+                Builder(
+                  builder: (context) {
+                    final size = MediaQuery.of(context).size;
+                    return Positioned.fill(
+                      child: CheckInExplosion(
+                        trigger: _showExplosion,
+                        center: Offset(size.width / 2, size.height / 2 - 40),
+                      ),
+                    );
+                  },
+                ),
+            ],
           ),
         ),
       ),
@@ -3516,16 +3670,94 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2E36).withOpacity(0.72),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF4C525D)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: Colors.white.withOpacity(0.6), size: 24),
+            Icon(icon, color: const Color(0xFFD8DDE6), size: 24),
             const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 11,
+              style: TextStyle(color: const Color(0xFFB8BFCA), fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMetallicText(
+    String text, {
+    double fontSize = 16,
+    FontWeight fontWeight = FontWeight.w700,
+  }) {
+    return ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFFF1F4F8), Color(0xFFCAD0DA), Color(0xFF9199A8)],
+        stops: [0.0, 0.55, 1.0],
+      ).createShader(bounds),
+      blendMode: BlendMode.srcIn,
+      child: Text(
+        text,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: fontSize,
+          fontWeight: fontWeight,
+          letterSpacing: 0.2,
+          shadows: [
+            Shadow(
+              color: Colors.black.withOpacity(0.3),
+              offset: const Offset(0, 1),
+              blurRadius: 4,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHomeActionButton({
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF30343D), Color(0xFF242830)],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF585F6B)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.28),
+              blurRadius: 14,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: const Color(0xFFE2E6EE), size: 18),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Color(0xFFF1F4F8),
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
@@ -3796,7 +4028,7 @@ class _AchievementPageState extends State<AchievementPage>
   late TabController _tabController;
   late AnimationController _pulseController;
   late AnimationController _slideController;
-  int _selectedBadgeIndex = -1;
+  final int _selectedBadgeIndex = -1;
 
   List<_BadgeData> get badges {
     final userBadges =
@@ -6071,7 +6303,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final weekCount = (totalDays / 7).ceil();
     final dateFormatter = DateFormat('yyyy-MM-dd');
 
-    Color _colorForCount(int? count) {
+    Color colorForCount(int? count) {
       if (count == null) {
         return Colors.transparent;
       }
@@ -6092,7 +6324,7 @@ class _HistoryPageState extends State<HistoryPage> {
       return const Color(0xFFB91C1C);
     }
 
-    List<Widget> _buildWeekColumns() {
+    List<Widget> buildWeekColumns() {
       return List.generate(weekCount, (week) {
         return Padding(
           padding: EdgeInsets.only(right: week == weekCount - 1 ? 0 : 3),
@@ -6109,14 +6341,14 @@ class _HistoryPageState extends State<HistoryPage> {
                   ? (interviewData[normalized] ?? 0)
                   : null;
               final tooltipText =
-                  "${dateFormatter.format(normalized)} · ${count == null ? 0 : count} 场";
+                  "${dateFormatter.format(normalized)} · ${count ?? 0} 场";
 
               final cell = Container(
                 width: 11,
                 height: 11,
                 margin: const EdgeInsets.symmetric(vertical: 1),
                 decoration: BoxDecoration(
-                  color: _colorForCount(count),
+                  color: colorForCount(count),
                   borderRadius: BorderRadius.circular(2),
                   border: inRange
                       ? null
@@ -6222,7 +6454,7 @@ class _HistoryPageState extends State<HistoryPage> {
               Expanded(
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  child: Row(children: _buildWeekColumns()),
+                  child: Row(children: buildWeekColumns()),
                 ),
               ),
             ],
@@ -7470,37 +7702,35 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
           const SizedBox(height: 14),
-          ...tips
-              .map(
-                (tip) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(top: 6, right: 10),
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          tip,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
+          ...tips.map(
+            (tip) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.only(top: 6, right: 10),
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                  Expanded(
+                    child: Text(
+                      tip,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -7754,7 +7984,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ...upcoming.map((e) => _buildScheduleItem(e)).toList(),
+                ...upcoming.map((e) => _buildScheduleItem(e)),
               ],
             )
           else
@@ -8203,7 +8433,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     (route) => false,
                   );
                 },
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
               ),
             ),
             const Divider(height: 1),
@@ -8505,7 +8735,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
 class _CalendarWeekdayLabel extends StatelessWidget {
   final String text;
-  const _CalendarWeekdayLabel(this.text, {super.key});
+  const _CalendarWeekdayLabel(this.text);
 
   @override
   Widget build(BuildContext context) {
@@ -12028,37 +12258,35 @@ class ReportPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ...items
-              .map(
-                (item) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(top: 6, right: 10),
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          item,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.only(top: 6, right: 10),
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                  Expanded(
+                    child: Text(
+                      item,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                        height: 1.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -12170,8 +12398,8 @@ class _InterviewChatPageState extends State<InterviewChatPage>
   int _sessionSeconds = 0;
 
   // 情绪状态
-  String _emotionStatus = "沉稳自如";
-  int _emotionScore = 85;
+  final String _emotionStatus = "沉稳自如";
+  final int _emotionScore = 85;
 
   // 实时情绪数据 (模拟)
   final List<double> _emotionHistory = [65, 70, 68, 75, 80, 78, 82, 85];
@@ -12404,19 +12632,16 @@ class _InterviewChatPageState extends State<InterviewChatPage>
         .toDouble();
     final double stability = _emotionScore.toDouble();
 
-    double _clampScore(double value) => value.clamp(55, 99).toDouble();
+    double clampScore(double value) => value.clamp(55, 99).toDouble();
 
     return [
-      {"name": "技术深度", "value": _clampScore(base + 4)},
-      {
-        "name": "架构思维",
-        "value": _clampScore(base - 2 + interactionFactor * 0.3),
-      },
-      {"name": "沟通协作", "value": _clampScore(base + 3)},
-      {"name": "应变能力", "value": _clampScore(base - 5 + interactionFactor)},
-      {"name": "情绪稳定", "value": _clampScore(stability)},
-      {"name": "表达清晰", "value": _clampScore(base + 2)},
-      {"name": "业务理解", "value": _clampScore(base - 3)},
+      {"name": "技术深度", "value": clampScore(base + 4)},
+      {"name": "架构思维", "value": clampScore(base - 2 + interactionFactor * 0.3)},
+      {"name": "沟通协作", "value": clampScore(base + 3)},
+      {"name": "应变能力", "value": clampScore(base - 5 + interactionFactor)},
+      {"name": "情绪稳定", "value": clampScore(stability)},
+      {"name": "表达清晰", "value": clampScore(base + 2)},
+      {"name": "业务理解", "value": clampScore(base - 3)},
     ];
   }
 
