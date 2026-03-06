@@ -3,10 +3,8 @@ import 'package:http/http.dart' as http;
 
 /// 代码执行服务 - 使用Judge0 API执行代码
 class CodeExecutionService {
-  // Judge0 API配置 (可以使用免费版本或自建服务)
-  static const String _baseUrl = 'https://judge0-ce.p.rapidapi.com';
-  static const String _rapidApiKey = 'YOUR_RAPIDAPI_KEY'; // 需要替换
-  static const String _rapidApiHost = 'judge0-ce.p.rapidapi.com';
+  // Judge0 API配置 - 自建服务
+  static const String _baseUrl = 'http://121.29.19.131:2358';
 
   // 支持的语言及其Judge0 language_id
   static const Map<String, int> languageIds = {
@@ -128,8 +126,6 @@ class CodeExecutionService {
         Uri.parse('$_baseUrl/submissions?base64_encoded=false&wait=true'),
         headers: {
           'Content-Type': 'application/json',
-          'X-RapidAPI-Key': _rapidApiKey,
-          'X-RapidAPI-Host': _rapidApiHost,
         },
         body: jsonEncode({
           'source_code': code,

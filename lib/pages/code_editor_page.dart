@@ -1335,9 +1335,9 @@ class Solution {
 
   // 构建控制台面板（NeonBorderCard包装）
   Widget _buildConsolePanel() {
-    return Container(
-      height: 180,
-      decoration: BoxDecoration(
+    return ClipRect(
+      child: Container(
+        decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -1410,14 +1410,19 @@ class Solution {
           // 测试用例状态指示器（彩色徽章组）
           if (_testCaseResults.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: List.generate(_testCaseResults.length, (index) {
-                  final passed = _testCaseResults[index];
-                  return _buildTestCaseBadge(index + 1, passed);
-                }),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              constraints: const BoxConstraints(maxHeight: 36),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: List.generate(_testCaseResults.length, (index) {
+                    final passed = _testCaseResults[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: _buildTestCaseBadge(index + 1, passed),
+                    );
+                  }),
+                ),
               ),
             ),
           // 输出内容（终端风格配色）
@@ -1441,7 +1446,8 @@ class Solution {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 
   // 状态徽章

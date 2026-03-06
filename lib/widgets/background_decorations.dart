@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
-import '../config/app_config.dart' show isDarkBackground;
+import '../theme/login_theme.dart';
 
 /// stitch_login_screen 风格背景装饰组件
 class TechBackground extends StatelessWidget {
@@ -25,14 +25,10 @@ class TechBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 根据全局设置选择背景色
-    final backgroundColor = isDarkBackground
-        ? const Color(0xFF101622)  // 深色背景
-        : AppColors.background;     // 浅色背景
+    // 黑白简约风格：使用 LoginTheme 的背景色
+    final backgroundColor = LoginTheme.background;
 
-    final gridColor = isDarkBackground
-        ? AppColors.primary.withOpacity(0.08)
-        : AppColors.primary.withOpacity(0.05);
+    final gridColor = LoginTheme.cardBorder.withOpacity(0.15);
 
     return Stack(
       children: [
@@ -1416,104 +1412,32 @@ class _HomeCodeChar {
 class TechPioneersHomeBackgroundPainter extends CustomPainter {
   final double animationValue;
 
-  // 代码字符集 - 带类型信息用于语法高亮
-  static const List<_HomeCodeChar> _codeChars = [
-    _HomeCodeChar('0', _HomeCodeCharType.digit),
-    _HomeCodeChar('1', _HomeCodeCharType.digit),
-    _HomeCodeChar('01', _HomeCodeCharType.digit),
-    _HomeCodeChar('10', _HomeCodeCharType.digit),
-    _HomeCodeChar('110', _HomeCodeCharType.digit),
-    _HomeCodeChar('101', _HomeCodeCharType.digit),
-    _HomeCodeChar('{', _HomeCodeCharType.bracket),
-    _HomeCodeChar('}', _HomeCodeCharType.bracket),
-    _HomeCodeChar('<', _HomeCodeCharType.bracket),
-    _HomeCodeChar('>', _HomeCodeCharType.bracket),
-    _HomeCodeChar('/', _HomeCodeCharType.symbol),
-    _HomeCodeChar('\\', _HomeCodeCharType.symbol),
-    _HomeCodeChar('if', _HomeCodeCharType.keyword),
-    _HomeCodeChar('for', _HomeCodeCharType.keyword),
-    _HomeCodeChar('while', _HomeCodeCharType.keyword),
-    _HomeCodeChar('return', _HomeCodeCharType.keyword),
-    _HomeCodeChar('func', _HomeCodeCharType.keyword),
-    _HomeCodeChar('var', _HomeCodeCharType.keyword),
-    _HomeCodeChar('let', _HomeCodeCharType.keyword),
-    _HomeCodeChar('const', _HomeCodeCharType.keyword),
-    _HomeCodeChar('class', _HomeCodeCharType.keyword),
-    _HomeCodeChar('import', _HomeCodeCharType.keyword),
-    _HomeCodeChar('=>', _HomeCodeCharType.symbol),
-    _HomeCodeChar('==', _HomeCodeCharType.symbol),
-    _HomeCodeChar('!=', _HomeCodeCharType.symbol),
-    _HomeCodeChar('&&', _HomeCodeCharType.symbol),
-    _HomeCodeChar('||', _HomeCodeCharType.symbol),
-  ];
-
-  // 语法高亮颜色映射（绿色主题）
+  // 语法高亮颜色映射（深色主题 - 绿色为主）
   static const Map<_HomeCodeCharType, Color> _colorMap = {
-    _HomeCodeCharType.digit: Color(0xFF80DEEA),       // 浅青色
-    _HomeCodeCharType.keyword: Color(0xFF4CAF50),     // 绿色
-    _HomeCodeCharType.symbol: Color(0xFFFFEB3B),      // 黄色
-    _HomeCodeCharType.bracket: Color(0xFFFF9800),     // 橙色
-    _HomeCodeCharType.string: Color(0xFFF48FB1),      // 粉色
+    _HomeCodeCharType.digit: Color(0xFF4CAF50),       // 绿色
+    _HomeCodeCharType.keyword: Color(0xFF81C784),      // 浅绿色
+    _HomeCodeCharType.symbol: Color(0xFFA5D6A7),       // 更浅的绿色
+    _HomeCodeCharType.bracket: Color(0xFF66BB6A),      // 中绿色
+    _HomeCodeCharType.string: Color(0xFF388E3C),       // 深绿色
   };
 
   TechPioneersHomeBackgroundPainter({required this.animationValue});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 深蓝色渐变背景
-    final backgroundGradient = LinearGradient(
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-      colors: [
-        const Color(0xFF0A0E1A),
-        const Color(0xFF16213E),
-        const Color(0xFF0F172A),
-      ],
-      stops: const [0.0, 0.5, 1.0],
+    // 纯黑背景
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = const Color(0xFF1A1A1A),
     );
-    final backgroundRect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final backgroundPaint = Paint()..shader = backgroundGradient.createShader(backgroundRect);
-    canvas.drawRect(backgroundRect, backgroundPaint);
 
-    // 绘制星空粒子背景
-    _drawStarField(canvas, size);
-
-    // 绘制六边形网格背景
+    // 绘制深灰色网格（降低透明度）
     _drawHexGrid(canvas, size);
-
-    // 绘制音频频谱模拟
-    _drawAudioSpectrum(canvas, size);
-
-    // 绘制脉冲扩散圆环
-    _drawPulseRings(canvas, size);
-
-    // 绘制电路板路径
-    _drawCircuitPaths(canvas, size);
-
-    // 绘制代码雨效果 - 多层带语法高亮
-    _drawCodeRainLayer(canvas, size, 0.8, 0.12, 11);
-    _drawCodeRainLayer(canvas, size, 0.5, 0.08, 9);
-    _drawCodeRainLayer(canvas, size, 0.3, 0.05, 7);
-
-    // 绘制漂浮代码片段（带光标效果）
-    _drawFloatingSnippets(canvas, size);
-
-    // 绘制数据流粒子
-    _drawDataFlowParticles(canvas, size);
-
-    // 绘制发光连接网络
-    _drawNetworkNodes(canvas, size);
-
-    // 绘制呼吸光环
-    _drawBreathingRings(canvas, size);
-
-    // 绘制扫描激光线
-    _drawScanLine(canvas, size);
   }
 
   void _drawHexGrid(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = const Color(0xFF2D5016).withOpacity(0.06)
+      ..color = const Color(0xFF404040).withOpacity(0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -1547,159 +1471,6 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
     }
     path.close();
     return path;
-  }
-
-  void _drawPulseRings(Canvas canvas, Size size) {
-    // 从多个源点扩散的脉冲圆环
-    final centers = [
-      Offset(size.width * 0.15, size.height * 0.2),
-      Offset(size.width * 0.85, size.height * 0.8),
-      Offset(size.width * 0.5, size.height * 0.5),
-      Offset(size.width * 0.75, size.height * 0.25),
-    ];
-
-    for (final center in centers) {
-      // 每个源点产生多个扩散圆环
-      for (int i = 0; i < 2; i++) {
-        final ringPhase = ((animationValue * 0.4 + i * 0.5 + centers.indexOf(center) * 0.25) % 1.0);
-        final radius = ringPhase * 180;
-        final alpha = (1 - ringPhase) * 0.12;
-
-        final ringPaint = Paint()
-          ..color = const Color(0xFF4CAF50).withOpacity(alpha)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2.5 * (1 - ringPhase)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-
-        canvas.drawCircle(center, radius, ringPaint);
-      }
-    }
-  }
-
-  void _drawCodeRainLayer(Canvas canvas, Size size, double speed, double baseOpacity, int fontSize) {
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-
-    // 代码雨列数
-    const columnCount = 30;
-    final columnWidth = size.width / columnCount;
-
-    // 使用伪随机但确定性的位置计算
-    for (int col = 0; col < columnCount; col++) {
-      // 每列的起始偏移（基于列索引的伪随机）
-      final columnOffset = (col * 83.7) % 100 / 100;
-      // 计算当前列的整体移动位置
-      final flowPosition = ((animationValue * speed * 150 + columnOffset * size.height) % (size.height + 80)) - 40;
-
-      // 在该列绘制多个字符形成雨滴效果
-      final dropLength = 12 + (col % 4) * 4;
-      for (int i = 0; i < dropLength; i++) {
-        final charY = flowPosition - i * fontSize * 1.2;
-
-        // 只绘制在屏幕内的字符
-        if (charY < -fontSize || charY > size.height + fontSize) continue;
-
-        // 计算透明度：头部最亮，尾部渐隐
-        final distanceFromHead = i / dropLength;
-        final alpha = baseOpacity * (1 - distanceFromHead * 0.7);
-
-        // 头部字符高亮（白色）
-        final isHead = i == 0;
-        Color charColor;
-
-        if (isHead) {
-          charColor = const Color(0xFFFFFFFF).withOpacity((alpha * 1.8).clamp(0.0, 1.0));
-        } else {
-          // 选择字符（基于位置的伪随机）
-          final charIndex = ((col * 11 + i * 5 + animationValue * 8) % _codeChars.length).floor();
-          final codeChar = _codeChars[charIndex];
-          // 使用语法高亮颜色
-          charColor = _colorMap[codeChar.type]!.withOpacity(alpha.clamp(0.0, 1.0));
-        }
-
-        // 选择字符
-        final charIndex = ((col * 11 + i * 5 + animationValue * 8) % _codeChars.length).floor();
-        final char = _codeChars[charIndex].value;
-
-        final textStyle = TextStyle(
-          color: charColor,
-          fontSize: fontSize.toDouble(),
-          fontFamily: 'Courier',
-          height: 1.2,
-        );
-
-        textPainter.text = TextSpan(text: char, style: textStyle);
-        textPainter.layout();
-        textPainter.paint(canvas, Offset(col * columnWidth + columnWidth / 2 - textPainter.width / 2, charY));
-      }
-    }
-  }
-
-  void _drawFloatingSnippets(Canvas canvas, Size size) {
-    final textPainter = TextPainter(textDirection: TextDirection.ltr);
-
-    final snippets = [
-      'function solve()',
-      'return result;',
-      'if (condition)',
-      '// TODO: fix',
-      'const π = 3.14159',
-      'while (running)',
-      'class Solution',
-      'async/await',
-      'null ?? value',
-      'useState(false)',
-      'export default',
-      'array.map(x => x)',
-      'try { catch }',
-      'SELECT * FROM',
-      '<Component />',
-      'interface User',
-      'type Result =',
-      '&str mut',
-      'fn main()',
-      'let x = 42;',
-    ];
-
-    // 计算光标闪烁状态
-    final cursorVisible = (animationValue * 6) % 2 < 1;
-
-    for (int i = 0; i < snippets.length; i++) {
-      // 每个代码片段独立的运动轨迹
-      final snippetOffset = (animationValue * 25 + i * 45) % (size.height + 80);
-      final x = (i * 97.3) % (size.width - 120) + 15;
-      final y = snippetOffset - 40;
-
-      // 边界淡入淡出效果
-      final fadeZone = 60.0;
-      double alpha = 0.2;
-      if (y < fadeZone) {
-        alpha = 0.2 * (y / fadeZone);
-      } else if (y > size.height - fadeZone) {
-        alpha = 0.2 * ((size.height - y) / fadeZone);
-      }
-
-      // 绘制代码片段
-      final textStyle = TextStyle(
-        color: const Color(0xFF4CAF50).withOpacity(alpha.clamp(0.0, 0.2)),
-        fontSize: 9,
-        fontFamily: 'Courier',
-      );
-
-      textPainter.text = TextSpan(text: snippets[i], style: textStyle);
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x, y));
-
-      // 绘制终端光标（闪烁效果）
-      if (cursorVisible) {
-        final cursorX = x + textPainter.width + 2;
-        final cursorPaint = Paint()
-          ..color = const Color(0xFF4CAF50).withOpacity(alpha.clamp(0.0, 0.35));
-        canvas.drawRect(
-          Rect.fromLTWH(cursorX, y, 5, 9),
-          cursorPaint,
-        );
-      }
-    }
   }
 
   void _drawDataFlowParticles(Canvas canvas, Size size) {

@@ -34,3 +34,6 @@ export 'data_display.dart';
 // 题解相关组件
 export 'solution_method_selector.dart';
 export 'language_selector.dart';
+
+// 简洁风格组件
+export 'simple_input_field.dart';

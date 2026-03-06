@@ -26,6 +26,7 @@ import 'theme/app_colors.dart';
 import 'theme/bubei_colors.dart';
 import 'theme/app_tokens.dart';
 import 'theme/app_text_styles.dart';
+import 'theme/login_theme.dart';
 
 // 导入新的UI组件
 import 'widgets/glass_card.dart';
@@ -43,6 +44,7 @@ import 'widgets/tech_selection_chip.dart';
 import 'widgets/section_header.dart';
 import 'widgets/tech_toggle_switch.dart';
 import 'widgets/glass_input_field.dart';
+import 'widgets/simple_input_field.dart';
 
 // 导入代码编辑器
 import 'pages/code_editor_page.dart';
@@ -541,7 +543,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BubeiColors.background,
+      backgroundColor: LoginTheme.background,
       body: SafeArea(
         child: Stack(
           children: [
@@ -550,19 +552,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             // 主内容
             Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 400),
+                  constraints: const BoxConstraints(maxWidth: 360),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 16),
                       // Logo
                       _buildLogo(),
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 24),
                       // 登录表单卡片
                       _buildLoginForm(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
                       // 服务条款和隐私协议
                       _buildTermsAndPrivacy(),
                     ],
@@ -585,144 +587,59 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   // ==================== Bubei风格登录页UI ====================
 
   Widget _buildBackgroundDecorations() {
-    return const TechPioneersBackground(child: SizedBox.expand());
+    return Container(color: LoginTheme.background);
   }
 
   Widget _buildLogo() {
     return Column(
       children: [
         Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: BubeiColors.primary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
+          width: 140,
+          height: 140,
           child: Image.asset('logo.png', fit: BoxFit.contain),
         ),
-        const SizedBox(height: 20),
-        // 艺术化 Husterview 标题
-        _buildAnimatedTitle(),
-        const SizedBox(height: 12),
+        Container(
+          width: 200,
+          child: Image.asset('Ntervue.png', fit: BoxFit.contain),
+        ),
+        const SizedBox(height: 6),
         Text(
           "AI面试助手",
           style: TextStyle(
-            color: BubeiColors.textSecondary,
-            fontSize: 14,
-            letterSpacing: 4,
+            color: LoginTheme.textSecondary,
+            fontSize: 11,
+            letterSpacing: 2,
           ),
         ),
       ],
     );
   }
 
-  // 艺术化标题组件 - 带发光脉冲动画
-  Widget _buildAnimatedTitle() {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: const Duration(milliseconds: 800),
-      builder: (context, value, child) {
-        return Opacity(
-          opacity: value,
-          child: Transform.scale(
-            scale: 0.8 + value * 0.2,
-            child: child,
-          ),
-        );
-      },
-      child: _buildGlowingTitle(),
-    );
-  }
-
-  Widget _buildGlowingTitle() {
-    return AnimatedBuilder(
-      animation: _logoController,
-      builder: (context, child) {
-        return Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: BubeiColors.primary.withOpacity(0.3),
-                blurRadius: 20 + _logoFadeAnimation.value * 10,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: Stack(
-            children: [
-              // 描边效果
-              Text(
-                "Ntervue",
-                style: TextStyle(
-                  fontSize: 43,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 3,
-                  foreground: Paint()
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = 2
-                    ..color = BubeiColors.primary.withOpacity(0.5),
-                ),
-              ),
-              // 渐变填充
-              ShaderMask(
-                shaderCallback: (bounds) => const LinearGradient(
-                  colors: [
-                    Color(0xFF00F5FF),  // 赛博青
-                    Color(0xFF3B82F6),  // 亮蓝
-                    Color(0xFF8B5CF6),  // 紫色
-                    Color(0xFFEC4899),  // 粉色
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  stops: [0.0, 0.3, 0.7, 1.0],
-                  tileMode: TileMode.mirror,
-                ).createShader(bounds),
-                blendMode: BlendMode.srcIn,
-                child: const Text(
-                  "Ntervue",
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 3,
-                    color: Colors.white,
-                    height: 1.0,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildLoginForm() {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: BubeiColors.surface.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(16),
+        color: LoginTheme.cardBackground,
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: BubeiColors.divider,
+          color: LoginTheme.cardBorder,
           width: 1,
         ),
       ),
       child: Column(
         children: [
-          // 账号输入 - 使用毛玻璃输入框
-          GlassInputField(
+          // 账号输入 - 使用简洁输入框
+          SimpleInputField(
             label: "账号",
             controller: _userController,
             hintText: "请输入账号 / 邮箱 / 手机号",
             prefixIcon: Icons.person_outlined,
-            autoDetectType: true,
-            connectionStatus: ConnectionStatus.online,
             errorText: _usernameError,
             enableClearButton: true,
           ),
-          const SizedBox(height: 16),
-          // 密码输入 - 使用毛玻璃输入框
-          GlassInputField(
+          const SizedBox(height: 12),
+          // 密码输入 - 使用简洁输入框
+          SimpleInputField(
             label: "密码",
             controller: _passController,
             hintText: "请输入密码",
@@ -731,7 +648,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             errorText: _passwordError,
             showCapsLockHint: true,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           // 忘记密码链接
           Align(
             alignment: Alignment.centerRight,
@@ -740,7 +657,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               child: Text(
                 "忘记密码？",
                 style: TextStyle(
-                  color: BubeiColors.primary,
+                  color: LoginTheme.linkColor,
                   fontSize: 12,
                 ),
               ),
@@ -750,24 +667,24 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           // 登录按钮
           SizedBox(
             width: double.infinity,
-            height: 56,
+            height: 48,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleLogin,
               style: ElevatedButton.styleFrom(
-                backgroundColor: BubeiColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                backgroundColor: LoginTheme.buttonBackground,
+                foregroundColor: LoginTheme.buttonText,
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(LoginTheme.buttonText),
                       ),
                     )
                   : const Text(
@@ -777,15 +694,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ),
           ),
           // 注册入口
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 "还没有账号？",
                 style: TextStyle(
-                  color: BubeiColors.textSecondary,
-                  fontSize: 13,
+                  color: LoginTheme.textSecondary,
+                  fontSize: 12,
                 ),
               ),
               GestureDetector(
@@ -800,7 +717,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 child: Text(
                   " 立即注册",
                   style: TextStyle(
-                    color: BubeiColors.primary,
+                    color: LoginTheme.linkColor,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -817,7 +734,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // 黄色圆形Checkbox
+        // 黑色圆形Checkbox
         GestureDetector(
           onTap: () => setState(() => _agreedToTerms = !_agreedToTerms),
           child: Container(
@@ -825,9 +742,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             height: 20,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: _agreedToTerms ? BubeiColors.warning : Colors.transparent,
+              color: _agreedToTerms ? LoginTheme.checkboxActive : Colors.transparent,
               border: Border.all(
-                color: _agreedToTerms ? BubeiColors.warning : BubeiColors.textTertiary,
+                color: _agreedToTerms ? LoginTheme.checkboxActive : LoginTheme.textSecondary,
                 width: 1.5,
               ),
             ),
@@ -839,7 +756,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         const SizedBox(width: 8),
         Text(
           "我已阅读并同意",
-          style: TextStyle(color: BubeiColors.textTertiary, fontSize: 12),
+          style: TextStyle(color: LoginTheme.textSecondary, fontSize: 12),
         ),
         TextButton(
           onPressed: () {},
@@ -850,7 +767,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
           child: Text(
             "《服务条款》",
-            style: TextStyle(color: BubeiColors.primary, fontSize: 12),
+            style: TextStyle(color: LoginTheme.linkColor, fontSize: 12),
           ),
         ),
         TextButton(
@@ -862,7 +779,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
           child: Text(
             "《隐私协议》",
-            style: TextStyle(color: BubeiColors.primary, fontSize: 12),
+            style: TextStyle(color: LoginTheme.linkColor, fontSize: 12),
           ),
         ),
       ],
@@ -876,7 +793,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         MaterialPageRoute(builder: (_) => const MainEntryPage()),
       ),
       style: TextButton.styleFrom(
-        foregroundColor: BubeiColors.textSecondary,
+        foregroundColor: LoginTheme.textSecondary,
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1369,8 +1286,9 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return TechBackground(
+      showGradientOrbs: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: LoginTheme.background,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -1980,7 +1898,7 @@ class _MainEntryPageState extends State<MainEntryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BubeiColors.background,
+      backgroundColor: LoginTheme.background,
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
@@ -2136,79 +2054,76 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
     );
   }
 
-  // 个人中心风格的签到卡片
+  // 个人中心风格的签到卡片（半透明磨砂状）
   Widget _buildCheckInCard() {
     final checked = _isCheckedIn;
     final streak = _checkInDays;
     final totalDays = _totalCheckInDays;
-    return Container(
-      width: 320,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [AppColors.primary.withOpacity(0.08), AppColors.cyberPurple.withOpacity(0.06)]),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF1b3cff), Color(0xFF0ad4ff)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              boxShadow: [
-                BoxShadow(color: AppColors.cyberBlue.withOpacity(0.35), blurRadius: 18, offset: const Offset(0, 8)),
-              ],
-            ),
-            child: Icon(checked ? Icons.verified_rounded : Icons.bolt_rounded, color: Colors.white, size: 22),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          width: 320,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.15)),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(checked ? "今天已签到" : "每日签到", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-                const SizedBox(height: 2),
-                Text("连续 $streak 天 · 累积 $totalDays 天", style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: LoginTheme.accentGreen,
+                ),
+                child: Icon(checked ? Icons.verified_rounded : Icons.bolt_rounded, color: Colors.white, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildChip("保持习惯", AppColors.primary.withOpacity(0.12), AppColors.primary),
-                    _buildChip("提升面试状态", AppColors.success.withOpacity(0.12), AppColors.success),
+                    Text(checked ? "今天已签到" : "每日签到", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: LoginTheme.textPrimary)),
+                    const SizedBox(height: 2),
+                    Text("连续 $streak 天 · 累积 $totalDays 天", style: TextStyle(color: LoginTheme.textSecondary, fontSize: 11)),
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 4,
+                      runSpacing: 4,
+                      children: [
+                        _buildChip("保持习惯", LoginTheme.accentGreen.withOpacity(0.2), LoginTheme.accentGreen),
+                        _buildChip("提升面试状态", LoginTheme.accentCyan.withOpacity(0.2), LoginTheme.accentCyan),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            key: _checkInButtonKey,
-            onTap: _handleCheckIn,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: checked ? AppColors.surfaceDim : AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: checked
-                    ? null
-                    : [BoxShadow(color: AppColors.primary.withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 8))],
               ),
-              child: Text(
-                checked ? "已完成" : "签到",
-                style: TextStyle(color: checked ? AppColors.textSecondary : Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+              const SizedBox(width: 8),
+              GestureDetector(
+                key: _checkInButtonKey,
+                onTap: _handleCheckIn,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: checked ? Colors.white.withOpacity(0.1) : LoginTheme.buttonBackground,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: checked ? Colors.white.withOpacity(0.2) : LoginTheme.accentGreen),
+                  ),
+                  child: Text(
+                    checked ? "已完成" : "签到",
+                    style: TextStyle(color: checked ? LoginTheme.textSecondary : LoginTheme.accentGreen, fontWeight: FontWeight.w700, fontSize: 12),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -2224,7 +2139,7 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BubeiColors.background,
+      backgroundColor: LoginTheme.background,
       body: DataWaveOverlay(
         child: TechPioneersHomeBackground(
           child: SafeArea(
@@ -2700,9 +2615,9 @@ class _AchievementPageState extends State<AchievementPage>
   Widget build(BuildContext context) {
     return TechBackground(
       showGrid: true,
-      showGradientOrbs: true,
+      showGradientOrbs: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: LoginTheme.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -3097,28 +3012,20 @@ class _BadgeCardState extends State<_BadgeCard>
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            gradient: widget.badge.unlocked
-                ? LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      BubeiColors.surface,
-                      BubeiColors.surfaceElevated,
-                    ],
-                  )
-                : null,
-            color: widget.badge.unlocked ? null : BubeiColors.surfaceDim,
+            // 黑白简约风格：深灰卡片背景
+            color: widget.badge.unlocked ? LoginTheme.cardBackground : LoginTheme.cardBackground.withOpacity(0.5),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: widget.badge.unlocked
-                  ? AppColors.primary
-                  : BubeiColors.divider,
-              width: widget.badge.unlocked ? 1.5 : 1,
+                  ? LoginTheme.cardBorder
+                  : LoginTheme.cardBorder.withOpacity(0.5),
+              width: 1,
             ),
+            // 简单的投影效果，去除霓虹发光
             boxShadow: widget.badge.unlocked
                 ? [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.2),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
@@ -3157,21 +3064,15 @@ class _BadgeCardState extends State<_BadgeCard>
                           );
                         },
                       ),
-                    // 图标背景
+                    // 图标背景 - 保留彩色点缀
                     Container(
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
-                        gradient: widget.badge.unlocked
-                            ? LinearGradient(
-                                colors: AppColors.primaryGradient,
-                              )
-                            : null,
-                        color: widget.badge.unlocked ? null : BubeiColors.surfaceDim,
+                        // 黑白简约风格：纯色背景
+                        color: widget.badge.unlocked ? LoginTheme.accentOrange : LoginTheme.cardBackground,
                         shape: BoxShape.circle,
-                        boxShadow: widget.badge.unlocked
-                            ? AppColors.neonShadow
-                            : null,
+                        // 去除霓虹发光效果
                       ),
                       child: Icon(
                         widget.badge.icon,
@@ -4542,8 +4443,9 @@ class _HistoryPageState extends State<HistoryPage> {
       userHistory.map((e) => (e['totalScore'] ?? 0) as int).reduce((a, b) => a + b) / totalInterviews;
 
     return TechBackground(
+      showGradientOrbs: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: LoginTheme.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -6358,8 +6260,9 @@ class _ProfilePageState extends State<ProfilePage> {
       (user['history'] as List).map((e) => (e['totalScore'] ?? 0) as int).reduce((a, b) => a + b) / historyCount;
 
     return TechBackground(
+      showGradientOrbs: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: LoginTheme.background,
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -7070,8 +6973,9 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
   @override
   Widget build(BuildContext context) {
     return TechBackground(
+      showGradientOrbs: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: LoginTheme.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -7833,8 +7737,9 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return TechBackground(
+      showGradientOrbs: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: LoginTheme.background,
         body: SafeArea(
           child: Column(
             children: [
@@ -9211,8 +9116,9 @@ class ReportPage extends StatelessWidget {
     final int score = reportData['totalScore'] ?? reportData['score'] ?? 85;
 
     return TechBackground(
+      showGradientOrbs: false,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: LoginTheme.background,
         body: SafeArea(
           child: SingleChildScrollView(
             child: Column(
