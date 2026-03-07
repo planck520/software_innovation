@@ -31,7 +31,6 @@ import 'theme/app_text_styles.dart';
 import 'widgets/glass_card.dart';
 import 'widgets/tech_button.dart';
 import 'widgets/ios_text_field.dart';
-import 'widgets/ios_bottom_nav.dart';
 import 'widgets/tech_progress_indicator.dart';
 import 'widgets/page_transitions.dart';
 import 'widgets/staggered_list_view.dart';
@@ -3134,7 +3133,6 @@ class MainEntryPage extends StatefulWidget {
 }
 
 class _MainEntryPageState extends State<MainEntryPage> {
-  int _currentIndex = 0;
   final PageController _pageController = PageController();
 
   // 3个页面（首页不通过底部导航访问）
@@ -3144,28 +3142,15 @@ class _MainEntryPageState extends State<MainEntryPage> {
     const AchievementPage(), // 成就
   ];
 
-  // 3个底部导航项
-  final List<NavItem> _navItems = const [
-    NavItem(icon: Icons.history_outlined, activeIcon: Icons.history, label: ""),
-    NavItem(icon: Icons.quiz_outlined, activeIcon: Icons.quiz, label: ""),
-    NavItem(
-      icon: Icons.emoji_events_outlined,
-      activeIcon: Icons.emoji_events,
-      label: "",
-    ),
-  ];
-
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
-  void _onPageChanged(int index) {
-    setState(() => _currentIndex = index);
-  }
-
+  // 保留页面跳转能力，供首页快捷入口调用。
   void _onNavTap(int index) {
+    if (index < 0 || index >= _pages.length) return;
     _pageController.animateToPage(
       index,
       duration: const Duration(milliseconds: 300),
@@ -3179,13 +3164,7 @@ class _MainEntryPageState extends State<MainEntryPage> {
       backgroundColor: BubeiColors.background,
       body: PageView(
         controller: _pageController,
-        onPageChanged: _onPageChanged,
         children: _pages,
-      ),
-      bottomNavigationBar: IosBottomNav(
-        currentIndex: _currentIndex,
-        onTap: _onNavTap,
-        items: _navItems,
       ),
     );
   }
@@ -3607,40 +3586,55 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
                       horizontal: 24,
                       vertical: 8,
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildFeatureIcon(
-                          Icons.history_outlined,
-                          "历史",
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const HistoryPage(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildFeatureIcon(
+                              Icons.history_outlined,
+                              "历史",
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const HistoryPage(),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                        _buildFeatureIcon(
-                          Icons.quiz_outlined,
-                          "题库",
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const QuestionBankPage(),
+                          Expanded(
+                            child: _buildFeatureIcon(
+                              Icons.quiz_outlined,
+                              "题库",
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const QuestionBankPage(),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                        _buildFeatureIcon(
-                          Icons.emoji_events_outlined,
-                          "成就",
-                          () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const AchievementPage(),
+                          Expanded(
+                            child: _buildFeatureIcon(
+                              Icons.emoji_events_outlined,
+                              "成就",
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const AchievementPage(),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -3667,16 +3661,12 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
 
   Widget _buildFeatureIcon(IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF2A2E36).withOpacity(0.72),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF4C525D)),
-        ),
+      child: SizedBox(
+        height: 56,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: const Color(0xFFD8DDE6), size: 24),
             const SizedBox(height: 4),
