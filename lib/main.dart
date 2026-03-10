@@ -3162,10 +3162,7 @@ class _MainEntryPageState extends State<MainEntryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: BubeiColors.background,
-      body: PageView(
-        controller: _pageController,
-        children: _pages,
-      ),
+      body: PageView(controller: _pageController, children: _pages),
     );
   }
 }
@@ -5444,6 +5441,17 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
+  static const List<Color> _historyMetalGradient = [
+    Color(0xFF232323),
+    Color(0xFF07BBEC),
+  ];
+  static const Color _historyNumberColor = Color(0xFFECECEC);
+  static const Color _historyAccentMint = Color(0xFFB7E749);
+  static const Color _historyAccentAmber = Color(0xFFEC922C);
+  static const Color _historyAccentCoral = Color(0xFFE85E5A);
+  static const Color _historyAccentTeal = Color(0xFF07BBEC);
+  static const Color _historyAccentMauve = Color(0xFFD19FAB);
+
   String _selectedFilter = "全部记录";
   final List<String> _filters = [
     "全部记录",
@@ -5575,7 +5583,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: _historyAccentTeal.withOpacity(0.3),
                               width: 2,
                             ),
                           ),
@@ -5585,10 +5593,10 @@ class _HistoryPageState extends State<HistoryPage> {
                               avatarUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Container(
-                                color: AppColors.primary.withOpacity(0.1),
+                                color: _historyAccentTeal.withOpacity(0.1),
                                 child: const Icon(
                                   Icons.person,
-                                  color: AppColors.primary,
+                                  color: _historyAccentTeal,
                                 ),
                               ),
                             ),
@@ -5617,14 +5625,16 @@ class _HistoryPageState extends State<HistoryPage> {
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.1),
+                                      color: _historyAccentCoral.withOpacity(
+                                        0.14,
+                                      ),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
                                       interviewerType,
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: AppColors.primary,
+                                        color: _historyAccentCoral,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -5649,8 +5659,8 @@ class _HistoryPageState extends State<HistoryPage> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: AppColors.primaryGradient,
+                            gradient: const LinearGradient(
+                              colors: _historyMetalGradient,
                             ),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -5658,10 +5668,10 @@ class _HistoryPageState extends State<HistoryPage> {
                             children: [
                               Text(
                                 "${item['totalScore'] ?? 0}",
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                                  color: _historyNumberColor,
                                 ),
                               ),
                               const Text(
@@ -5719,7 +5729,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       children: [
                         Icon(
                           Icons.format_list_numbered,
-                          color: AppColors.primary,
+                          color: _historyAccentAmber,
                           size: 9.8,
                         ),
                         const SizedBox(width: 8),
@@ -5817,8 +5827,8 @@ class _HistoryPageState extends State<HistoryPage> {
                                   vertical: 14,
                                 ),
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: AppColors.primaryGradient,
+                                  gradient: const LinearGradient(
+                                    colors: _historyMetalGradient,
                                   ),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -5851,14 +5861,14 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildStatItem(IconData icon, String label, String value) {
     return Column(
       children: [
-        Icon(icon, size: 12.6, color: AppColors.primary),
+        Icon(icon, size: 12.6, color: _historyAccentTeal),
         const SizedBox(height: 4),
         Text(
           value,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
+            color: _historyNumberColor,
           ),
         ),
         Text(
@@ -5872,10 +5882,10 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget _buildQAItem(int index, Map<String, dynamic> qa) {
     final int score = qa['score'] ?? 0;
     final Color scoreColor = score >= 85
-        ? AppColors.success
+        ? _historyAccentMint
         : score >= 70
-        ? AppColors.primary
-        : AppColors.warning;
+        ? _historyAccentAmber
+        : _historyAccentCoral;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -5902,7 +5912,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: _historyAccentAmber.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Center(
@@ -5911,7 +5921,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: _historyAccentAmber,
                     ),
                   ),
                 ),
@@ -5962,7 +5972,7 @@ class _HistoryPageState extends State<HistoryPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
+              color: _historyAccentTeal.withOpacity(0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
@@ -5981,7 +5991,7 @@ class _HistoryPageState extends State<HistoryPage> {
               Icon(
                 Icons.record_voice_over,
                 size: 9.8,
-                color: AppColors.cyberPurple,
+                color: _historyAccentCoral,
               ),
               const SizedBox(width: 6),
               Text(
@@ -6024,7 +6034,7 @@ class _HistoryPageState extends State<HistoryPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: BubeiColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusXl),
         ),
@@ -6094,10 +6104,10 @@ class _HistoryPageState extends State<HistoryPage> {
                   .reduce((a, b) => a + b) /
               totalInterviews;
 
-    return TechBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: BubeiColors.background,
+      body: PremiumStaticBackground(
+        child: SafeArea(
           child: Column(
             children: [
               // 顶部导航
@@ -6152,7 +6162,7 @@ class _HistoryPageState extends State<HistoryPage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: _historyAccentAmber,
               borderRadius: BorderRadius.circular(AppTokens.radiusSm),
             ),
             child: const Icon(Icons.history, color: Colors.white, size: 9.8),
@@ -6178,12 +6188,12 @@ class _HistoryPageState extends State<HistoryPage> {
                 ),
                 decoration: BoxDecoration(
                   color: _isSelectMode
-                      ? AppColors.primary
+                      ? _historyAccentTeal
                       : AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(AppTokens.radiusFull),
                   border: Border.all(
                     color: _isSelectMode
-                        ? AppColors.primary
+                      ? _historyAccentTeal
                         : AppColors.border.withOpacity(0.5),
                   ),
                 ),
@@ -6224,7 +6234,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   _selectedIndices.length == history.length
                       ? Icons.check_box
                       : Icons.check_box_outline_blank,
-                  color: AppColors.primary,
+                  color: _historyAccentTeal,
                   size: 15.4,
                 ),
                 const SizedBox(width: 8),
@@ -6232,7 +6242,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   _selectedIndices.length == history.length ? "取消全选" : "全选",
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.primary,
+                    color: _historyAccentTeal,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -6398,12 +6408,12 @@ class _HistoryPageState extends State<HistoryPage> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.cyberPurple.withOpacity(0.1),
+                  color: _historyAccentMint.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
                   Icons.video_camera_front_outlined,
-                  color: AppColors.cyberPurple,
+                  color: _historyAccentMint,
                   size: 11.2,
                 ),
               ),
@@ -6502,7 +6512,7 @@ class _HistoryPageState extends State<HistoryPage> {
               label: "平均技术分",
               value: avgScore.toStringAsFixed(1),
               icon: Icons.analytics_outlined,
-              color: AppColors.primary,
+              color: _historyAccentTeal,
             ),
           ),
           const SizedBox(width: 12),
@@ -6546,18 +6556,62 @@ class _HistoryPageState extends State<HistoryPage> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
+          _buildArtNumber(value),
           const SizedBox(height: 10),
           Text(
             label,
             style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArtNumber(String value) {
+    const numberStyle = TextStyle(
+      fontSize: 40,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 1,
+      height: 1,
+    );
+
+    return SizedBox(
+      height: 44,
+      child: Stack(
+        alignment: Alignment.centerLeft,
+        children: [
+          Text(
+            value,
+            style: numberStyle.copyWith(
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 1.8
+                ..color = const Color(0xFF2C313A),
+            ),
+          ),
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [
+                Color(0xFFF1F4FA),
+                Color(0xFFC2CAD8),
+                Color(0xFF96A0B1),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
+            child: Text(
+              value,
+              style: numberStyle.copyWith(
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -6584,7 +6638,9 @@ class _HistoryPageState extends State<HistoryPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               decoration: BoxDecoration(
                 gradient: isSelected
-                    ? LinearGradient(colors: AppColors.primaryGradient)
+                    ? const LinearGradient(
+                        colors: [Color(0xFF5F6674), Color(0xFF3D434E)],
+                      )
                     : null,
                 color: isSelected ? null : AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(AppTokens.radiusFull),
@@ -6594,7 +6650,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: const Color(0xFF2A2E36).withOpacity(0.35),
                           blurRadius: 8,
                         ),
                       ]
@@ -6648,12 +6704,12 @@ class _HistoryPageState extends State<HistoryPage> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
+              ? _historyAccentTeal.withOpacity(0.12)
               : AppColors.surface.withOpacity(0.9),
           borderRadius: BorderRadius.circular(AppTokens.radiusLg),
           border: Border.all(
             color: isSelected
-                ? AppColors.primary.withOpacity(0.5)
+                ? _historyAccentTeal.withOpacity(0.5)
                 : AppColors.border.withOpacity(0.3),
             width: isSelected ? 2 : 1,
           ),
@@ -6675,12 +6731,12 @@ class _HistoryPageState extends State<HistoryPage> {
                       height: 24,
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? AppColors.primary
+                            ? _historyAccentTeal
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: isSelected
-                              ? AppColors.primary
+                              ? _historyAccentTeal
                               : AppColors.textTertiary,
                           width: 2,
                         ),
@@ -6699,12 +6755,12 @@ class _HistoryPageState extends State<HistoryPage> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: _historyAccentCoral.withOpacity(0.14),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(
                     Icons.work_outline,
-                    color: AppColors.primary,
+                    color: _historyAccentCoral,
                     size: 9.8,
                   ),
                 ),
@@ -6730,7 +6786,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.cyberPurple.withOpacity(0.1),
+                              color: _historyAccentMauve.withOpacity(0.18),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
@@ -6738,7 +6794,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
-                                color: AppColors.cyberPurple,
+                                color: _historyAccentMauve,
                               ),
                             ),
                           ),
@@ -6762,7 +6818,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: _historyAccentMint.withOpacity(0.14),
                     borderRadius: BorderRadius.circular(AppTokens.radiusFull),
                   ),
                   child: Text(
@@ -6770,7 +6826,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: _historyNumberColor,
                     ),
                   ),
                 ),
@@ -6778,9 +6834,9 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
             const SizedBox(height: 16),
             // 进度条区域
-            _buildProgressRow("技术能力", techScore, AppColors.primary),
+            _buildProgressRow("技术能力", techScore, _historyAccentMint),
             const SizedBox(height: 10),
-            _buildProgressRow("沟通表达", commScore, AppColors.cyberPurple),
+            _buildProgressRow("沟通表达", commScore, _historyAccentAmber),
           ],
         ),
       ),
@@ -6814,7 +6870,7 @@ class _HistoryPageState extends State<HistoryPage> {
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
-            color: color,
+            color: _historyNumberColor,
           ),
         ),
       ],
@@ -6868,6 +6924,14 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  static const Color _metalPrimary = Color(0xFF5A616F);
+  static const Color _metalPrimaryLight = Color(0xFFE0E5ED);
+  static const Color _metalPrimaryDim = Color(0xFF3A404B);
+  static const List<Color> _metalGradient = [
+    Color(0xFF5F6674),
+    Color(0xFF3D434E),
+  ];
+
   late DateTime _calendarMonth;
   List<String> _checkIns = [];
   List<Map<String, dynamic>> _schedules = [];
@@ -6916,14 +6980,14 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _handleCheckIn() async {
     final todayKey = _dateKey(DateTime.now());
     if (_checkIns.contains(todayKey)) {
-      _showStatus("今天已签到", AppColors.warning);
+      _showStatus("今天已签到", BubeiColors.warning);
       return;
     }
     setState(() {
       _checkIns.add(todayKey);
     });
     _syncProfileData();
-    _showStatus("签到成功，保持打卡节奏！", AppColors.success);
+    _showStatus("签到成功，保持打卡节奏！", BubeiColors.success);
   }
 
   List<Map<String, dynamic>> get _upcomingSchedules {
@@ -6953,7 +7017,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: BubeiColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusXl),
         ),
@@ -6975,7 +7039,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: const Text("取消"),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            style: ElevatedButton.styleFrom(backgroundColor: _metalPrimaryDim),
             onPressed: () => Navigator.pop(context, true),
             child: const Text("保存", style: TextStyle(color: Colors.white)),
           ),
@@ -6993,7 +7057,7 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     });
     _syncProfileData();
-    _showStatus("已添加到日程", AppColors.success);
+    _showStatus("已添加到日程", BubeiColors.success);
   }
 
   void _changeMonth(int delta) {
@@ -7016,10 +7080,10 @@ class _ProfilePageState extends State<ProfilePage> {
           globalUsers[currentUserIndex]['avatarPath'] =
               result.files.single.path;
         });
-        _showStatus("头像更新成功", AppColors.success);
+        _showStatus("头像更新成功", BubeiColors.success);
       }
     } catch (e) {
-      _showStatus("更新失败", AppColors.error);
+      _showStatus("更新失败", BubeiColors.error);
     }
   }
 
@@ -7031,7 +7095,7 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: BubeiColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusXl),
         ),
@@ -7040,12 +7104,12 @@ class _ProfilePageState extends State<ProfilePage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: _metalPrimary.withOpacity(0.16),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Icon(
                 Icons.lock_reset,
-                color: AppColors.primary,
+                color: _metalPrimaryLight,
                 size: 9.8,
               ),
             ),
@@ -7073,7 +7137,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      side: BorderSide(color: AppColors.border),
+                      side: BorderSide(color: BubeiColors.border),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -7082,7 +7146,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Text(
                       "取消",
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: BubeiColors.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -7096,7 +7160,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: _metalPrimaryDim,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -7105,16 +7169,16 @@ class _ProfilePageState extends State<ProfilePage> {
                       String currentActualPass =
                           globalUsers[currentUserIndex]['password'];
                       if (oldPassController.text != currentActualPass) {
-                        _showStatus("原密码错误", AppColors.error);
+                        _showStatus("原密码错误", BubeiColors.error);
                         return;
                       }
                       if (newPassController.text.isEmpty) {
-                        _showStatus("新密码不能为空", AppColors.warning);
+                        _showStatus("新密码不能为空", BubeiColors.warning);
                         return;
                       }
                       if (newPassController.text !=
                           confirmPassController.text) {
-                        _showStatus("两次密码不一致", AppColors.warning);
+                        _showStatus("两次密码不一致", BubeiColors.warning);
                         return;
                       }
                       setState(() {
@@ -7122,7 +7186,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             newPassController.text;
                       });
                       Navigator.pop(context);
-                      _showStatus("密码修改成功", AppColors.success);
+                      _showStatus("密码修改成功", BubeiColors.success);
                     },
                     child: const Text(
                       "确认",
@@ -7152,15 +7216,15 @@ class _ProfilePageState extends State<ProfilePage> {
         hintStyle: AppTextStyles.caption,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: BubeiColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: BubeiColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderSide: const BorderSide(color: _metalPrimary),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -7177,7 +7241,7 @@ class _ProfilePageState extends State<ProfilePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: BubeiColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusXl),
         ),
@@ -7188,11 +7252,11 @@ class _ProfilePageState extends State<ProfilePage> {
           decoration: InputDecoration(
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              borderSide: BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: BubeiColors.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              borderSide: const BorderSide(color: AppColors.primary),
+              borderSide: const BorderSide(color: _metalPrimary),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
@@ -7210,7 +7274,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      side: BorderSide(color: AppColors.border),
+                      side: BorderSide(color: BubeiColors.border),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -7219,7 +7283,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: Text(
                       "取消",
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: BubeiColors.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -7233,7 +7297,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: _metalPrimaryDim,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
@@ -7272,7 +7336,7 @@ class _ProfilePageState extends State<ProfilePage> {
         builder: (context, setSheetState) => Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: BubeiColors.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
@@ -7284,7 +7348,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: BubeiColors.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -7294,12 +7358,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1),
+                      color: _metalPrimary.withOpacity(0.16),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
                       Icons.description,
-                      color: AppColors.primary,
+                      color: _metalPrimaryLight,
                       size: 16.8,
                     ),
                   ),
@@ -7309,7 +7373,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: BubeiColors.textPrimary,
                     ),
                   ),
                 ],
@@ -7321,13 +7385,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: resumePath != null
-                      ? AppColors.success.withOpacity(0.1)
-                      : AppColors.surfaceDim,
+                      ? BubeiColors.success.withOpacity(0.14)
+                      : BubeiColors.surfaceDim,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: resumePath != null
-                        ? AppColors.success.withOpacity(0.3)
-                        : AppColors.border.withOpacity(0.3),
+                        ? BubeiColors.success.withOpacity(0.36)
+                        : BubeiColors.border.withOpacity(0.9),
                   ),
                 ),
                 child: Row(
@@ -7337,8 +7401,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           ? Icons.check_circle
                           : Icons.info_outline,
                       color: resumePath != null
-                          ? AppColors.success
-                          : AppColors.textSecondary,
+                          ? BubeiColors.success
+                          : BubeiColors.textSecondary,
                       size: 14,
                     ),
                     const SizedBox(width: 12),
@@ -7351,7 +7415,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
-                              color: AppColors.textPrimary,
+                              color: BubeiColors.textPrimary,
                             ),
                           ),
                           if (resumePath != null) ...[
@@ -7360,7 +7424,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               resumePath.split('/').last.split('\\').last,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: AppColors.textSecondary,
+                                color: BubeiColors.textSecondary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -7378,14 +7442,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.05),
+                  color: _metalPrimary.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.lightbulb_outline,
-                      color: AppColors.primary,
+                      color: _metalPrimaryLight,
                       size: 12.6,
                     ),
                     const SizedBox(width: 8),
@@ -7394,7 +7458,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         "上传简历后，AI面试官将根据您的简历进行针对性提问",
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: BubeiColors.textSecondary,
                         ),
                       ),
                     ),
@@ -7414,15 +7478,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           });
                           saveUserData();
                           setSheetState(() {});
-                          _showStatus("简历已删除", AppColors.warning);
+                          _showStatus("简历已删除", BubeiColors.warning);
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.1),
+                            color: BubeiColors.error.withOpacity(0.14),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppColors.error.withOpacity(0.3),
+                              color: BubeiColors.error.withOpacity(0.36),
                             ),
                           ),
                           child: Row(
@@ -7430,14 +7494,14 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               Icon(
                                 Icons.delete_outline,
-                                color: AppColors.error,
+                                color: BubeiColors.error,
                                 size: 12.6,
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 "删除简历",
                                 style: TextStyle(
-                                  color: AppColors.error,
+                                  color: BubeiColors.error,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -7465,19 +7529,20 @@ class _ProfilePageState extends State<ProfilePage> {
                             });
                             saveUserData();
                             setSheetState(() {});
-                            _showStatus("简历上传成功", AppColors.success);
+                            _showStatus("简历上传成功", BubeiColors.success);
                           }
                         } catch (e) {
-                          _showStatus("上传失败", AppColors.error);
+                          _showStatus("上传失败", BubeiColors.error);
                         }
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: AppColors.primaryGradient,
+                          gradient: const LinearGradient(
+                            colors: _metalGradient,
                           ),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFF565D6A)),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -7509,7 +7574,7 @@ class _ProfilePageState extends State<ProfilePage> {
               // 支持格式提示
               Text(
                 "支持 PDF、DOC、DOCX 格式",
-                style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                style: TextStyle(fontSize: 11, color: BubeiColors.textTertiary),
               ),
               const SizedBox(height: 20),
             ],
@@ -7529,7 +7594,7 @@ class _ProfilePageState extends State<ProfilePage> {
         height: MediaQuery.of(context).size.height * 0.75,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: BubeiColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -7540,7 +7605,7 @@ class _ProfilePageState extends State<ProfilePage> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: BubeiColors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -7550,12 +7615,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.cyberPurple.withOpacity(0.1),
+                    color: _metalPrimary.withOpacity(0.16),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
                     Icons.tips_and_updates,
-                    color: AppColors.cyberPurple,
+                    color: _metalPrimaryLight,
                     size: 16.8,
                   ),
                 ),
@@ -7569,15 +7634,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
+                          color: BubeiColors.textPrimary,
                         ),
                       ),
-                      SizedBox(height: 2),
+                      const SizedBox(height: 2),
                       Text(
                         "AI根据您的面试表现生成的个性化建议",
                         style: TextStyle(
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: BubeiColors.textSecondary,
                         ),
                       ),
                     ],
@@ -7590,22 +7655,17 @@ class _ProfilePageState extends State<ProfilePage> {
             Expanded(
               child: ListView(
                 children: [
-                  _buildTipCard(
-                    "自我介绍技巧",
-                    Icons.person_outline,
-                    AppColors.primary,
-                    [
-                      "控制时长在1-3分钟，突出关键经历",
-                      "采用'现在-过去-未来'的叙述结构",
-                      "量化成果，用数据说话",
-                      "与目标岗位建立关联性",
-                    ],
-                  ),
+                  _buildTipCard("自我介绍技巧", Icons.person_outline, _metalPrimary, [
+                    "控制时长在1-3分钟，突出关键经历",
+                    "采用'现在-过去-未来'的叙述结构",
+                    "量化成果，用数据说话",
+                    "与目标岗位建立关联性",
+                  ]),
                   const SizedBox(height: 16),
                   _buildTipCard(
                     "行为面试STAR法则",
                     Icons.stars_outlined,
-                    AppColors.cyberPurple,
+                    const Color(0xFF8E97A6),
                     [
                       "Situation: 描述具体背景和情境",
                       "Task: 说明你的任务和目标",
@@ -7663,7 +7723,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: BubeiColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withOpacity(0.2)),
       ),
@@ -7686,7 +7746,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: BubeiColors.textPrimary,
                 ),
               ),
             ],
@@ -7712,7 +7772,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       tip,
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: BubeiColors.textSecondary,
                         height: 1.4,
                       ),
                     ),
@@ -7744,12 +7804,21 @@ class _ProfilePageState extends State<ProfilePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.08),
-            AppColors.cyberPurple.withOpacity(0.06),
+            const Color(0xFF2D3139).withOpacity(0.96),
+            const Color(0xFF23272F).withOpacity(0.96),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.15)),
+        border: Border.all(color: const Color(0xFF505560)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -7759,14 +7828,14 @@ class _ProfilePageState extends State<ProfilePage> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: const LinearGradient(
-                colors: [Color(0xFF1b3cff), Color(0xFF0ad4ff)],
+                colors: _metalGradient,
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.cyberBlue.withOpacity(0.35),
-                  blurRadius: 18,
+                  color: Colors.black.withOpacity(0.32),
+                  blurRadius: 14,
                   offset: const Offset(0, 8),
                 ),
               ],
@@ -7787,14 +7856,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: BubeiColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   "连续 $streak 天 · 累积 $totalDays 天",
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: BubeiColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -7805,13 +7874,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     _buildChip(
                       "保持习惯",
-                      AppColors.primary.withOpacity(0.12),
-                      AppColors.primary,
+                      const Color(0xFF3A3F49),
+                      const Color(0xFFE1E5EC),
                     ),
                     _buildChip(
                       "提升面试状态",
-                      AppColors.success.withOpacity(0.12),
-                      AppColors.success,
+                      BubeiColors.success.withOpacity(0.18),
+                      BubeiColors.success,
                     ),
                   ],
                 ),
@@ -7824,14 +7893,21 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: checked ? AppColors.surfaceDim : AppColors.primary,
+                color: checked
+                    ? const Color(0xFF2A2E36)
+                    : const Color(0xFF15181E),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: checked
+                      ? const Color(0xFF484D58)
+                      : const Color(0xFF303540),
+                ),
                 boxShadow: checked
                     ? null
                     : [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.35),
-                          blurRadius: 16,
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 14,
                           offset: const Offset(0, 8),
                         ),
                       ],
@@ -7839,7 +7915,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Text(
                 checked ? "已完成" : "立即签到",
                 style: TextStyle(
-                  color: checked ? AppColors.textSecondary : Colors.white,
+                  color: checked ? BubeiColors.textSecondary : Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -7872,9 +7948,9 @@ class _ProfilePageState extends State<ProfilePage> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: BubeiColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withOpacity(0.4)),
+        border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -7887,13 +7963,13 @@ class _ProfilePageState extends State<ProfilePage> {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: BubeiColors.textPrimary,
                 ),
               ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.chevron_left, size: 18),
-                color: AppColors.textSecondary,
+                color: BubeiColors.textSecondary,
                 onPressed: () => _changeMonth(-1),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(
@@ -7904,12 +7980,15 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(width: 4),
               Text(
                 monthLabel,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                style: TextStyle(
+                  color: BubeiColors.textSecondary,
+                  fontSize: 12,
+                ),
               ),
               const SizedBox(width: 4),
               IconButton(
                 icon: const Icon(Icons.chevron_right, size: 18),
-                color: AppColors.textSecondary,
+                color: BubeiColors.textSecondary,
                 onPressed: () => _changeMonth(1),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints.tightFor(
@@ -7930,7 +8009,9 @@ class _ProfilePageState extends State<ProfilePage> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: AppColors.primaryGradient),
+                  gradient: const LinearGradient(
+                    colors: BubeiColors.primaryGradient,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -7956,9 +8037,9 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 10),
           Row(
             children: [
-              _buildLegend(AppColors.success, "签到"),
+              _buildLegend(BubeiColors.success, "签到"),
               const SizedBox(width: 12),
-              _buildLegend(AppColors.cyberPurple, "日程"),
+              _buildLegend(BubeiColors.info, "日程"),
             ],
           ),
           const SizedBox(height: 12),
@@ -7969,7 +8050,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   "即将进行",
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: BubeiColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -7982,12 +8063,12 @@ class _ProfilePageState extends State<ProfilePage> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.surfaceDim,
+                color: BubeiColors.surfaceDim,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 "暂无日程，添加一个面试计划吧",
-                style: TextStyle(color: AppColors.textTertiary, fontSize: 12),
+                style: TextStyle(color: BubeiColors.textTertiary, fontSize: 12),
               ),
             ),
         ],
@@ -8007,7 +8088,7 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(width: 6),
         Text(
           text,
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+          style: TextStyle(color: BubeiColors.textSecondary, fontSize: 11),
         ),
       ],
     );
@@ -8080,16 +8161,14 @@ class _ProfilePageState extends State<ProfilePage> {
     bool hasSchedule,
   ) {
     final bg = isToday
-        ? AppColors.primary.withOpacity(0.12)
-        : AppColors.surfaceDim;
+        ? _metalPrimary.withOpacity(0.2)
+        : BubeiColors.surfaceDim;
     return Container(
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isToday
-              ? AppColors.primary
-              : AppColors.border.withOpacity(0.4),
+          color: isToday ? _metalPrimary : BubeiColors.border.withOpacity(0.8),
         ),
       ),
       child: Stack(
@@ -8099,7 +8178,7 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Text(
                 "$day",
                 style: TextStyle(
-                  color: isToday ? AppColors.primary : AppColors.textPrimary,
+                  color: isToday ? _metalPrimaryLight : BubeiColors.textPrimary,
                   fontWeight: isToday ? FontWeight.bold : FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -8116,7 +8195,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     width: 4,
                     height: 4,
                     decoration: const BoxDecoration(
-                      color: AppColors.success,
+                      color: BubeiColors.success,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -8126,7 +8205,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     width: 4,
                     height: 4,
                     decoration: const BoxDecoration(
-                      color: AppColors.cyberPurple,
+                      color: BubeiColors.info,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -8147,21 +8226,21 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDim,
+        color: BubeiColors.surfaceDim,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+        border: Border.all(color: BubeiColors.border.withOpacity(0.8)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.cyberPurple.withOpacity(0.12),
+              color: BubeiColors.info.withOpacity(0.16),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(
               Icons.event_available,
-              color: AppColors.cyberPurple,
+              color: BubeiColors.info,
               size: 14,
             ),
           ),
@@ -8173,7 +8252,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   title,
                   style: TextStyle(
-                    color: AppColors.textPrimary,
+                    color: BubeiColors.textPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -8181,7 +8260,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 Text(
                   "$dateLabel · 自主面试/练习",
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: BubeiColors.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -8195,7 +8274,7 @@ class _ProfilePageState extends State<ProfilePage> {
               });
               _syncProfileData();
             },
-            child: Icon(Icons.close, size: 14, color: AppColors.textTertiary),
+            child: Icon(Icons.close, size: 14, color: BubeiColors.textTertiary),
           ),
         ],
       ),
@@ -8225,10 +8304,10 @@ class _ProfilePageState extends State<ProfilePage> {
                   .reduce((a, b) => a + b) /
               historyCount;
 
-    return TechBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: BubeiColors.background,
+      body: PremiumStaticBackground(
+        child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
@@ -8304,7 +8383,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               child: Icon(
                 Icons.arrow_back_ios_new,
-                color: AppColors.textSecondary,
+                color: BubeiColors.textSecondary,
                 size: 16,
               ),
             ),
@@ -8313,35 +8392,97 @@ class _ProfilePageState extends State<ProfilePage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: _metalPrimaryDim,
               borderRadius: BorderRadius.circular(AppTokens.radiusSm),
             ),
             child: const Icon(Icons.person, color: Colors.white, size: 9.8),
           ),
           const SizedBox(width: 12),
-          Text(
-            "个人中心",
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildArtTitle("个人中心"),
+                const SizedBox(height: 2),
+                Text(
+                  "PROFILE HUB",
+                  style: TextStyle(
+                    color: BubeiColors.textTertiary,
+                    fontSize: 10,
+                    letterSpacing: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
-          const Spacer(),
+          const SizedBox(width: 10),
           // 设置按钮
           GestureDetector(
             onTap: _showSettingsMenu,
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: BubeiColors.surface,
                 borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
               ),
               child: Icon(
                 Icons.settings_outlined,
-                color: AppColors.textSecondary,
+                color: BubeiColors.textSecondary,
                 size: 9.8,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildArtTitle(String text) {
+    const baseStyle = TextStyle(
+      fontSize: 24,
+      fontWeight: FontWeight.w900,
+      letterSpacing: 1.1,
+      height: 1,
+    );
+
+    return SizedBox(
+      height: 30,
+      child: Stack(
+        alignment: Alignment.centerLeft,
+        children: [
+          Text(
+            text,
+            style: baseStyle.copyWith(
+              foreground: Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 1.6
+                ..color = const Color(0xFF2A2F38).withOpacity(0.7),
+            ),
+          ),
+          ShaderMask(
+            blendMode: BlendMode.srcIn,
+            shaderCallback: (bounds) => const LinearGradient(
+              colors: [
+                Color(0xFFF0F4FB),
+                Color(0xFFB5C0D3),
+                Color(0xFFE8EEF9),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ).createShader(bounds),
+            child: Text(
+              text,
+              style: baseStyle.copyWith(
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.32),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
             ),
           ),
@@ -8357,7 +8498,7 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context) => Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: BubeiColors.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: Column(
@@ -8369,7 +8510,7 @@ class _ProfilePageState extends State<ProfilePage> {
               height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: AppColors.border,
+                color: BubeiColors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -8379,7 +8520,7 @@ class _ProfilePageState extends State<ProfilePage> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
+                color: BubeiColors.textPrimary,
               ),
             ),
             const SizedBox(height: 20),
@@ -8388,12 +8529,12 @@ class _ProfilePageState extends State<ProfilePage> {
               leading: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: _metalPrimary.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   isDarkBackground ? Icons.light_mode : Icons.dark_mode,
-                  color: AppColors.primary,
+                  color: _metalPrimaryLight,
                   size: 14,
                 ),
               ),
@@ -8401,12 +8542,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 "背景颜色",
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textPrimary,
+                  color: BubeiColors.textPrimary,
                 ),
               ),
               subtitle: Text(
                 isDarkBackground ? "当前：深色背景" : "当前：浅色背景",
-                style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                style: TextStyle(fontSize: 12, color: BubeiColors.textTertiary),
               ),
               trailing: Switch(
                 value: isDarkBackground,
@@ -8423,7 +8564,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     (route) => false,
                   );
                 },
-                activeThumbColor: AppColors.primary,
+                activeThumbColor: _metalPrimaryLight,
               ),
             ),
             const Divider(height: 1),
@@ -8432,21 +8573,21 @@ class _ProfilePageState extends State<ProfilePage> {
               leading: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.1),
+                  color: BubeiColors.error.withOpacity(0.14),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.logout, color: AppColors.error, size: 9.8),
+                child: Icon(Icons.logout, color: BubeiColors.error, size: 9.8),
               ),
               title: Text(
                 "退出登录",
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
-                  color: AppColors.error,
+                  color: BubeiColors.error,
                 ),
               ),
               subtitle: Text(
                 "结束当前会话",
-                style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                style: TextStyle(fontSize: 12, color: BubeiColors.textTertiary),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -8458,7 +8599,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   (route) => false,
                 );
-                _showStatus("已退出登录", AppColors.primary);
+                _showStatus("已退出登录", _metalPrimaryDim);
               },
             ),
             const SizedBox(height: 20),
@@ -8477,122 +8618,166 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: BubeiColors.surface,
         borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+        border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
+        boxShadow: BubeiColors.cardShadow,
       ),
-      child: Row(
+      child: Stack(
         children: [
-          // 左侧：头像和用户信息
-          Expanded(
-            flex: 3,
-            child: Row(
-              children: [
-                // 头像带虚线圆环
-                GestureDetector(
-                  onTap: _pickAvatar,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // 虚线圆环
-                      Container(
-                        width: 84,
-                        height: 84,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3),
-                            width: 2,
-                          ),
-                        ),
-                      ),
-                      // 头像
-                      Container(
-                        width: 70,
-                        height: 70,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: AppColors.primaryGradient,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 15,
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(3),
-                          child: CircleAvatar(
-                            radius: 33,
-                            backgroundColor: AppColors.surface,
-                            backgroundImage: user['avatarPath'] != null
-                                ? FileImage(File(user['avatarPath']))
-                                : null,
-                            child: user['avatarPath'] == null
-                                ? Text(
-                                    user['name'][0],
-                                    style: const TextStyle(
-                                      fontSize: 25,
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ),
-                      // 在线状态点
-                      Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: Container(
-                          width: 16,
-                          height: 16,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00F2FF),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0xFF00F2FF).withOpacity(0.5),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+          Positioned(
+            top: -36,
+            right: -24,
+            child: IgnorePointer(
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      _metalPrimary.withOpacity(0.24),
+                      _metalPrimary.withOpacity(0.02),
+                      Colors.transparent,
                     ],
                   ),
                 ),
-                const SizedBox(width: 16),
-                // 用户信息列
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -44,
+            left: -28,
+            child: IgnorePointer(
+              child: Container(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      _metalPrimaryLight.withOpacity(0.22),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              // 左侧：头像和用户信息
+              Expanded(
+                flex: 3,
+                child: Row(
                   children: [
-                    // 用户名
-                    Text(
-                      user['name'],
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                    // 头像带虚线圆环
+                    GestureDetector(
+                      onTap: _pickAvatar,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // 虚线圆环
+                          Container(
+                            width: 84,
+                            height: 84,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: _metalPrimary.withOpacity(0.6),
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          // 头像
+                          Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: _metalGradient,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  blurRadius: 12,
+                                ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(3),
+                              child: CircleAvatar(
+                                radius: 33,
+                                backgroundColor: BubeiColors.surfaceDim,
+                                backgroundImage: user['avatarPath'] != null
+                                    ? FileImage(File(user['avatarPath']))
+                                    : null,
+                                child: user['avatarPath'] == null
+                                    ? Text(
+                                        user['name'][0],
+                                        style: const TextStyle(
+                                          fontSize: 25,
+                                          color: _metalPrimaryLight,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                            ),
+                          ),
+                          // 在线状态点
+                          Positioned(
+                            bottom: 8,
+                            right: 8,
+                            child: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: BubeiColors.success,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: BubeiColors.success.withOpacity(0.55),
+                                    blurRadius: 8,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    // 用户ID
-                    Text(
-                      "@${user['username']}",
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textTertiary,
-                      ),
+                    const SizedBox(width: 16),
+                    // 用户信息列
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // 用户名
+                        Text(
+                          user['name'],
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: BubeiColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // 用户ID
+                        Text(
+                          "@${user['username']}",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: BubeiColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -8608,17 +8793,17 @@ class _ProfilePageState extends State<ProfilePage> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppColors.textTertiary,
+            color: BubeiColors.textTertiary,
             letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.cardBackground,
+            color: BubeiColors.surface,
             borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-            border: Border.all(color: AppColors.border.withOpacity(0.3)),
-            boxShadow: AppTokens.shadowSm,
+            border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
+            boxShadow: BubeiColors.cardShadow,
           ),
           child: Column(
             children: items.asMap().entries.map((entry) {
@@ -8630,7 +8815,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     item,
                     Divider(
                       height: 1,
-                      color: AppColors.border.withOpacity(0.3),
+                      color: BubeiColors.border.withOpacity(0.9),
                       indent: 56,
                     ),
                   ],
@@ -8657,27 +8842,27 @@ class _ProfilePageState extends State<ProfilePage> {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: _metalPrimary.withOpacity(0.16),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: AppColors.primary, size: 9.8),
+        child: Icon(icon, color: _metalPrimaryLight, size: 9.8),
       ),
       title: Text(
         title,
         style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
+          color: BubeiColors.textPrimary,
         ),
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+        style: TextStyle(fontSize: 12, color: BubeiColors.textSecondary),
       ),
       trailing: Icon(
         Icons.arrow_forward_ios,
         size: 9.8,
-        color: AppColors.textTertiary,
+        color: BubeiColors.textTertiary,
       ),
     );
   }
@@ -8691,26 +8876,26 @@ class _ProfilePageState extends State<ProfilePage> {
           TechPageTransitions.fade(builder: (context) => const LoginPage()),
           (route) => false,
         );
-        _showStatus("已退出登录", AppColors.primary);
+        _showStatus("已退出登录", _metalPrimaryDim);
       },
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: AppColors.error.withOpacity(0.1),
+          color: BubeiColors.error.withOpacity(0.14),
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-          border: Border.all(color: AppColors.error.withOpacity(0.3)),
+          border: Border.all(color: BubeiColors.error.withOpacity(0.36)),
         ),
         child: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.logout, color: AppColors.error, size: 12.6),
+              Icon(Icons.logout, color: BubeiColors.error, size: 12.6),
               const SizedBox(width: 8),
               Text(
                 "结束会话",
                 style: TextStyle(
-                  color: AppColors.error,
+                  color: BubeiColors.error,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -8734,7 +8919,7 @@ class _CalendarWeekdayLabel extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            color: AppColors.textSecondary,
+            color: BubeiColors.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
