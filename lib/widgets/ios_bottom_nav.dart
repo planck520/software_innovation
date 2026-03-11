@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
+import '../theme/login_theme.dart';
 
 /// 底部导航项数据类
 class NavItem {
@@ -67,10 +68,10 @@ class _IosBottomNavState extends State<IosBottomNav> {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: LoginTheme.cardBackground,
         border: Border(
           top: BorderSide(
-            color: Colors.white.withOpacity(0.1),
+            color: LoginTheme.cardBorder,
             width: 0.5,
           ),
         ),
@@ -79,7 +80,7 @@ class _IosBottomNavState extends State<IosBottomNav> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
-            color: Colors.transparent,
+            color: LoginTheme.cardBackground,
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: AppTokens.space2, vertical: 12),
@@ -114,7 +115,7 @@ class _IosBottomNavState extends State<IosBottomNav> {
           duration: const Duration(milliseconds: 100),
           child: Icon(
             isSelected ? (item.activeIcon ?? item.icon) : item.icon,
-            color: isFlashing ? _flashColor : (isSelected ? const Color(0xFFFF8C00) : Colors.white.withOpacity(0.6)),
+            color: isFlashing ? _flashColor : (isSelected ? LoginTheme.accentOrange : LoginTheme.textSecondary),
             size: 28,
           ),
         ),

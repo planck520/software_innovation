@@ -11,9 +11,18 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
-        // 添加阿里镜像
+        // 1. 阿里云镜像（优先）
         maven { url = uri("https://maven.aliyun.com/repository/google") }
         maven { url = uri("https://maven.aliyun.com/repository/public") }
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+
+        // 2. 腾讯云镜像
+        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/") }
+
+        // 3. 华为云镜像
+        maven { url = uri("https://repo.huaweicloud.com/repository/maven/") }
+
+        // 4. 官方源（作为备份）
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -31,14 +40,24 @@ include(":app")
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
     repositories {
-        // 添加阿里镜像，确保应用层的库下载也能加速
+        // 1. 阿里云镜像（优先）
         maven { url = uri("https://maven.aliyun.com/repository/google") }
         maven { url = uri("https://maven.aliyun.com/repository/public") }
-        // 2. Flutter 官方镜像 (解决 io.flutter 相关报错)
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+
+        // 2. Flutter 中国镜像
         maven { url = uri("https://storage.flutter-io.cn/download.flutter.io") }
 
-        // 3. JitPack (解决 flutter_sound 等 Github 库报错)
+        // 3. 腾讯云镜像
+        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/") }
+
+        // 4. 华为云镜像
+        maven { url = uri("https://repo.huaweicloud.com/repository/maven/") }
+
+        // 5. JitPack（解决 Github 库依赖）
         maven { url = uri("https://jitpack.io") }
+
+        // 6. 官方源（作为备份）
         google()
         mavenCentral()
     }

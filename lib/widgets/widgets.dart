@@ -26,3 +26,15 @@ export 'tech_selection_chip.dart';
 export 'section_header.dart';
 export 'tech_toggle_switch.dart';
 export 'tech_dropdown_field.dart';
+
+// LeetCode风格组件
+export 'tech_tag.dart';
+export 'code_block.dart';
+export 'data_display.dart';
+
+// 题解相关组件
+export 'solution_method_selector.dart';
+export 'language_selector.dart';
+
+// 简洁风格组件
+export 'simple_input_field.dart';

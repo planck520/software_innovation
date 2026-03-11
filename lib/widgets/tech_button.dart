@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
+import '../theme/login_theme.dart';
 
 /// 磨砂玻璃按钮样式
 enum GlassButtonStyle {
@@ -72,28 +73,21 @@ class _TechButtonState extends State<TechButton>
     super.dispose();
   }
 
-  Color _getGlowColor() {
-    if (widget.isDanger) return AppColors.error.withOpacity(0.4);
-    if (widget.isSecondary || widget.isOutlined) return AppColors.primary.withOpacity(0.2);
-    // stitch 风格: rgba(19, 91, 236, 0.4)
-    return AppColors.primary.withOpacity(0.4);
-  }
-
-  List<Color> _getGradientColors(bool isEnabled) {
-    if (!isEnabled) return [AppColors.surfaceDim, AppColors.surfaceDim];
-    if (widget.isDanger) return [AppColors.error, AppColors.error.withOpacity(0.8)];
+  Color _getBackgroundColor(bool isEnabled) {
+    if (!isEnabled) return LoginTheme.cardBackground;
+    if (widget.isDanger) return AppColors.error;
     if (widget.isSecondary || widget.isOutlined) {
-      return [AppColors.background, AppColors.surfaceDim];
+      return LoginTheme.buttonBackground;
     }
-    // stitch 风格: 蓝紫渐变
-    return AppColors.primaryGradient;
+    // 黑白简约风格：黑色背景
+    return LoginTheme.buttonBackground;
   }
 
   Color _getTextColor(bool isEnabled) {
-    if (!isEnabled) return AppColors.textTertiary;
+    if (!isEnabled) return LoginTheme.textSecondary;
     if (widget.isDanger) return Colors.white;
-    if (widget.isOutlined || widget.isSecondary) return AppColors.primary;
-    return Colors.white;
+    if (widget.isOutlined || widget.isSecondary) return LoginTheme.textPrimary;
+    return LoginTheme.textPrimary;
   }
 
   void _handlePressDown() {
@@ -132,7 +126,6 @@ class _TechButtonState extends State<TechButton>
   }
 
   Widget _buildButton(bool enabled) {
-    final gradientColors = _getGradientColors(enabled);
     final textColor = _getTextColor(enabled);
 
     Widget buttonContent;
@@ -174,12 +167,12 @@ class _TechButtonState extends State<TechButton>
     return Container(
       width: widget.isFullWidth ? double.infinity : widget.width,
       height: widget.height,
-      decoration: _buildDecoration(enabled, gradientColors),
+      decoration: _buildDecoration(enabled),
       child: Center(child: buttonContent),
     );
   }
 
-  BoxDecoration _buildDecoration(bool enabled, List<Color> gradientColors) {
+  BoxDecoration _buildDecoration(bool enabled) {
     // Outlined 样式
     if (widget.isOutlined) {
       return BoxDecoration(
@@ -187,27 +180,24 @@ class _TechButtonState extends State<TechButton>
         borderRadius: BorderRadius.circular(AppTokens.radiusMd),
         border: Border.all(
           color: enabled
-              ? (widget.isDanger ? AppColors.error : AppColors.primary).withOpacity(0.3)
-              : AppColors.textTertiary.withOpacity(0.3),
+              ? (widget.isDanger ? AppColors.error : LoginTheme.textPrimary).withOpacity(0.3)
+              : LoginTheme.textSecondary.withOpacity(0.3),
           width: 1,
         ),
       );
     }
 
-    // 渐变按钮样式 (stitch 风格)
+    // 黑白简约风格：纯色背景，无渐变，无霓虹发光
     return BoxDecoration(
-      gradient: LinearGradient(
-        colors: gradientColors,
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
+      color: _getBackgroundColor(enabled),
       borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-      // stitch 风格霓虹发光: box-shadow: 0 0 15px rgba(19, 91, 236, 0.4)
-      boxShadow: enabled && widget.showNeonGlow
+      border: Border.all(color: LoginTheme.cardBorder),
+      // 简单的投影效果
+      boxShadow: enabled
           ? [
               BoxShadow(
-                color: _getGlowColor(),
-                blurRadius: 15,
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 8,
                 spreadRadius: 0,
               ),
             ]
@@ -519,18 +509,18 @@ class BubeiButton extends StatelessWidget {
       foregroundColor = Colors.white;
     } else if (isOutlined) {
       backgroundColor = Colors.transparent;
-      foregroundColor = BubeiColors.primary;
+      foregroundColor = LoginTheme.textPrimary;
     } else if (isSecondary) {
-      backgroundColor = BubeiColors.surfaceElevated;
-      foregroundColor = BubeiColors.textPrimary;
+      backgroundColor = LoginTheme.cardBackground;
+      foregroundColor = LoginTheme.textPrimary;
     } else {
-      backgroundColor = BubeiColors.primary;
-      foregroundColor = Colors.white;
+      backgroundColor = LoginTheme.buttonBackground;
+      foregroundColor = LoginTheme.textPrimary;
     }
 
     if (!enabled) {
-      backgroundColor = BubeiColors.surfaceDim;
-      foregroundColor = BubeiColors.textTertiary;
+      backgroundColor = LoginTheme.cardBackground;
+      foregroundColor = LoginTheme.textSecondary;
     }
 
     Widget buttonChild = Row(
@@ -542,7 +532,7 @@ class BubeiButton extends StatelessWidget {
             height: 16,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+              valueColor: AlwaysStoppedAnimation<Color>(foregroundColor),
             ),
           )
         else ...[
@@ -570,12 +560,13 @@ class BubeiButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor,
           foregroundColor: foregroundColor,
-          disabledBackgroundColor: BubeiColors.surfaceDim,
+          disabledBackgroundColor: LoginTheme.cardBackground,
           shadowColor: Colors.transparent,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
+            side: BorderSide(color: LoginTheme.cardBorder),
           ),
         ),
         child: buttonChild,
@@ -680,49 +671,36 @@ class _FrostedGlassButtonState extends State<FrostedGlassButton>
   }
 
   Widget _buildButton() {
-    // 获取按钮对应的颜色
-    Color buttonColor;
+    // 获取图标对应的强调色（用于图标颜色点缀）
+    Color accentColor;
     switch (widget.style) {
       case GlassButtonStyle.checkIn:
-        buttonColor = TechEvolutionColors.glassGreen;
+        accentColor = LoginTheme.accentGreen;
         break;
       case GlassButtonStyle.interview:
-        buttonColor = const Color(0xFF135bec);
+        accentColor = LoginTheme.accentBlue;
         break;
       case GlassButtonStyle.custom:
-        buttonColor = const Color(0xFF80DEEA);
+        accentColor = LoginTheme.accentCyan;
         break;
     }
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            // 多层渐变增强毛玻璃效果
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                buttonColor.withOpacity(0.25),  // 更强的颜色
-                buttonColor.withOpacity(0.15),
-                Colors.white.withOpacity(0.1),   // 白色光泽层
-              ],
-            ),
+            // 黑白简约风格：深灰卡片背景
+            color: LoginTheme.cardBackground,
             borderRadius: BorderRadius.circular(20),
-            // 增强投影，更明显的悬浮效果
+            border: Border.all(color: LoginTheme.cardBorder),
+            // 简单的投影效果
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                offset: const Offset(0, 4),
-                blurRadius: 16,
-                spreadRadius: 0,
-              ),
-              BoxShadow(
-                color: buttonColor.withOpacity(0.2),
+                color: Colors.black.withOpacity(0.2),
                 offset: const Offset(0, 2),
                 blurRadius: 8,
                 spreadRadius: 0,
@@ -731,13 +709,13 @@ class _FrostedGlassButtonState extends State<FrostedGlassButton>
           ),
           child: Row(
             children: [
-              _buildIcon(),
+              _buildIcon(accentColor),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   widget.title,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.95),
+                    color: LoginTheme.textPrimary,
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
                   ),
@@ -748,7 +726,7 @@ class _FrostedGlassButtonState extends State<FrostedGlassButton>
               if (widget.showArrow) ...[
                 Icon(
                   Icons.arrow_forward_ios,
-                  color: Colors.white.withOpacity(0.4),
+                  color: LoginTheme.textSecondary,
                   size: 12,
                 ),
               ],
@@ -759,41 +737,22 @@ class _FrostedGlassButtonState extends State<FrostedGlassButton>
     );
   }
 
-  Widget _buildIcon() {
-    // 获取按钮对应的颜色
-    Color iconBgColor;
-    switch (widget.style) {
-      case GlassButtonStyle.checkIn:
-        iconBgColor = TechEvolutionColors.glassGreen;
-        break;
-      case GlassButtonStyle.interview:
-        iconBgColor = const Color(0xFF135bec);
-        break;
-      case GlassButtonStyle.custom:
-        iconBgColor = const Color(0xFF80DEEA);
-        break;
-    }
-
-    switch (widget.style) {
-      case GlassButtonStyle.checkIn:
-        return _PulseIcon(
-          icon: widget.icon,
-          color: _iconColor,
-          bgColor: iconBgColor,
-        );
-      case GlassButtonStyle.interview:
-        return _PlayRippleIcon(
-          icon: widget.icon,
-          color: _iconColor,
-          bgColor: iconBgColor,
-        );
-      case GlassButtonStyle.custom:
-        return _RotatingIcon(
-          icon: widget.icon,
-          color: _iconColor,
-          bgColor: iconBgColor,
-        );
-    }
+  Widget _buildIcon(Color accentColor) {
+    // 静态图标 - 固定尺寸容器确保居中
+    return SizedBox(
+      width: 32,
+      height: 32,
+      child: Center(
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: accentColor.withOpacity(0.2),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(widget.icon, color: accentColor, size: 20),
+        ),
+      ),
+    );
   }
 }
 

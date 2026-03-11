@@ -449,6 +449,12 @@ class AppTheme {
         ),
         behavior: SnackBarBehavior.floating,
       ),
+
+      // 进度指示器主题
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: BubeiColors.textDisabled, // 深灰色 #4B5563
+        linearTrackColor: BubeiColors.textDisabled.withOpacity(0.2), // 线性进度条轨道颜色
+      ),
     );
   }
 }

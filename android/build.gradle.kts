@@ -1,8 +1,21 @@
 // 添加镜像源配置
 buildscript {
     repositories {
+        // 1. 阿里云镜像（优先）
         maven { url = uri("https://maven.aliyun.com/repository/google") }
         maven { url = uri("https://maven.aliyun.com/repository/public") }
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
+
+        // 2. 腾讯云镜像
+        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/") }
+
+        // 3. 华为云镜像
+        maven { url = uri("https://repo.huaweicloud.com/repository/maven/") }
+
+        // 4. Flutter 中国镜像
+        maven { url = uri("https://storage.flutter-io.cn/download.flutter.io") }
+
+        // 5. 官方源（作为备份）
         google()
         mavenCentral()
     }
@@ -10,16 +23,24 @@ buildscript {
 
 allprojects {
     repositories {
+        // 1. 阿里云镜像（优先）
         maven { url = uri("https://maven.aliyun.com/repository/google") }
         maven { url = uri("https://maven.aliyun.com/repository/public") }
-        google()
-        mavenCentral()
-    }
-}
+        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
 
+        // 2. 腾讯云镜像
+        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public/") }
 
-allprojects {
-    repositories {
+        // 3. 华为云镜像
+        maven { url = uri("https://repo.huaweicloud.com/repository/maven/") }
+
+        // 4. Flutter 中国镜像
+        maven { url = uri("https://storage.flutter-io.cn/download.flutter.io") }
+
+        // 5. JitPack
+        maven { url = uri("https://jitpack.io") }
+
+        // 6. 官方源（作为备份）
         google()
         mavenCentral()
     }

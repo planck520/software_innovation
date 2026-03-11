@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
-import '../config/app_config.dart' show isDarkBackground;
+import '../theme/login_theme.dart';
 
 /// stitch_login_screen 风格背景装饰组件
 class TechBackground extends StatelessWidget {
@@ -30,9 +30,7 @@ class TechBackground extends StatelessWidget {
         ? const Color(0xFF101622) // 深色背景
         : AppColors.background; // 浅色背景
 
-    final gridColor = isDarkBackground
-        ? AppColors.primary.withOpacity(0.08)
-        : AppColors.primary.withOpacity(0.05);
+    final gridColor = LoginTheme.cardBorder.withOpacity(0.15);
 
     return Stack(
       children: [
@@ -1436,38 +1434,7 @@ class _HomeCodeChar {
 class TechPioneersHomeBackgroundPainter extends CustomPainter {
   final double animationValue;
 
-  // 代码字符集 - 带类型信息用于语法高亮
-  static const List<_HomeCodeChar> _codeChars = [
-    _HomeCodeChar('0', _HomeCodeCharType.digit),
-    _HomeCodeChar('1', _HomeCodeCharType.digit),
-    _HomeCodeChar('01', _HomeCodeCharType.digit),
-    _HomeCodeChar('10', _HomeCodeCharType.digit),
-    _HomeCodeChar('110', _HomeCodeCharType.digit),
-    _HomeCodeChar('101', _HomeCodeCharType.digit),
-    _HomeCodeChar('{', _HomeCodeCharType.bracket),
-    _HomeCodeChar('}', _HomeCodeCharType.bracket),
-    _HomeCodeChar('<', _HomeCodeCharType.bracket),
-    _HomeCodeChar('>', _HomeCodeCharType.bracket),
-    _HomeCodeChar('/', _HomeCodeCharType.symbol),
-    _HomeCodeChar('\\', _HomeCodeCharType.symbol),
-    _HomeCodeChar('if', _HomeCodeCharType.keyword),
-    _HomeCodeChar('for', _HomeCodeCharType.keyword),
-    _HomeCodeChar('while', _HomeCodeCharType.keyword),
-    _HomeCodeChar('return', _HomeCodeCharType.keyword),
-    _HomeCodeChar('func', _HomeCodeCharType.keyword),
-    _HomeCodeChar('var', _HomeCodeCharType.keyword),
-    _HomeCodeChar('let', _HomeCodeCharType.keyword),
-    _HomeCodeChar('const', _HomeCodeCharType.keyword),
-    _HomeCodeChar('class', _HomeCodeCharType.keyword),
-    _HomeCodeChar('import', _HomeCodeCharType.keyword),
-    _HomeCodeChar('=>', _HomeCodeCharType.symbol),
-    _HomeCodeChar('==', _HomeCodeCharType.symbol),
-    _HomeCodeChar('!=', _HomeCodeCharType.symbol),
-    _HomeCodeChar('&&', _HomeCodeCharType.symbol),
-    _HomeCodeChar('||', _HomeCodeCharType.symbol),
-  ];
-
-  // 语法高亮颜色映射（绿色主题）
+  // 语法高亮颜色映射（深色主题 - 绿色为主）
   static const Map<_HomeCodeCharType, Color> _colorMap = {
     _HomeCodeCharType.digit: Color(0xFF80DEEA), // 浅青色
     _HomeCodeCharType.keyword: Color(0xFF4CAF50), // 绿色
@@ -1480,6 +1447,11 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    // 纯黑背景
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Paint()..color = const Color(0xFF1A1A1A),
+    );
     // 深蓝色渐变背景
     final backgroundGradient = LinearGradient(
       begin: Alignment.topLeft,
@@ -1499,42 +1471,13 @@ class TechPioneersHomeBackgroundPainter extends CustomPainter {
     // 绘制星空粒子背景
     _drawStarField(canvas, size);
 
-    // 绘制六边形网格背景
+    // 绘制深灰色网格（降低透明度）
     _drawHexGrid(canvas, size);
-
-    // 绘制音频频谱模拟
-    _drawAudioSpectrum(canvas, size);
-
-    // 绘制脉冲扩散圆环
-    _drawPulseRings(canvas, size);
-
-    // 绘制电路板路径
-    _drawCircuitPaths(canvas, size);
-
-    // 绘制代码雨效果 - 多层带语法高亮
-    _drawCodeRainLayer(canvas, size, 0.8, 0.12, 11);
-    _drawCodeRainLayer(canvas, size, 0.5, 0.08, 9);
-    _drawCodeRainLayer(canvas, size, 0.3, 0.05, 7);
-
-    // 绘制漂浮代码片段（带光标效果）
-    _drawFloatingSnippets(canvas, size);
-
-    // 绘制数据流粒子
-    _drawDataFlowParticles(canvas, size);
-
-    // 绘制发光连接网络
-    _drawNetworkNodes(canvas, size);
-
-    // 绘制呼吸光环
-    _drawBreathingRings(canvas, size);
-
-    // 绘制扫描激光线
-    _drawScanLine(canvas, size);
   }
 
   void _drawHexGrid(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = const Color(0xFF2D5016).withOpacity(0.06)
+      ..color = const Color(0xFF404040).withOpacity(0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
