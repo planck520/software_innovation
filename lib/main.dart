@@ -3685,58 +3685,12 @@ class InterviewRoomPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1a1a2e),
-              const Color(0xFF16213e),
-              const Color(0xFF0f3460).withOpacity(0.3),
-            ],
-          ),
-        ),
-        child: SafeArea(
+    return PremiumStaticBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
           child: Stack(
             children: [
-              // 背景装饰
-              Positioned(
-                top: -100,
-                right: -100,
-                child: Container(
-                  width: 250,
-                  height: 250,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppColors.primary.withOpacity(0.15),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: -80,
-                left: -80,
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        AppColors.cyberPurple.withOpacity(0.12),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              // 主内容
               Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
@@ -3986,11 +3940,9 @@ class _AchievementPageState extends State<AchievementPage>
 
   @override
   Widget build(BuildContext context) {
-    return TechBackground(
-      showGrid: true,
-      showGradientOrbs: false,
+    return PremiumStaticBackground(
       child: Scaffold(
-        backgroundColor: LoginTheme.background,
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             children: [
@@ -6020,10 +5972,9 @@ class _HistoryPageState extends State<HistoryPage> {
                   .reduce((a, b) => a + b) /
               totalInterviews;
 
-    return TechBackground(
-      showGradientOrbs: false,
+    return PremiumStaticBackground(
       child: Scaffold(
-        backgroundColor: LoginTheme.background,
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             children: [
@@ -9641,7 +9592,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
   Widget build(BuildContext context) {
     return Theme(
       data: Theme.of(context).copyWith(
-        scaffoldBackgroundColor: LoginTheme.background,
+        scaffoldBackgroundColor: Colors.transparent,
         // 移除默认蓝色选择颜色
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: AppColors.textPrimary,
@@ -9653,10 +9604,9 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
         splashColor: Colors.transparent,
         splashFactory: NoSplash.splashFactory,
       ),
-      child: TechBackground(
-        showGradientOrbs: false,
+      child: PremiumStaticBackground(
         child: Scaffold(
-          backgroundColor: LoginTheme.background,
+          backgroundColor: Colors.transparent,
           body: SafeArea(
             child: Column(
               children: [
@@ -10631,10 +10581,9 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return TechBackground(
-      showGradientOrbs: false,
+    return PremiumStaticBackground(
       child: Scaffold(
-        backgroundColor: LoginTheme.background,
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             children: [

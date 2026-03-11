@@ -193,41 +193,28 @@ public:
 
   @override
   Widget build(BuildContext context) {
-    return TechBackground(
-      showGradientOrbs: false,
+    return PremiumStaticBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFF333333),
-                Color(0xFF232323),
-              ],
-            ),
-          ),
-          child: Column(
-            children: [
-              // 自定义AppBar
-              _buildAppBar(context),
-              // TabBar
-              _buildTabBar(),
-              // TabBarView
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildProblemDetailTab(),
-                    _buildSolutionTab(),
-                    _buildCompaniesTab(),
-                    _buildSubmissionTab(),
-                  ],
-                ),
+        body: Column(
+          children: [
+            // 自定义AppBar
+            _buildAppBar(context),
+            // TabBar
+            _buildTabBar(),
+            // TabBarView
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildProblemDetailTab(),
+                  _buildSolutionTab(),
+                  _buildCompaniesTab(),
+                  _buildSubmissionTab(),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         floatingActionButton: _buildFloatingActionButton(),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
@@ -637,7 +624,7 @@ public:
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
-                children: (tags as List).map<Widget>((tag) {
+                children: tags.map<Widget>((tag) {
                   final index = tags.indexOf(tag);
                   final colors = [
                     _pBlue,   // 第1个tag - 浅蓝

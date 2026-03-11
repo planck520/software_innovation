@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../config/app_config.dart' show isDarkBackground;
 import '../theme/app_colors.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
@@ -1433,6 +1434,27 @@ class _HomeCodeChar {
 /// 计算机领军人物背景绘制器（主界面 - 绿色主题代码雨效果）
 class TechPioneersHomeBackgroundPainter extends CustomPainter {
   final double animationValue;
+
+  static const List<_HomeCodeChar> _codeChars = [
+    _HomeCodeChar('0', _HomeCodeCharType.digit),
+    _HomeCodeChar('1', _HomeCodeCharType.digit),
+    _HomeCodeChar('42', _HomeCodeCharType.digit),
+    _HomeCodeChar('if', _HomeCodeCharType.keyword),
+    _HomeCodeChar('for', _HomeCodeCharType.keyword),
+    _HomeCodeChar('class', _HomeCodeCharType.keyword),
+    _HomeCodeChar('return', _HomeCodeCharType.keyword),
+    _HomeCodeChar('{', _HomeCodeCharType.bracket),
+    _HomeCodeChar('}', _HomeCodeCharType.bracket),
+    _HomeCodeChar('[', _HomeCodeCharType.bracket),
+    _HomeCodeChar(']', _HomeCodeCharType.bracket),
+    _HomeCodeChar('()', _HomeCodeCharType.bracket),
+    _HomeCodeChar('=>', _HomeCodeCharType.symbol),
+    _HomeCodeChar('==', _HomeCodeCharType.symbol),
+    _HomeCodeChar('!=', _HomeCodeCharType.symbol),
+    _HomeCodeChar('//', _HomeCodeCharType.symbol),
+    _HomeCodeChar('"AI"', _HomeCodeCharType.string),
+    _HomeCodeChar('"101"', _HomeCodeCharType.string),
+  ];
 
   // 语法高亮颜色映射（深色主题 - 绿色为主）
   static const Map<_HomeCodeCharType, Color> _colorMap = {
