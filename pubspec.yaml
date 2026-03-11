@@ -44,6 +44,7 @@ dependencies:
   file_picker: ^8.1.7  # 负责简历文件选择
   shared_preferences: ^2.2.2
   video_player: ^2.8.1
+  flutter_easyloading: ^3.0.5
 
   # 代码编辑器
   re_editor: ^0.7.0

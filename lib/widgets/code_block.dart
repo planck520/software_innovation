@@ -61,7 +61,8 @@ class _CodeBlockState extends State<CodeBlock>
   }
 
   Future<void> _copyCode() async {
-    await Clipboard.setData(ClipboardData(text: widget.code));
+    // 使用规范化后的代码，统一换行符为 \n
+    await Clipboard.setData(ClipboardData(text: _normalizedCode));
     setState(() {
       _isCopied = true;
     });
@@ -76,6 +77,11 @@ class _CodeBlockState extends State<CodeBlock>
       });
     });
     widget.onCopy?.call();
+  }
+
+  // 获取规范化后的代码（统一换行符）
+  String get _normalizedCode {
+    return widget.code.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
   }
 
   @override
@@ -233,7 +239,7 @@ class _CodeBlockState extends State<CodeBlock>
   }
 
   Widget _buildCodeContent() {
-    final lines = widget.code.split('\n');
+    final lines = _normalizedCode.split('\n');
 
     return Container(
       padding: const EdgeInsets.all(AppTokens.space4),
@@ -256,7 +262,7 @@ class _CodeBlockState extends State<CodeBlock>
 
   Widget _buildPlainCode() {
     return SelectableText(
-      widget.code,
+      _normalizedCode,
       maxLines: widget.maxLines,
       style: const TextStyle(
         fontFamily: 'Consolas, Monaco, monospace',
@@ -294,7 +300,7 @@ class _CodeBlockState extends State<CodeBlock>
   Widget _buildHighlightedCode() {
     try {
       final language = _getHighlightLanguage();
-      final result = _highlightEngine.highlight(code: widget.code, language: language);
+      final result = _highlightEngine.highlight(code: _normalizedCode, language: language);
 
       // 使用 VSCode Dark+ 主题
       final renderer = TextSpanRenderer(
@@ -318,7 +324,7 @@ class _CodeBlockState extends State<CodeBlock>
 
     // 回退：返回普通文本
     return SelectableText(
-      widget.code,
+      _normalizedCode,
       style: const TextStyle(
         fontFamily: 'Consolas, Monaco, monospace',
         fontSize: 12,
@@ -483,7 +489,8 @@ class SimpleCodeCard extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () {
-              Clipboard.setData(ClipboardData(text: code));
+              // 使用规范化后的代码，统一换行符为 \n
+              Clipboard.setData(ClipboardData(text: _normalizedCode));
               onCopy?.call();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -524,11 +531,16 @@ class SimpleCodeCard extends StatelessWidget {
     );
   }
 
+  // 获取规范化后的代码（统一换行符）
+  String get _normalizedCode {
+    return code.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+  }
+
   Widget _buildCodeContent() {
     return Container(
       padding: const EdgeInsets.all(AppTokens.space4),
       child: SelectableText(
-        code,
+        _normalizedCode,
         style: const TextStyle(
           fontFamily: 'monospace',
           fontSize: 12,

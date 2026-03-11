@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:re_editor/re_editor.dart';
 import 'package:re_highlight/re_highlight.dart';
 import 'package:re_highlight/languages/python.dart';
@@ -11,6 +12,7 @@ import 'editor_settings_page.dart';
 import '../services/code_execution_service.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
+import '../theme/login_theme.dart';
 import '../widgets/tech_tag.dart';
 import '../widgets/widgets.dart';
 
@@ -781,7 +783,34 @@ class Solution {
 
   void _initCodeController() {
     final template = _getTemplate(_selectedLanguage);
-    _codeController = CodeLineEditingController.fromText(template);
+    // 规范化换行符，确保编辑器正确识别多行
+    final normalizedTemplate = template.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+    // 将文本按行分割，手动创建 CodeLines
+    final lines = normalizedTemplate.split('\n');
+    final codeLines = lines.map((line) => CodeLine(line)).toList();
+
+    _codeController = CodeLineEditingController(
+      codeLines: CodeLines.of(codeLines),
+    );
+  }
+
+  // 自定义粘贴处理方法
+  Future<void> _handlePaste() async {
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    if (clipboardData?.text != null) {
+      String text = clipboardData!.text!;
+      // 规范化换行符为 \n
+      text = text.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+      // 按行分割创建CodeLines
+      final lines = text.split('\n');
+      final codeLines = lines.map((line) => CodeLine(line)).toList();
+      // 更新编辑器，确保保持当前语言设置
+      setState(() {
+        _codeController.dispose();
+        _codeController = CodeLineEditingController(codeLines: CodeLines.of(codeLines));
+      });
+    }
   }
 
   @override
@@ -798,8 +827,17 @@ class Solution {
       final currentCode = _codeController.text;
       _codeController.dispose();
       final template = _getTemplate(language);
-      _codeController = CodeLineEditingController.fromText(
-        template.isNotEmpty ? template : currentCode,
+      // 规范化换行符，确保编辑器正确识别多行
+      final normalizedTemplate = template.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+      final normalizedCurrentCode = currentCode.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+      final codeToUse = normalizedTemplate.isNotEmpty ? normalizedTemplate : normalizedCurrentCode;
+
+      // 将文本按行分割，手动创建 CodeLines
+      final lines = codeToUse.split('\n');
+      final codeLines = lines.map((line) => CodeLine(line)).toList();
+
+      _codeController = CodeLineEditingController(
+        codeLines: CodeLines.of(codeLines),
       );
       _lastResult = null;
       _testCaseResults = [];
@@ -825,6 +863,7 @@ class Solution {
         code: _codeController.text,
         language: _selectedLanguage,
         testCases: testCases,
+        template: widget.question['template'],
       );
 
       setState(() {
@@ -862,6 +901,7 @@ class Solution {
         code: _codeController.text,
         language: _selectedLanguage,
         testCases: testCases,
+        template: widget.question['template'],
       );
 
       setState(() {
@@ -889,14 +929,25 @@ class Solution {
   void _parseTestResults(String output, int testCaseCount) {
     _testCaseResults = List.filled(testCaseCount, false);
     final lines = output.split('\n');
-    for (int i = 0; i < testCaseCount; i++) {
-      final resultLine = lines.firstWhere(
-        (line) => line.contains('测试用例 ${i + 1}:'),
-        orElse: () => '',
-      );
-      final nextLineIndex = lines.indexOf(resultLine) + 1;
-      if (nextLineIndex < lines.length) {
-        _testCaseResults[i] = lines[nextLineIndex].contains('✅ 通过');
+
+    // 按测试用例分组解析
+    int currentTestCase = -1;
+    for (int i = 0; i < lines.length; i++) {
+      final line = lines[i];
+
+      // 检查是否是新的测试用例开始
+      final testCaseMatch = RegExp(r'测试用例 (\d+):').firstMatch(line);
+      if (testCaseMatch != null) {
+        currentTestCase = int.parse(testCaseMatch.group(1)!) - 1;
+        continue;
+      }
+
+      // 在当前测试用例范围内查找结果行
+      if (currentTestCase >= 0 && currentTestCase < testCaseCount) {
+        if (line.contains('结果:')) {
+          _testCaseResults[currentTestCase] = line.contains('✅ 通过');
+          currentTestCase = -1; // 重置
+        }
       }
     }
   }
@@ -906,7 +957,16 @@ class Solution {
     // 简单实现：重置为模板代码
     setState(() {
       final template = _getTemplate(_selectedLanguage);
-      _codeController.text = template;
+      // 规范化换行符，确保编辑器正确识别多行
+      final normalizedTemplate = template.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+      // 将文本按行分割，手动��建 CodeLines
+      final lines = normalizedTemplate.split('\n');
+      final codeLines = lines.map((line) => CodeLine(line)).toList();
+
+      _codeController = CodeLineEditingController(
+        codeLines: CodeLines.of(codeLines),
+      );
       _lastResult = null;
       _testCaseResults = [];
       _outputText = '';
@@ -938,50 +998,61 @@ class Solution {
 
   // 构建代码编辑器
   Widget _buildCodeEditor() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF1E1E1E),
-            Color(0xFF1E1E1E),
-          ],
-        ),
-      ),
-      width: double.infinity,
-      child: CodeEditor(
-        controller: _codeController,
-        style: CodeEditorStyle(
-          fontSize: _fontSize,
-          fontFamily: 'Consolas, Monaco, monospace',
-          fontHeight: 1.6,
-          textColor: const Color(0xFFD4D4D4),
-          backgroundColor: const Color(0xFF1E1E1E),
-          cursorColor: BubeiColors.primaryLight,
-          codeTheme: CodeHighlightTheme(
-            languages: {
-              'python': _getHighlightMode('python'),
-              'javascript': _getHighlightMode('javascript'),
-              'java': _getHighlightMode('java'),
-              'cpp': _getHighlightMode('cpp'),
-              'c': _getHighlightMode('c'),
-            },
-            theme: vs2015Theme,
-          ),
-        ),
-        wordWrap: true,
-        indicatorBuilder: (context, editingController, chunkController, notifier) {
-          return DefaultCodeLineNumber(
-            controller: editingController,
-            notifier: notifier,
-          );
+    return Shortcuts(
+      shortcuts: {
+        LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyV): const _PasteIntent(),
+        LogicalKeySet(LogicalKeyboardKey.meta, LogicalKeyboardKey.keyV): const _PasteIntent(),
+      },
+      child: Actions(
+        actions: {
+          _PasteIntent: CallbackAction<_PasteIntent>(onInvoke: (_) => _handlePaste()),
         },
-        sperator: const SizedBox(
-          width: 1,
-          child: VerticalDivider(
-            color: Color(0xFF3C3C3C),
-            thickness: 1,
+        child: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF1E1E1E),
+                Color(0xFF1E1E1E),
+              ],
+            ),
+          ),
+          width: double.infinity,
+          child: CodeEditor(
+            controller: _codeController,
+            style: CodeEditorStyle(
+              fontSize: _fontSize,
+              fontFamily: 'Consolas, Monaco, monospace',
+              fontHeight: 1.6,
+              textColor: const Color(0xFFD4D4D4),
+              backgroundColor: const Color(0xFF1E1E1E),
+              cursorColor: BubeiColors.primaryLight,
+              codeTheme: CodeHighlightTheme(
+                languages: {
+                  'python': _getHighlightMode('python'),
+                  'javascript': _getHighlightMode('javascript'),
+                  'java': _getHighlightMode('java'),
+                  'cpp': _getHighlightMode('cpp'),
+                  'c': _getHighlightMode('c'),
+                },
+                theme: vs2015Theme,
+              ),
+            ),
+            wordWrap: true,
+            indicatorBuilder: (context, editingController, chunkController, notifier) {
+              return DefaultCodeLineNumber(
+                controller: editingController,
+                notifier: notifier,
+              );
+            },
+            sperator: const SizedBox(
+              width: 1,
+              child: VerticalDivider(
+                color: Color(0xFF3C3C3C),
+                thickness: 1,
+              ),
+            ),
           ),
         ),
       ),
@@ -1010,7 +1081,7 @@ class Solution {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BubeiColors.background,
+      backgroundColor: LoginTheme.background,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -1035,7 +1106,7 @@ class Solution {
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            height: _showConsole ? 200 : 0,
+            height: _showConsole ? 360 : 0,
             child: _showConsole ? _buildConsolePanel() : const SizedBox.shrink(),
           ),
 
@@ -1055,10 +1126,10 @@ class Solution {
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Container(
             decoration: BoxDecoration(
-              color: BubeiColors.surface.withOpacity(0.9),
+              color: LoginTheme.background,
               border: Border(
                 bottom: BorderSide(
-                  color: BubeiColors.divider.withOpacity(0.5),
+                  color: LoginTheme.cardBorder,
                   width: 1,
                 ),
               ),
@@ -1089,22 +1160,9 @@ class Solution {
   Widget _buildBackButton() {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
-      child: Container(
-        margin: const EdgeInsets.all(4),
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: BubeiColors.primary.withOpacity(0.1),
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: BubeiColors.primary.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: const Icon(
-          Icons.arrow_back,
-          color: Colors.white,
-          size: 16,
-        ),
+      child: CustomPaint(
+        size: const Size(16, 16),
+        painter: _TriangleArrowPainter(),
       ),
     );
   }
@@ -1117,14 +1175,7 @@ class Solution {
         onTap: _openSettings,
         child: Container(
           padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: BubeiColors.primary.withOpacity(0.1),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: BubeiColors.primary.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
+          decoration: const BoxDecoration(),  // 无边框和填充
           child: const Icon(
             Icons.settings,
             color: BubeiColors.primaryLight,
@@ -1141,26 +1192,7 @@ class Solution {
       onTap: () => _showLanguagePicker(context),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              BubeiColors.primary.withOpacity(0.2),
-              BubeiColors.primary.withOpacity(0.1),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-          border: Border.all(
-            color: BubeiColors.primary.withOpacity(0.4),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: BubeiColors.primary.withOpacity(0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+        decoration: const BoxDecoration(),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -1335,20 +1367,20 @@ class Solution {
 
   // 构建控制台面板（NeonBorderCard包装）
   Widget _buildConsolePanel() {
-    return ClipRect(
-      child: Container(
-        decoration: BoxDecoration(
+    return Container(
+      height: double.infinity,
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            BubeiColors.surface.withOpacity(0.95),
-            BubeiColors.background,
+            LoginTheme.cardBackground,
+            LoginTheme.background,
           ],
         ),
         border: Border(
           top: BorderSide(
-            color: BubeiColors.primary.withOpacity(0.3),
+            color: LoginTheme.cardBorder,
             width: 1,
           ),
         ),
@@ -1369,17 +1401,17 @@ class Solution {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: BubeiColors.surface.withOpacity(0.7),
+                  color: LoginTheme.cardBackground,
                   border: Border(
                     bottom: BorderSide(
-                      color: BubeiColors.primary.withOpacity(0.2),
+                      color: LoginTheme.cardBorder,
                       width: 1,
                     ),
                   ),
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.terminal,
                       size: 16,
                       color: BubeiColors.primaryLight,
@@ -1394,11 +1426,16 @@ class Solution {
                       ),
                     ),
                     const Spacer(),
-                    // 执行统计（彩色徽章组）
+                    // 执行统计（彩色徽章组）- 与控制台标题同一行
                     if (_lastResult != null) ...[
-                      _buildStatusBadge(_lastResult!.success),
-                      const SizedBox(width: 8),
-                      _buildExecutionTimeBadge(),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildStatusBadge(_lastResult!.success),
+                          const SizedBox(width: 8),
+                          _buildExecutionTimeBadge(),
+                        ],
+                      ),
                     ],
                     const SizedBox(width: 8),
                     _buildCloseButton(),
@@ -1411,7 +1448,7 @@ class Solution {
           if (_testCaseResults.isNotEmpty)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              constraints: const BoxConstraints(maxHeight: 36),
+              height: 36,
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -1426,19 +1463,17 @@ class Solution {
               ),
             ),
           // 输出内容（终端风格配色）
-          Expanded(
+          Flexible(
             child: Container(
               padding: const EdgeInsets.all(12),
               child: SingleChildScrollView(
                 child: Text(
                   _outputText.isNotEmpty ? _outputText : '点击"运行"查看输出结果...',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'monospace',
                     fontSize: 12,
                     height: 1.5,
-                    color: _lastResult?.success ?? true
-                        ? const Color(0xFF9CDCFE)
-                        : Colors.redAccent,
+                    color: Colors.white,  // 改为白色
                   ),
                 ),
               ),
@@ -1446,8 +1481,7 @@ class Solution {
           ),
         ],
       ),
-    ),
-  );
+    );
   }
 
   // 状态徽章
@@ -1473,14 +1507,6 @@ class Solution {
               : BubeiColors.error.withOpacity(0.5),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: (success ? BubeiColors.success : BubeiColors.error)
-                .withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1506,6 +1532,16 @@ class Solution {
 
   // 执行时间徽章
   Widget _buildExecutionTimeBadge() {
+    // 格式化时间显示，避免显示0ms
+    String timeText;
+    if (_lastResult!.executionTime < 1) {
+      timeText = '${(_lastResult!.executionTime * 1000).toStringAsFixed(0)}μs';
+    } else if (_lastResult!.executionTime < 10) {
+      timeText = '${_lastResult!.executionTime.toStringAsFixed(2)}ms';
+    } else {
+      timeText = '${_lastResult!.executionTime.toStringAsFixed(1)}ms';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -1526,7 +1562,7 @@ class Solution {
           ),
           const SizedBox(width: 3),
           Text(
-            '${_lastResult!.executionTime.toStringAsFixed(0)}ms',
+            timeText,
             style: const TextStyle(
               fontSize: 10,
               color: BubeiColors.info,
@@ -1610,10 +1646,10 @@ class Solution {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: BubeiColors.surface.withOpacity(0.9),
+            color: LoginTheme.cardBackground,
             border: Border(
               top: BorderSide(
-                color: BubeiColors.primary.withOpacity(0.2),
+                color: LoginTheme.cardBorder,
                 width: 1,
               ),
             ),
@@ -1666,58 +1702,37 @@ class Solution {
         });
       },
       child: Container(
+        height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          gradient: _showConsole
-              ? LinearGradient(
-                  colors: [
-                    BubeiColors.primary.withOpacity(0.3),
-                    BubeiColors.primary.withOpacity(0.15),
-                  ],
-                )
-              : null,
-          color: _showConsole
-              ? null
-              : BubeiColors.surfaceDim,
+          color: const Color(0xFF1A1A1A),  // 黑色填充
           borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-          border: Border.all(
-            color: _showConsole
-                ? BubeiColors.primary.withOpacity(0.5)
-                : BubeiColors.divider,
-            width: 1,
-          ),
-          boxShadow: _showConsole
-              ? [
-                  BoxShadow(
-                    color: BubeiColors.primary.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          // 去掉边框
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.terminal_outlined,
-              size: 16,
-              color: _showConsole
-                  ? BubeiColors.primaryLight
-                  : Colors.white70,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '控制台',
-              style: TextStyle(
-                fontSize: 13,
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.terminal_outlined,
+                size: 16,
                 color: _showConsole
                     ? BubeiColors.primaryLight
                     : Colors.white70,
-                fontWeight: FontWeight.w600,
               ),
-            ),
-          ],
+              const SizedBox(width: 6),
+              Text(
+                '控制台',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _showConsole
+                      ? BubeiColors.primaryLight
+                      : Colors.white70,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1728,14 +1743,12 @@ class Solution {
     return GestureDetector(
       onTap: _undo,
       child: Container(
+        width: 40,
+        height: 40,
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: BubeiColors.surfaceDim.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-          border: Border.all(
-            color: BubeiColors.divider.withOpacity(0.5),
-            width: 1,
-          ),
+          shape: BoxShape.circle,
         ),
         child: const Icon(
           Icons.undo,
@@ -1746,30 +1759,58 @@ class Solution {
     );
   }
 
-  // 运行按钮（渐变+发光）
-  // 运行按钮 - 使用 TechCapsuleButton 风格 + 绿色渐变 + 脉冲动画
+  // 运行按钮 - 圆形，无发光特效
   Widget _buildRunButton() {
-    return _TechButton(
-      label: '运行',
-      icon: _isRunning ? null : Icons.play_arrow,
-      isLoading: _isRunning,
-      gradientColors: const [Color(0xFF10B981), Color(0xFF059669)],
-      glowColor: const Color(0xFF10B981),
-      onPressed: _isRunning ? null : _runCode,
+    return GestureDetector(
+      onTap: _isRunning ? null : _runCode,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF10B981), Color(0xFF059669)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          shape: BoxShape.circle,
+        ),
+        child: _isRunning
+            ? const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            : const Icon(
+                Icons.play_arrow,
+                color: Colors.white,
+                size: 24,
+              ),
+      ),
     );
   }
 
-  // 提交按钮 - 使用 TechCapsuleButton 风格 + 蓝色渐变 + 脉冲动画
+  // 提交按钮 - 使用 TechCapsuleButton 风格 + 黑色填充 + 无边框
   Widget _buildSubmitButton() {
     return _TechButton(
       label: '提交',
-      icon: _isSubmitting ? null : Icons.check,
+      icon: null,  // 不显示icon
       isLoading: _isSubmitting,
-      gradientColors: const [Color(0xFF3B82F6), Color(0xFF2563EB)],
-      glowColor: const Color(0xFF3B82F6),
+      gradientColors: const [Color(0xFF1A1A1A), Color(0xFF1A1A1A)],  // 黑色填充
+      glowColor: Colors.transparent,  // 无发光效果
+      borderColor: Colors.transparent,  // 无边框
       onPressed: _isSubmitting ? null : _submitCode,
     );
   }
+}
+
+/// 自定义粘贴Intent
+class _PasteIntent extends Intent {
+  const _PasteIntent();
 }
 
 /// 科技风格按钮 - 带渐变和脉冲发光效果
@@ -1779,6 +1820,7 @@ class _TechButton extends StatefulWidget {
   final bool isLoading;
   final List<Color> gradientColors;
   final Color glowColor;
+  final Color? borderColor;
   final VoidCallback? onPressed;
 
   const _TechButton({
@@ -1787,6 +1829,7 @@ class _TechButton extends StatefulWidget {
     this.isLoading = false,
     required this.gradientColors,
     required this.glowColor,
+    this.borderColor,
     this.onPressed,
   });
 
@@ -1840,6 +1883,7 @@ class _TechButtonState extends State<_TechButton>
           return AnimatedContainer(
             duration: const Duration(milliseconds: 100),
             transform: Matrix4.identity()..scale(_isPressed ? 0.95 : 1.0),
+            height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -1848,6 +1892,9 @@ class _TechButtonState extends State<_TechButton>
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+              border: widget.borderColor != null
+                  ? Border.all(color: widget.borderColor!, width: 1)
+                  : null,
               boxShadow: widget.onPressed != null
                   ? [
                       BoxShadow(
@@ -1893,4 +1940,30 @@ class _TechButtonState extends State<_TechButton>
       ),
     );
   }
+}
+
+/// 三角形向下箭头绘制器（只有箭头头部）
+class _TriangleArrowPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final path = Path();
+    // 绘制向下的三角形箭头
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
+    final arrowSize = 4.0;
+
+    path.moveTo(centerX - arrowSize, centerY - arrowSize);
+    path.lineTo(centerX + arrowSize, centerY - arrowSize);
+    path.lineTo(centerX, centerY + arrowSize);
+    path.close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

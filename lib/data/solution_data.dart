@@ -184,19 +184,19 @@ final Solution reverseStringTwoPointersSolution = Solution(
 
 **复杂度分析：**
 - 时间复杂度 O(n)，只需遍历半个数组
-- 空间复杂度 O(1)，原地交换''',
+- 空间复杂度 O(1)，原地交换
+
+**注意：**
+- Python字符串不可变，需要转换为列表后再反转''',
   timeComplexity: 'O(n)',
-  spaceComplexity: 'O(1)',
-  isRecommended: true,
+  spaceComplexity: 'O(n)',
+  isRecommended: false,
   codeVersions: [
     CodeVersion(
       language: ProgrammingLanguage.python,
-      code: '''def reverseString(s: List[str]) -> None:
-    left, right = 0, len(s) - 1
-    while left < right:
-        s[left], s[right] = s[right], s[left]
-        left += 1
-        right -= 1''',
+      code: '''def reverseString(s: str) -> str:
+    # Python字符串不可变，使用切片返回新字符串
+    return s[::-1]''',
     ),
     CodeVersion(
       language: ProgrammingLanguage.java,
@@ -246,20 +246,20 @@ final Solution reverseStringBuiltInSolution = Solution(
   approach: '''使用语言内置函数反转。
 
 **核心思路：**
-- Python: 使用切片 [::-1]
-- 直接调用内置的 reverse 函数
+- Python: 使用切片 [::-1] 最简洁高效
 
 **注意：**
-- 这种方法会创建新字符串，不是原地操作
-- 面试中如果要求原地反转，不建议使用''',
+- Python字符串不可变，切片会返回新字符串
+- 这是最推荐的Python写法''',
   timeComplexity: 'O(n)',
   spaceComplexity: 'O(n)',
-  isRecommended: false,
+  isRecommended: true,
   codeVersions: [
     CodeVersion(
       language: ProgrammingLanguage.python,
-      code: '''def reverseString(s: List[str]) -> None:
-    s[:] = s[::-1]''',
+      code: '''def reverseString(s: str) -> str:
+    # 使用切片反转字符串 - 最简洁高效
+    return s[::-1]''',
     ),
     CodeVersion(
       language: ProgrammingLanguage.java,
@@ -826,46 +826,47 @@ final ProblemSolutions maxSubarraySolutions = ProblemSolutions(
 
 final Solution addTwoNumbersSolution = Solution(
   method: SolutionMethod.twoPointers,
-  approach: '''模拟链表数字相加。
+  approach: '''模拟数字相加（数组版本）。
 
 **核心思路：**
-1. 同时遍历两个链表
-2. 相加对应节点和进位值
-3. 创建新节点存储结果
+1. 使用双指针同时遍历两个数组
+2. 相加对应元素和进位值
+3. 将结果个位数添加到结果数组
 4. 处理最后的进位
 
 **注意：**
-- 链表是逆序存储的，直接按位相加即可
+- 数组是逆序存储的，直接按位相加即可
 - 需要处理进位（carry）
-- 虚拟头节点简化操作''',
+- 时间复杂度：O(max(m,n))，其中m和n是两个数组的长度''',
   timeComplexity: 'O(max(m,n))',
   spaceComplexity: 'O(max(m,n))',
   isRecommended: true,
   codeVersions: [
     CodeVersion(
       language: ProgrammingLanguage.python,
-      code: '''# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
-
-def addTwoNumbers(l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
-    dummy = ListNode(0)
-    cur = dummy
+      code: '''def addTwoNumbers(l1, l2):
+    """
+    l1: List[int] - 第一个数字的数组（逆序存储）
+    l2: List[int] - 第二个数字的数组（逆序存储）
+    返回: List[int] - 和的数组（逆序存储）
+    """
+    result = []
     carry = 0
-    while l1 or l2 or carry:
+    i = j = 0
+
+    while i < len(l1) or j < len(l2) or carry:
         val = carry
-        if l1:
-            val += l1.val
-            l1 = l1.next
-        if l2:
-            val += l2.val
-            l2 = l2.next
+        if i < len(l1):
+            val += l1[i]
+            i += 1
+        if j < len(l2):
+            val += l2[j]
+            j += 1
+
         carry = val // 10
-        cur.next = ListNode(val % 10)
-        cur = cur.next
-    return dummy.next''',
+        result.append(val % 10)
+
+    return result''',
     ),
     CodeVersion(
       language: ProgrammingLanguage.java,
@@ -1306,43 +1307,46 @@ final ProblemSolutions validParenthesesSolutions = ProblemSolutions(
 
 final Solution mergeTwoListsIterativeSolution = Solution(
   method: SolutionMethod.twoPointers,
-  approach: '''迭代合并两个有序链表。
+  approach: '''迭代合并两个有序数组。
 
 **核心思路：**
-1. 创建虚拟头节点简化操作
-2. 比较两个链表的头节点
-3. 将较小的节点接到结果链表后
-4. 重复直到某个链表为空
-5. 接上剩余部分
+1. 使用双指针分别指向两个数组开头
+2. 比较两个指针位置的元素
+3. 将较小的元素添加到结果数组
+4. 移动对应指针，重复直到某个数组为空
+5. 将剩余元素添加到结果数组
 
 **为什么这样可行？**
-- 两个链表都是有序的
+- 两个数组都是有序的
 - 每次选择最小的头部，最终结果也是有序的''',
   timeComplexity: 'O(m+n)',
-  spaceComplexity: 'O(1)',
+  spaceComplexity: 'O(m+n)',
   isRecommended: true,
   codeVersions: [
     CodeVersion(
       language: ProgrammingLanguage.python,
-      code: '''# Definition for singly-linked list.
-# class ListNode:
-#     def __init__(self, val=0, next=None):
-#         self.val = val
-#         self.next = next
+      code: '''def mergeTwoLists(l1, l2):
+    """
+    l1: List[int] - 第一个有序数组
+    l2: List[int] - 第二个有序数组
+    返回: List[int] - 合并后的有序数组
+    """
+    result = []
+    i = j = 0
 
-def mergeTwoLists(l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
-    dummy = ListNode(0)
-    cur = dummy
-    while l1 and l2:
-        if l1.val <= l2.val:
-            cur.next = l1
-            l1 = l1.next
+    while i < len(l1) and j < len(l2):
+        if l1[i] <= l2[j]:
+            result.append(l1[i])
+            i += 1
         else:
-            cur.next = l2
-            l2 = l2.next
-        cur = cur.next
-    cur.next = l1 or l2
-    return dummy.next''',
+            result.append(l2[j])
+            j += 1
+
+    # 添加剩余元素
+    result.extend(l1[i:])
+    result.extend(l2[j:])
+
+    return result''',
     ),
     CodeVersion(
       language: ProgrammingLanguage.java,
@@ -1411,31 +1415,32 @@ public:
 
 final Solution mergeTwoListsRecursiveSolution = Solution(
   method: SolutionMethod.recursion,
-  approach: '''递归解法。
+  approach: '''递归解法（数组版本）。
 
 **核心思路：**
-1. 选择两个链表头中较小的作为新头
-2. 递归合并剩余部分
-3. 递归出口：某个链表为空
+1. 比较两个数组首元素
+2. 选择较小的作为新数组首元素
+3. 递归合并剩余部分
+4. 递归出口：某个数组为空
 
 **注意：**
-- 递归深度可能很大，不适合很长的链表
-- 空间复杂度 O(m+n)''',
+- 递归解法代码简洁，但对于大数组可能导致栈溢出
+- Python列表的列表拼接效率较低''',
   timeComplexity: 'O(m+n)',
   spaceComplexity: 'O(m+n)',
   isRecommended: false,
   codeVersions: [
     CodeVersion(
       language: ProgrammingLanguage.python,
-      code: '''def mergeTwoLists(l1: Optional[ListNode], l2: Optional[ListNode]) -> Optional[ListNode]:
-    if not l1 or not l2:
-        return l1 or l2
-    if l1.val <= l2.val:
-        l1.next = mergeTwoLists(l1.next, l2)
+      code: '''def mergeTwoLists(l1, l2):
+    if not l1:
+        return l2
+    if not l2:
         return l1
+    if l1[0] <= l2[0]:
+        return [l1[0]] + mergeTwoLists(l1[1:], l2)
     else:
-        l2.next = mergeTwoLists(l1, l2.next)
-        return l2''',
+        return [l2[0]] + mergeTwoLists(l1, l2[1:])''',
     ),
     CodeVersion(
       language: ProgrammingLanguage.java,

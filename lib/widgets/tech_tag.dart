@@ -76,6 +76,11 @@ class _TechTagState extends State<TechTag>
 
   Color get _tagColor => widget.color ?? BubeiColors.primary;
 
+  Color _getTextColor(Color backgroundColor) {
+    final luminance = backgroundColor.computeLuminance();
+    return luminance > 0.5 ? Colors.black : Colors.white;
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -105,8 +110,7 @@ class _TechTagState extends State<TechTag>
   }
 
   Widget _buildTag() {
-    final glowOpacity =
-        (widget.showGlow || widget.isSelected) ? _pulseAnimation.value : 0.0;
+    final textColor = _getTextColor(_tagColor);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -114,26 +118,8 @@ class _TechTagState extends State<TechTag>
         vertical: AppTokens.space1,
       ),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _tagColor.withOpacity(0.2),
-            _tagColor.withOpacity(0.1),
-          ],
-        ),
+        color: _tagColor,
         borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-        border: Border.all(
-          color: _tagColor.withOpacity(0.4),
-          width: 1,
-        ),
-        boxShadow: glowOpacity > 0
-            ? [
-                BoxShadow(
-                  color: _tagColor.withOpacity(glowOpacity * 0.6),
-                  blurRadius: 8,
-                  spreadRadius: 0,
-                ),
-              ]
-            : null,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -142,7 +128,7 @@ class _TechTagState extends State<TechTag>
             Icon(
               widget.icon,
               size: 12,
-              color: _tagColor,
+              color: textColor,
             ),
             const SizedBox(width: 4),
           ],
@@ -150,7 +136,7 @@ class _TechTagState extends State<TechTag>
             widget.label,
             style: TextStyle(
               fontSize: 11,
-              color: _tagColor,
+              color: textColor,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.3,
             ),

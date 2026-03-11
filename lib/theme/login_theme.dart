@@ -11,6 +11,7 @@ class LoginTheme {
   // 卡片样式 - 深灰
   static const Color cardBackground = Color(0xFF2D2D2D);
   static const Color cardBorder = Color(0xFF404040);
+  static const Color surface = Color(0xFF3A3A3A);
 
   // 文字颜色 - 浅色
   static const Color textPrimary = Color(0xFFFFFFFF);
@@ -50,4 +51,7 @@ class LoginTheme {
 
   // 黄色强调
   static const Color accentYellow = Color(0xFFFFD54F);
+
+  // 红色强调 - 错误状态
+  static const Color accentRed = Color(0xFFEF4444);
 }

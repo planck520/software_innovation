@@ -51,6 +51,9 @@ class LanguageSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const langColor = Color(0xFF4DA3D6); // 蓝色
+    final textColor = langColor.computeLuminance() > 0.5 ? Colors.black : Colors.white;
+
     return GestureDetector(
       onTap: () => _showLanguagePicker(context),
       child: Container(
@@ -60,12 +63,8 @@ class LanguageSelector extends StatelessWidget {
           vertical: AppTokens.space2,
         ),
         decoration: BoxDecoration(
-          color: BubeiColors.surface,
+          color: langColor,
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-          border: Border.all(
-            color: BubeiColors.divider.withOpacity(0.5),
-            width: 1,
-          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -74,17 +73,17 @@ class LanguageSelector extends StatelessWidget {
             const SizedBox(width: AppTokens.space2),
             Text(
               selectedLanguage.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: Colors.white,
+                color: textColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(width: AppTokens.space2),
-            const Icon(
+            Icon(
               Icons.keyboard_arrow_down,
               size: 16,
-              color: Colors.white54,
+              color: textColor,
             ),
           ],
         ),

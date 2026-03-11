@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
@@ -27,6 +28,7 @@ import 'theme/bubei_colors.dart';
 import 'theme/app_tokens.dart';
 import 'theme/app_text_styles.dart';
 import 'theme/login_theme.dart';
+import 'theme/interview_theme.dart';
 
 // 导入新的UI组件
 import 'widgets/glass_card.dart';
@@ -146,6 +148,7 @@ class HusterviewApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'Husterview',
           theme: AppTheme.bubeiDarkTheme,
+          builder: EasyLoading.init(),
           home: const LoginPage(),
         );
       },
@@ -186,7 +189,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _userController = TextEditingController();
   final _passController = TextEditingController();
-  bool _isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
   bool _agreedToTerms = false;
@@ -321,7 +323,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return;
     }
 
-    setState(() => _isLoading = true);
+    EasyLoading.show(status: '登录中...', maskType: EasyLoadingMaskType.black);
 
     await Future.delayed(const Duration(milliseconds: 1200));
 
@@ -329,7 +331,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             (u) => u['username'] == inputUser && u['password'] == inputPass
     );
 
-    setState(() => _isLoading = false);
+    EasyLoading.dismiss();
 
     if (foundIndex != -1) {
       currentUserIndex = foundIndex;
@@ -669,7 +671,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: _isLoading ? null : _handleLogin,
+              onPressed: () {
+                if (EasyLoading.isShow) return;
+                _handleLogin();
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: LoginTheme.buttonBackground,
                 foregroundColor: LoginTheme.buttonText,
@@ -678,19 +683,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: _isLoading
-                  ? SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(LoginTheme.buttonText),
-                      ),
-                    )
-                  : const Text(
-                      "登录",
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: 1.2),
-                    ),
+              child: const Text(
+                "登录",
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, height: 1.2),
+              ),
             ),
           ),
           // 注册入口
@@ -5723,7 +5719,7 @@ class _ProfilePageState extends State<ProfilePage> {
         height: MediaQuery.of(context).size.height * 0.75,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: LoginTheme.background,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -6742,9 +6738,10 @@ class QuestionBankPage extends StatefulWidget {
   State<QuestionBankPage> createState() => _QuestionBankPageState();
 }
 
-class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _QuestionBankPageState extends State<QuestionBankPage> {
   String _selectedCategory = '全部';
+  bool _isFilterExpanded = false;
+  String _searchQuery = '';
 
   // 面试题库数据
   final Map<String, List<Map<String, dynamic>>> questionBank = {
@@ -6923,7 +6920,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
 - int get(int key) 如果关键字 key 存在于缓存中，则返回关键字的值，否则返回 -1
 - void put(int key, int value) 如果关键字 key 已存在，则变更其数据值 value ；如果不存在，则插入该组 key-value
 
-当缓存容量达到 capacity 时，在插入新组数据之前，应删除最近最少使用的数据腾出空间。''', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'class LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}]},
+当缓存容量达到 capacity 时，在插入新组数据之前，应删除最近最少使用的数据腾出空间。''', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'from collections import OrderedDict\nclass LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}]},
       {'q': '有效括号', 'a': '''给定一个只包括 '('，')'，'{'，'}'，'['，']' 的字符串 s ，判断字符串 s 是否有效。
 
 有效字符串需满足：
@@ -6943,47 +6940,61 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
     ],
   };
 
-  List<String> get categories => ['全部', ...questionBank.keys];
+  List<String> get _orderedCategories => [
+    '全部', '算法编程', '技术基础', '算法数据结构',
+    '前端开发', '后端开发', '系统设计', '行为面试', '智力题'
+  ];
 
   List<Map<String, dynamic>> get filteredQuestions {
+    List<Map<String, dynamic>> questions;
     if (_selectedCategory == '全部') {
-      return questionBank.values.expand((list) => list).toList();
+      questions = questionBank.values.expand((list) => list).toList();
+    } else {
+      questions = questionBank[_selectedCategory] ?? [];
     }
-    return questionBank[_selectedCategory] ?? [];
+
+    // 搜索过滤
+    if (_searchQuery.isNotEmpty) {
+      final query = _searchQuery.toLowerCase();
+      questions = questions.where((q) {
+        final question = (q['q'] as String).toLowerCase();
+        return question.contains(query);
+      }).toList();
+    }
+
+    return questions;
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: categories.length, vsync: this);
-    _tabController.addListener(() {
-      if (_tabController.indexIsChanging) return;
-      setState(() {
-        _selectedCategory = categories[_tabController.index];
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
-    return TechBackground(
-      showGradientOrbs: false,
-      child: Scaffold(
-        backgroundColor: LoginTheme.background,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(),
-              _buildCategoryTabs(),
-              _buildStatsBar(),
-              Expanded(child: _buildQuestionList()),
-            ],
+    return Theme(
+      data: Theme.of(context).copyWith(
+        scaffoldBackgroundColor: LoginTheme.background,
+        // 移除默认蓝色选择颜色
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: AppColors.textPrimary,
+          selectionColor: Colors.white24,
+          selectionHandleColor: Colors.white70,
+        ),
+        // 移除默认蓝色高亮
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
+        splashFactory: NoSplash.splashFactory,
+      ),
+      child: TechBackground(
+        showGradientOrbs: false,
+        child: Scaffold(
+          backgroundColor: LoginTheme.background,
+          body: SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(),
+                _buildSearchBar(),
+                _buildFilterAndStatsBar(),
+                Expanded(child: _buildQuestionList()),
+              ],
+            ),
           ),
         ),
       ),
@@ -6991,74 +7002,52 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
   }
 
   Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 16, 20, 16),
       child: Row(
         children: [
-          // 返回按钮
+          // 返回按钮 - 简洁设计
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-              ),
-              child: Icon(Icons.arrow_back_ios_new, color: AppColors.textSecondary, size: 16),
+              padding: const EdgeInsets.all(12),
+              child: Icon(Icons.arrow_back_ios_new, color: AppColors.textSecondary, size: 18),
             ),
           ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-            ),
-            child: const Icon(Icons.quiz, color: Colors.white, size: 9.8),
-          ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 4),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "面试题库",
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  "精选高频经典面试题目",
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            child: Text(
+              "题库",
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
+          // 简洁分隔线
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+            width: 1,
+            height: 20,
+            margin: const EdgeInsets.symmetric(horizontal: 16),
+            color: const Color(0xFF3D3D3D),
+          ),
+          // 题目总数
+          Text(
+            "${questionBank.values.expand((e) => e).length}",
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.auto_awesome, color: AppColors.primary, size: 9.8),
-                const SizedBox(width: 4),
-                Text(
-                  "${questionBank.values.expand((e) => e).length}题",
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+          ),
+          const SizedBox(width: 4),
+          Text(
+            "题",
+            style: TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
             ),
           ),
         ],
@@ -7066,86 +7055,277 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
     );
   }
 
-  Widget _buildCategoryTabs() {
-    return Container(
-      height: 40,
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        tabAlignment: TabAlignment.start,
-        labelColor: Colors.white,
-        unselectedLabelColor: AppColors.textSecondary,
-        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontSize: 13),
-        indicator: BoxDecoration(
-          gradient: LinearGradient(colors: AppColors.primaryGradient),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        tabs: categories.map((c) => Tab(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(c),
+  // 搜索栏
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Container(
+        height: 44,
+        decoration: BoxDecoration(
+          color: LoginTheme.inputBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: LoginTheme.cardBorder,
+            width: 1,
           ),
-        )).toList(),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 14),
+            Icon(Icons.search, color: AppColors.textTertiary, size: 17),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Theme(
+                data: ThemeData(
+                  textSelectionTheme: TextSelectionThemeData(
+                    cursorColor: AppColors.textPrimary,
+                    selectionColor: const Color(0xFF252525),
+                    selectionHandleColor: AppColors.textTertiary,
+                  ),
+                ),
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  cursorColor: AppColors.textPrimary,
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w400),
+                  decoration: InputDecoration(
+                  hintText: '搜索题目',
+                  hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 14),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+                ),
+              ),
+            ),
+            _searchQuery.isNotEmpty
+                ? GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _searchQuery = '';
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(Icons.clear, color: AppColors.textTertiary, size: 16),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildStatsBar() {
+  // 筛选和统计栏合并
+  Widget _buildFilterAndStatsBar() {
     final questions = filteredQuestions;
-    final hotCount = questions.where((q) => q['hot'] == true).length;
     final basicCount = questions.where((q) => q['difficulty'] == '基础').length;
     final mediumCount = questions.where((q) => q['difficulty'] == '中等').length;
     final hardCount = questions.where((q) => q['difficulty'] == '困难').length;
 
-    return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      child: Column(
         children: [
-          _buildStatItem("热门", "$hotCount题", AppColors.error),
-          _buildStatItem("基础", "$basicCount题", AppColors.success),
-          _buildStatItem("中等", "$mediumCount题", AppColors.warning),
-          _buildStatItem("困难", "$hardCount题", AppColors.cyberPurple),
+          // 第一行：统计信息 + 筛选图标
+          Row(
+            children: [
+              // 统计信息
+              Expanded(
+                child: Container(
+                  height: 38,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  decoration: BoxDecoration(
+                    color: LoginTheme.cardBackground,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: LoginTheme.cardBorder,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(
+                        "${questions.length}",
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "题",
+                        style: TextStyle(
+                          color: AppColors.textTertiary,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const Spacer(),
+                      _buildDifficultyTag("基础", basicCount, const Color(0xFF00B8A3)),
+                      const SizedBox(width: 10),
+                      _buildDifficultyTag("中等", mediumCount, const Color(0xFFFFC01E)),
+                      const SizedBox(width: 10),
+                      _buildDifficultyTag("困难", hardCount, const Color(0xFFFF375F)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // 筛选图标按钮
+              _buildFilterButton(),
+            ],
+          ),
+          // 第二行：筛选面板（展开时）
+          if (_isFilterExpanded) _buildFilterPanel(),
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color) {
-    return Column(
+  // 筛选图标按钮
+  Widget _buildFilterButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isFilterExpanded = !_isFilterExpanded;
+        });
+      },
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          color: LoginTheme.cardBackground,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: LoginTheme.cardBorder,
+            width: 1,
+          ),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Icon(
+                Icons.tune,
+                color: AppColors.textSecondary,
+                size: 18,
+              ),
+            ),
+            // 选中分类指示点
+            if (_selectedCategory != '全部')
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 筛选面板
+  Widget _buildFilterPanel() {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      child: Container(
+        margin: const EdgeInsets.only(top: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: LoginTheme.cardBackground,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: LoginTheme.cardBorder,
+            width: 1,
+          ),
+        ),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _orderedCategories.map((category) {
+            return _buildCategoryChip(category);
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  // 分类标签
+  Widget _buildCategoryChip(String category) {
+    final isSelected = _selectedCategory == category;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedCategory = category;
+          _isFilterExpanded = false;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.white : LoginTheme.cardBackground,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isSelected ? Colors.white : LoginTheme.cardBorder,
+            width: 1,
+          ),
+        ),
+        child: Text(
+          category,
+          style: TextStyle(
+            color: isSelected ? Colors.black : AppColors.textSecondary,
+            fontSize: 13,
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDifficultyTag(String label, int count, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8,
-          height: 8,
+          width: 6,
+          height: 6,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        const SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
-            fontSize: 11,
-            color: AppColors.textSecondary,
+            color: AppColors.textTertiary,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          "$count",
+          style: TextStyle(
+            color: color,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -7156,6 +7336,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
     final questions = filteredQuestions;
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 20),
+      physics: const ClampingScrollPhysics(),
       itemCount: questions.length,
       itemBuilder: (context, index) {
         final q = questions[index];
@@ -7167,144 +7348,123 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
 
   Widget _buildQuestionCard(Map<String, dynamic> question, int index) {
     final difficulty = question['difficulty'] as String;
-    final isHot = question['hot'] == true;
     final isCoding = question['type'] == 'coding';
 
+    // 难度颜色（唯一彩色点缀）
     Color difficultyColor;
     switch (difficulty) {
       case '基础':
-        difficultyColor = AppColors.success;
+        difficultyColor = const Color(0xFF00B8A3);
         break;
       case '中等':
-        difficultyColor = AppColors.warning;
+        difficultyColor = const Color(0xFFFFC01E);
         break;
       case '困难':
-        difficultyColor = AppColors.cyberPurple;
+        difficultyColor = const Color(0xFFFF375F);
         break;
       default:
         difficultyColor = AppColors.textSecondary;
     }
 
-    return GestureDetector(
+    return InkWell(
       onTap: () => _showQuestionDetail(question),
+      highlightColor: Colors.transparent,
+      splashColor: Colors.transparent,
+      hoverColor: Colors.transparent,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.cardBackground,
-          borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+          color: LoginTheme.cardBackground,
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: AppColors.border.withOpacity(0.3),
+            color: LoginTheme.cardBorder,
             width: 1,
           ),
-          boxShadow: AppTokens.shadowSm,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+            // 编号 - 简洁设计
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: LoginTheme.cardBackground,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Center(
+                child: Text(
+                  "$index",
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textTertiary,
                   ),
-                  child: Center(
-                    child: Text(
-                      "$index",
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            // 题目文字
+            Expanded(
+              child: Text(
+                question['q'],
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textPrimary,
+                  height: 1.4,
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 12),
+            // 难度标签 - 彩色点缀
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: difficultyColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                difficulty,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: difficultyColor,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+            if (isCoding) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF4EC9B0).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.code, size: 9, color: const Color(0xFF4EC9B0)),
+                    const SizedBox(width: 3),
+                    Text(
+                      "编程",
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF4EC9B0),
+                        letterSpacing: 0.3,
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: difficultyColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    difficulty,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: difficultyColor,
-                    ),
-                  ),
-                ),
-                if (isCoding) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4EC9B0).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.code, size: 8.4, color: const Color(0xFF4EC9B0)),
-                        const SizedBox(width: 4),
-                        Text(
-                          "编程",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF4EC9B0),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                // 热门标签 - 对于所有类型的题目都显示
-                if (isHot) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.local_fire_department, size: 8.4, color: AppColors.error),
-                        const SizedBox(width: 4),
-                        Text(
-                          "热门",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const Spacer(),
-                Icon(Icons.arrow_forward_ios, size: 9.8, color: AppColors.textTertiary),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              question['q'],
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
-                height: 1.4,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            ],
+            const SizedBox(width: 10),
+            // 箭头 - 更简洁
+            Icon(Icons.chevron_right, size: 18, color: AppColors.textTertiary),
           ],
         ),
       ),
@@ -7327,6 +7487,22 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
       return;
     }
 
+    // 获取难度颜色
+    Color _getDifficultyColor(String difficulty) {
+      switch (difficulty) {
+        case '基础':
+          return const Color(0xFF00B8A3);
+        case '中等':
+          return const Color(0xFFFFC01E);
+        case '困难':
+          return const Color(0xFFFF375F);
+        default:
+          return LoginTheme.textSecondary;
+      }
+    }
+
+    final difficultyColor = _getDifficultyColor(question['difficulty'] ?? '基础');
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -7335,7 +7511,14 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
         height: MediaQuery.of(context).size.height * 0.75,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFF2A2A2A),
+              const Color(0xFF1A1A1A),
+            ],
+          ),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -7348,7 +7531,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: AppColors.border,
+                  color: LoginTheme.cardBorder,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -7359,15 +7542,16 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: difficultyColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: difficultyColor.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     question['difficulty'],
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: difficultyColor,
                     ),
                   ),
                 ),
@@ -7376,20 +7560,21 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withOpacity(0.1),
+                      color: LoginTheme.cardBackground,
                       borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: LoginTheme.cardBorder),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.local_fire_department, size: 8.4, color: AppColors.error),
+                        Icon(Icons.local_fire_department, size: 8.4, color: LoginTheme.accentOrange),
                         const SizedBox(width: 4),
                         Text(
                           "高频热门",
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.error,
+                            color: LoginTheme.accentOrange,
                           ),
                         ),
                       ],
@@ -7404,23 +7589,23 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                color: const Color(0xFF252525),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                border: Border.all(color: LoginTheme.cardBorder),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.help_outline, color: AppColors.primary, size: 12.6),
+                      Icon(Icons.help_outline, color: LoginTheme.textSecondary, size: 12.6),
                       const SizedBox(width: 8),
                       Text(
                         "面试问题",
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.primary,
+                          color: LoginTheme.textSecondary,
                         ),
                       ),
                     ],
@@ -7445,23 +7630,23 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.05),
+                  color: const Color(0xFF252525),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.success.withOpacity(0.1)),
+                  border: Border.all(color: LoginTheme.cardBorder),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.lightbulb_outline, color: AppColors.success, size: 12.6),
+                        Icon(Icons.lightbulb_outline, color: LoginTheme.textSecondary, size: 12.6),
                         const SizedBox(width: 8),
                         Text(
                           "参考答案",
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.success,
+                            color: LoginTheme.textSecondary,
                           ),
                         ),
                       ],
@@ -7473,7 +7658,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> with SingleTickerPr
                           question['a'],
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.textSecondary,
+                            color: LoginTheme.textPrimary,
                             height: 1.6,
                           ),
                         ),
@@ -7654,7 +7839,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
       'name': 'Alex',
       'role': '技术专家',
       'icon': Icons.computer,
-      'color': AppColors.primary,
+      'color': InterviewTheme.accentBlue,
       'traits': ['深度技术追问', '代码实现验证', '系统设计评估'],
       'style': '严谨型',
       'description': '专注于技术深度，会针对你的回答进行层层追问，验证技术功底。',
@@ -7664,7 +7849,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
       'name': 'Jordan',
       'role': '行为面试专家',
       'icon': Icons.psychology,
-      'color': AppColors.cyberPurple,
+      'color': InterviewTheme.accentPurple,
       'traits': ['压力测试', '情景模拟', 'STAR方法'],
       'style': '挑战型',
       'description': '擅长压力面试，通过行为问题挖掘你的真实能力和性格特点。',
@@ -7674,7 +7859,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
       'name': 'Sophia',
       'role': '业务主管',
       'icon': Icons.business_center,
-      'color': const Color(0xFF10B981),
+      'color': InterviewTheme.accentGreen,
       'traits': ['业务理解', '项目经验', '团队协作'],
       'style': '务实型',
       'description': '关注实际业务能力，评估你如何将技术应用到真实��务场景。',
@@ -7684,7 +7869,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
       'name': 'Emma',
       'role': 'HR总监',
       'icon': Icons.people,
-      'color': const Color(0xFFF59E0B),
+      'color': InterviewTheme.accentOrange,
       'traits': ['文化匹配', '职业规划', '沟通能力'],
       'style': '温和型',
       'description': '注重软技能和文化契合度，评估你的沟通表达和职业发展潜力。',
@@ -7754,8 +7939,8 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: TabBar(
                   controller: _tabController,
-                  indicatorColor: AppColors.primary,
-                  labelColor: AppColors.primary,
+                  indicatorColor: InterviewTheme.accentBlue,
+                  labelColor: InterviewTheme.accentBlue,
                   unselectedLabelColor: AppColors.textSecondary,
                   labelStyle: AppTextStyles.tabBarLabel,
                   unselectedLabelStyle: AppTextStyles.tabBarLabel.copyWith(
@@ -7821,7 +8006,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: InterviewTheme.accentBlue.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppTokens.radiusFull),
               ),
               child: Row(
@@ -7831,7 +8016,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
-                      color: AppColors.success,
+                      color: InterviewTheme.accentGreen,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -7839,7 +8024,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                   Text(
                     "AI 就绪",
                     style: AppTextStyles.chipLabelSmall.copyWith(
-                      color: AppColors.primary,
+                      color: InterviewTheme.accentBlue,
                     ),
                   ),
                 ],
@@ -7891,19 +8076,12 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
               curve: Curves.easeOut,
               width: 140,
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: LoginTheme.cardBackground,
                 borderRadius: BorderRadius.circular(AppTokens.radiusLg),
                 border: Border.all(
-                  color: isSelected ? color : AppColors.border.withOpacity(0.3),
-                  width: isSelected ? 2 : 1,
+                  color: isSelected ? color : LoginTheme.cardBorder.withOpacity(0.5),
+                  width: isSelected ? 2.5 : 1,
                 ),
-                boxShadow: isSelected ? [
-                  BoxShadow(
-                    color: color.withOpacity(0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ] : null,
               ),
               child: Material(
                 color: Colors.transparent,
@@ -7932,7 +8110,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: InterviewTheme.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -7941,7 +8119,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                               interviewer['role'],
                               style: TextStyle(
                                 fontSize: 10,
-                                color: AppColors.textSecondary,
+                                color: InterviewTheme.textSecondary,
                               ),
                               textAlign: TextAlign.center,
                               maxLines: 1,
@@ -7953,22 +8131,27 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                   colors: [
-                                    color.withOpacity(0.15),
-                                    color.withOpacity(0.05),
+                                    color.withOpacity(0.8),
+                                    color.withOpacity(0.6),
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: color.withOpacity(0.2),
-                                  width: 0.5,
-                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withOpacity(0.3),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Text(
                                 interviewer['style'],
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 9,
-                                  color: color,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -7993,10 +8176,10 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: AppColors.surfaceDim,
+                              color: LoginTheme.surface,
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.info_outline, color: AppColors.textTertiary, size: 10),
+                            child: Icon(Icons.info_outline, color: InterviewTheme.textSecondary, size: 10),
                           ),
                         ),
                       ),
@@ -8013,13 +8196,15 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   Widget _buildQuestionComposition() {
     return GlassCard(
+      backgroundColor: LoginTheme.cardBackground,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(
+          SectionHeader(
             icon: Icons.quiz_outlined,
             title: "题目组成",
+            iconColor: InterviewTheme.accentBlue,
           ),
           const SizedBox(height: 10),
           _buildStepper("主观题", subjectiveCount, (v) => setState(() => subjectiveCount = v)),
@@ -8029,106 +8214,135 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
           _buildStepper("算法题", algorithmCount, (v) => setState(() => algorithmCount = v)),
           const SizedBox(height: 12),
           // 难度选择
-          Row(
-            children: [
-              Icon(Icons.brightness_1, size: 4, color: AppColors.cyberPurple.withOpacity(0.5)),
-              const SizedBox(width: 6),
-              Text(
-                "难度等级",
-                style: AppTextStyles.labelTiny.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          Text(
+            "难度等级",
+            style: AppTextStyles.label.copyWith(
+              color: InterviewTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: difficultyLevels.map((level) {
-              return TechSelectionChip(
-                label: level,
-                isSelected: selectedDifficulty == level,
-                onChanged: (isSelected) {
-                  if (isSelected) setState(() => selectedDifficulty = level);
-                },
-                size: ChipSize.small,
+              final isSelected = selectedDifficulty == level;
+              return GestureDetector(
+                onTap: () => setState(() => selectedDifficulty = level),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.white : LoginTheme.cardBackground,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected ? Colors.white : LoginTheme.cardBorder,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    level,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? LoginTheme.background : InterviewTheme.textSecondary,
+                    ),
+                  ),
+                ),
               );
             }).toList(),
           ),
           const SizedBox(height: 12),
           // 时间限制
-          Row(
-            children: [
-              Icon(Icons.access_time, size: 10, color: AppColors.primary.withOpacity(0.5)),
-              const SizedBox(width: 6),
-              Text(
-                "单题时限",
-                style: AppTextStyles.labelTiny.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          Text(
+            "单题时限",
+            style: AppTextStyles.label.copyWith(
+              color: InterviewTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 8),
-          TechSegmentedControl(
-            options: timeLimitOptions,
-            selectedIndex: timeLimitOptions.indexOf(timeLimit),
-            onIndexChanged: (index) => setState(() => timeLimit = timeLimitOptions[index]),
+          // 单题时限选择器 - 简洁黑白风格
+          Container(
+            height: 36,
+            decoration: BoxDecoration(
+              color: LoginTheme.cardBackground,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: LoginTheme.cardBorder.withOpacity(0.5)),
+            ),
+            child: Row(
+              children: List.generate(timeLimitOptions.length, (index) {
+                final isSelected = timeLimit == timeLimitOptions[index];
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => timeLimit = timeLimitOptions[index]),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        timeLimitOptions[index],
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected ? LoginTheme.background : InterviewTheme.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStepper(String label, int value, Function(int) onChanged) {
+  Widget _buildStepper(String label, int value, Function(int) onChanged, {Color? color}) {
     return _AnimatedStepper(
       label: label,
       value: value,
       onChanged: onChanged,
       minValue: 0,
       maxValue: 10,
+      color: color ?? InterviewTheme.getQuestionTypeColor(label),
     );
   }
 
   Widget _buildJobSection() {
     return GlassCard(
+      backgroundColor: LoginTheme.cardBackground,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(
+          SectionHeader(
             icon: Icons.work_outline,
             title: "职位信息",
+            iconColor: InterviewTheme.accentOrange,
           ),
           const SizedBox(height: 10),
           // 职位大类
-          Row(
-              children: [
-                Icon(Icons.brightness_1, size: 4, color: AppColors.cyberPurple.withOpacity(0.5)),
-                SizedBox(width: 6),
-                Text(
-                "职位类别",
-                style: AppTextStyles.labelTiny.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          Text(
+            "职位类别",
+            style: AppTextStyles.label.copyWith(
+              color: InterviewTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 4),
           Container(
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: LoginTheme.cardBackground,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              border: Border.all(color: LoginTheme.cardBorder),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedJobCategory,
                 isExpanded: true,
-                dropdownColor: AppColors.surface,
+                dropdownColor: LoginTheme.surface,
                 items: jobCategories.keys.map((e) => DropdownMenuItem(
                   value: e,
                   child: Text(e, style: AppTextStyles.dropdownItem),
@@ -8137,75 +8351,63 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                   selectedJobCategory = v!;
                   selectedJob = jobCategories[v]!.first;
                 }),
-                icon: Icon(Icons.keyboard_arrow_down, color: AppColors.textTertiary),
+                icon: Icon(Icons.keyboard_arrow_down, color: InterviewTheme.textSecondary),
               ),
             ),
           ),
           const SizedBox(height: 12),
           // 具体职位
-          Row(
-              children: [
-                Icon(Icons.star, size: 4, color: AppColors.success.withOpacity(0.5)),
-                SizedBox(width: 6),
-                Text(
-                "目标职位",
-                style: AppTextStyles.labelTiny.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          Text(
+            "目标职位",
+            style: AppTextStyles.label.copyWith(
+              color: InterviewTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 4),
           Container(
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: LoginTheme.cardBackground,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              border: Border.all(color: LoginTheme.cardBorder),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedJob,
                 isExpanded: true,
-                dropdownColor: AppColors.surface,
+                dropdownColor: LoginTheme.surface,
                 items: jobCategories[selectedJobCategory]!.map((e) => DropdownMenuItem(
                   value: e,
                   child: Text(e, style: AppTextStyles.dropdownItem),
                 )).toList(),
                 onChanged: (v) => setState(() => selectedJob = v!),
-                icon: Icon(Icons.keyboard_arrow_down, color: AppColors.textTertiary),
+                icon: Icon(Icons.keyboard_arrow_down, color: InterviewTheme.textSecondary),
               ),
             ),
           ),
           const SizedBox(height: 12),
           // 企业规模
-          Row(
-              children: [
-                Icon(Icons.apps, size: 4, color: AppColors.primary.withOpacity(0.5)),
-                SizedBox(width: 6),
-                Text(
-                "企业规模",
-                style: AppTextStyles.labelTiny.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          Text(
+            "企业规模",
+            style: AppTextStyles.label.copyWith(
+              color: InterviewTheme.textSecondary,
+            ),
           ),
           const SizedBox(height: 4),
           Container(
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: LoginTheme.cardBackground,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              border: Border.all(color: LoginTheme.cardBorder),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: companySize,
                 isExpanded: true,
-                dropdownColor: AppColors.surface,
+                dropdownColor: LoginTheme.surface,
                 items: ['初创公司', '中型企业', '大型企业'].map((e) => DropdownMenuItem(
                   value: e,
                   child: Text(e, style: AppTextStyles.dropdownItem),
@@ -8216,7 +8418,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                     selectedCompany = null;
                   }
                 }),
-                icon: Icon(Icons.keyboard_arrow_down, color: AppColors.textTertiary),
+                icon: Icon(Icons.keyboard_arrow_down, color: InterviewTheme.textSecondary),
               ),
             ),
           ),
@@ -8226,7 +8428,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
             Text(
               "目标公司",
               style: AppTextStyles.label.copyWith(
-                color: AppColors.textSecondary,
+                color: InterviewTheme.textSecondary,
               ),
             ),
             const SizedBox(height: 4),
@@ -8234,22 +8436,22 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: LoginTheme.cardBackground,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                border: Border.all(color: LoginTheme.cardBorder),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedCompany,
                   isExpanded: true,
-                  dropdownColor: AppColors.surface,
-                  hint: Text("选择目标公司", style: AppTextStyles.dropdownItem.copyWith(color: AppColors.textTertiary)),
+                  dropdownColor: LoginTheme.surface,
+                  hint: Text("选择目标公司", style: AppTextStyles.dropdownItem.copyWith(color: LoginTheme.textSecondary)),
                   items: majorCompanies.map((e) => DropdownMenuItem(
                     value: e,
                     child: Text(e, style: AppTextStyles.dropdownItem),
                   )).toList(),
                   onChanged: (v) => setState(() => selectedCompany = v),
-                  icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.primary),
+                  icon: Icon(Icons.keyboard_arrow_down, color: InterviewTheme.textSecondary),
                 ),
               ),
             ),
@@ -8261,16 +8463,17 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   Widget _buildAdaptiveDifficulty() {
     return GlassCard(
+      backgroundColor: LoginTheme.cardBackground,
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: InterviewTheme.accentBlue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.auto_awesome, color: AppColors.primary, size: 12.6),
+            child: Icon(Icons.auto_awesome, color: InterviewTheme.accentBlue, size: 12.6),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -8281,7 +8484,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                 const SizedBox(height: 2),
                 Text(
                   "AI根据表现动态调整难度",
-                  style: AppTextStyles.chipLabel.copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.chipLabel.copyWith(color: InterviewTheme.textSecondary),
                 ),
               ],
             ),
@@ -8290,6 +8493,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
           TechToggleSwitch(
             value: adaptiveDifficulty,
             onChanged: (value) => setState(() => adaptiveDifficulty = value),
+            activeColor: InterviewTheme.accentBlue,
           ),
         ],
       ),
@@ -8298,14 +8502,15 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   Widget _buildQuestionPreferences() {
     return GlassCard(
+      backgroundColor: LoginTheme.cardBackground,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader(
+          SectionHeader(
             icon: Icons.tune,
             title: "答题偏好",
-            iconColor: AppColors.cyberPurple,
+            iconColor: InterviewTheme.accentPurple,
           ),
           const SizedBox(height: 10),
           _buildPreferenceToggle(
@@ -8348,10 +8553,10 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: InterviewTheme.accentBlue.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(icon, color: AppColors.primary, size: 12),
+          child: Icon(icon, color: InterviewTheme.accentBlue, size: 12),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -8361,13 +8566,13 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
               Text(
                 label,
                 style: AppTextStyles.chipLabel.copyWith(
-                  color: AppColors.textPrimary,
+                  color: InterviewTheme.textPrimary,
                 ),
               ),
               Text(
                 description,
                 style: AppTextStyles.chipLabelSmall.copyWith(
-                  color: AppColors.textSecondary,
+                  color: InterviewTheme.textSecondary,
                 ),
               ),
             ],
@@ -8377,6 +8582,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
         TechToggleSwitch(
           value: value,
           onChanged: onChanged,
+          activeColor: InterviewTheme.accentBlue,
         ),
       ],
     );
@@ -8397,11 +8603,16 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: AppColors.primaryGradient),
+          gradient: LinearGradient(
+            colors: [
+              InterviewTheme.accentBlue,
+              InterviewTheme.accentBlue.withOpacity(0.8),
+            ],
+          ),
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withOpacity(0.4),
+              color: InterviewTheme.accentBlue.withOpacity(0.4),
               blurRadius: 15,
               offset: const Offset(0, 4),
             ),
@@ -8851,6 +9062,7 @@ class _AnimatedStepper extends StatefulWidget {
   final Function(int) onChanged;
   final int minValue;
   final int maxValue;
+  final Color? color;
 
   const _AnimatedStepper({
     required this.label,
@@ -8858,6 +9070,7 @@ class _AnimatedStepper extends StatefulWidget {
     required this.onChanged,
     this.minValue = 0,
     this.maxValue = 10,
+    this.color,
   });
 
   @override
@@ -8920,33 +9133,28 @@ class _AnimatedStepperState extends State<_AnimatedStepper>
   Widget build(BuildContext context) {
     final canDecrement = widget.value > widget.minValue;
     final canIncrement = widget.value < widget.maxValue;
+    final stepperColor = widget.color ?? InterviewTheme.accentBlue;
 
     return Row(
       children: [
         Expanded(
-          child: Row(
-            children: [
-              Icon(Icons.circle, size: 4, color: AppColors.primary.withOpacity(0.5)),
-              const SizedBox(width: 6),
-              Text(
-                widget.label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          child: Text(
+            widget.label,
+            style: AppTextStyles.label.copyWith(
+              color: InterviewTheme.textSecondary,
+            ),
           ),
         ),
-        // 减少按钮
+        // 减少按钮 - 黑白配色
         _StepperButton(
           icon: Icons.remove,
           isEnabled: canDecrement,
           onTap: _handleDecrement,
           isPrimary: false,
+          color: Colors.white,
         ),
         const SizedBox(width: 6),
-        // 数值
+        // 数值 - 黑白配色
         AnimatedBuilder(
           animation: _valueAnimation,
           builder: (context, child) {
@@ -8957,15 +9165,10 @@ class _AnimatedStepperState extends State<_AnimatedStepper>
                 height: 28,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withOpacity(0.1),
-                      AppColors.cyberPurple.withOpacity(0.08),
-                    ],
-                  ),
+                  color: LoginTheme.surface,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: LoginTheme.cardBorder,
                     width: 1,
                   ),
                 ),
@@ -8974,7 +9177,7 @@ class _AnimatedStepperState extends State<_AnimatedStepper>
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: Colors.white,
                   ),
                 ),
               ),
@@ -8982,12 +9185,13 @@ class _AnimatedStepperState extends State<_AnimatedStepper>
           },
         ),
         const SizedBox(width: 6),
-        // 增加按钮
+        // 增加按钮 - 黑白配色
         _StepperButton(
           icon: Icons.add,
           isEnabled: canIncrement,
           onTap: _handleIncrement,
           isPrimary: true,
+          color: Colors.white,
         ),
       ],
     );
@@ -9000,12 +9204,14 @@ class _StepperButton extends StatefulWidget {
   final bool isEnabled;
   final VoidCallback onTap;
   final bool isPrimary;
+  final Color? color;
 
   const _StepperButton({
     required this.icon,
     required this.isEnabled,
     required this.onTap,
     this.isPrimary = false,
+    this.color,
   });
 
   @override
@@ -9050,6 +9256,7 @@ class _StepperButtonState extends State<_StepperButton>
 
   @override
   Widget build(BuildContext context) {
+    final buttonColor = widget.color ?? Colors.white;
     return GestureDetector(
       onTapDown: widget.isEnabled ? (_) => _handleTapDown() : null,
       onTapUp: widget.isEnabled ? (_) => _handleTapUp() : null,
@@ -9066,35 +9273,29 @@ class _StepperButtonState extends State<_StepperButton>
               decoration: BoxDecoration(
                 gradient: widget.isEnabled && widget.isPrimary
                     ? LinearGradient(
-                        colors: AppColors.primaryGradient,
+                        colors: [
+                          buttonColor,
+                          buttonColor.withOpacity(0.7),
+                        ],
                       )
                     : null,
                 color: widget.isEnabled && !widget.isPrimary
-                    ? AppColors.surfaceDim
+                    ? LoginTheme.surface
                     : widget.isEnabled
-                        ? AppColors.primary
-                        : AppColors.surfaceDim.withOpacity(0.5),
+                        ? buttonColor
+                        : LoginTheme.surface.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: widget.isEnabled
-                      ? AppColors.border
-                      : AppColors.border.withOpacity(0.3),
+                      ? LoginTheme.cardBorder
+                      : LoginTheme.cardBorder.withOpacity(0.3),
                 ),
-                boxShadow: widget.isEnabled && widget.isPrimary
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 1),
-                        ),
-                      ]
-                    : null,
               ),
               child: Icon(
                 widget.icon,
                 color: widget.isEnabled
-                    ? (widget.isPrimary ? Colors.white : AppColors.textSecondary)
-                    : AppColors.textTertiary,
+                    ? (widget.isPrimary ? Colors.black : InterviewTheme.textSecondary)
+                    : InterviewTheme.textSecondary.withOpacity(0.3),
                 size: 14,
               ),
             ),
@@ -9950,7 +10151,7 @@ Map<String, String> _buildSystemPrompt() {
         {'q': '最大子数组和', 'a': 'def maxSubArray(nums):\n    max_sum = nums[0]\n    current_sum = nums[0]\n    for num in nums[1:]:\n        current_sum = max(num, current_sum + num)\n        max_sum = max(max_sum, current_sum)\n    return max_sum', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def maxSubArray(nums):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[-2,1,-3,4,-1,2,1,-5,4]', 'output': '6'}, {'input': '[1]', 'output': '1'}, {'input': '[5,4,-1,7,8]', 'output': '23'}]},
         {'q': '两数相加', 'a': 'def addTwoNumbers(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    carry = 0\n    while l1 or l2 or carry:\n        val = carry\n        if l1:\n            val += l1.val\n            l1 = l1.next\n        if l2:\n            val += l2.val\n            l2 = l2.next\n        carry = val // 10\n        cur.next = ListNode(val % 10)\n        cur = cur.next\n    return dummy.next', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef addTwoNumbers(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[2,4,3]\n[5,6,4]', 'output': '[7,0,8]'}, {'input': '[0]\n[0]', 'output': '[0]'}, {'input': '[9,9,9,9,9,9,9]\n[1]', 'output': '[0,0,0,0,0,0,0,1]'}]},
         {'q': '无重复字符的最长子串', 'a': 'def lengthOfLongestSubstring(s):\n    char_set = set()\n    left = 0\n    max_len = 0\n    for right in range(len(s)):\n        while s[right] in char_set:\n            char_set.remove(s[left])\n            left += 1\n        char_set.add(s[right])\n        max_len = max(max_len, right - left + 1)\n    return max_len', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def lengthOfLongestSubstring(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'abcabcbb', 'output': '3'}, {'input': 'bbbbb', 'output': '1'}, {'input': 'pwwkew', 'output': '3'}]},
-        {'q': 'LRU缓存机制', 'a': 'from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key):\n        if key not in self.cache:\n            return -1\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key, value):\n        if key in self.cache:\n            self.cache.move_to_end(key)\n        self.cache[key] = value\n        if len(self.cache) > self.capacity:\n            self.cache.popitem(last=False)', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'class LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}]},
+        {'q': 'LRU缓存机制', 'a': 'from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key):\n        if key not in self.cache:\n            return -1\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key, value):\n        if key in self.cache:\n            self.cache.move_to_end(key)\n        self.cache[key] = value\n        if len(self.cache) > self.capacity:\n            self.cache.popitem(last=False)', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'from collections import OrderedDict\nclass LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}]},
         {'q': '有效括号', 'a': 'def isValid(s):\n    stack = []\n    mapping = {")": "(", "]": "[", "}": "{"}\n    for char in s:\n        if char in mapping:\n            if not stack or stack.pop() != mapping[char]:\n                return False\n        else:\n            stack.append(char)\n    return not stack', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def isValid(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '()', 'output': 'True'}, {'input': '()[]{}', 'output': 'True'}, {'input': '(]', 'output': 'False'}]},
         {'q': '合并两个有序链表', 'a': 'def mergeTwoLists(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            cur.next = l1\n            l1 = l1.next\n        else:\n            cur.next = l2\n            l2 = l2.next\n        cur = cur.next\n    cur.next = l1 or l2\n    return dummy.next', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef mergeTwoLists(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[1,2,4]\n[1,3,4]', 'output': '[1,1,2,3,4,4]'}, {'input': '[]\n[]', 'output': '[]'}, {'input': '[]\n[0]', 'output': '[0]'}]},
         {'q': '买卖股票最佳时机', 'a': 'def maxProfit(prices):\n    min_price = float("inf")\n    max_profit = 0\n    for price in prices:\n        min_price = min(min_price, price)\n        max_profit = max(max_profit, price - min_price)\n    return max_profit', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': 'def maxProfit(prices):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[7,1,5,3,6,4]', 'output': '5'}, {'input': '[7,6,4,3,1]', 'output': '0'}]},

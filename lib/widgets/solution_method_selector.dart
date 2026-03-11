@@ -158,6 +158,7 @@ class _SolutionMethodTagState extends State<_SolutionMethodTag>
       child: AnimatedBuilder(
         animation: _glowController,
         builder: (context, child) {
+          final textColor = color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
           return AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             transform: Matrix4.identity()..scale(_isPressed ? 0.95 : 1.0),
@@ -177,15 +178,6 @@ class _SolutionMethodTagState extends State<_SolutionMethodTag>
                 color: color.withOpacity(widget.isSelected ? 0.7 : 0.4),
                 width: widget.isSelected ? 1.5 : 1,
               ),
-              boxShadow: widget.isSelected
-                  ? [
-                      BoxShadow(
-                        color: color.withOpacity(_glowAnimation.value * 0.5),
-                        blurRadius: 10,
-                        spreadRadius: 0,
-                      ),
-                    ]
-                  : null,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -203,7 +195,7 @@ class _SolutionMethodTagState extends State<_SolutionMethodTag>
                   widget.solution.method.label,
                   style: TextStyle(
                     fontSize: 12,
-                    color: color,
+                    color: textColor,
                     fontWeight: widget.isSelected ? FontWeight.w600 : FontWeight.w500,
                     letterSpacing: 0.3,
                   ),

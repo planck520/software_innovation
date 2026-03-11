@@ -4,6 +4,7 @@ import 'code_editor_page.dart';
 import 'package:flutter/services.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
+import '../theme/login_theme.dart';
 import '../widgets/tech_tag.dart';
 import '../widgets/code_block.dart';
 import '../widgets/data_display.dart';
@@ -30,6 +31,15 @@ class ProblemDetailPage extends StatefulWidget {
 class _ProblemDetailPageState extends State<ProblemDetailPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  // 色卡颜色常量（仅本页面使用）
+  static const Color _pBlue = Color(0xFF4DA3D6);       // 浅蓝 - 主要操作、标题
+  static const Color _pRed = Color(0xFFBF6969);        // 暖红 - 错误状态、困难
+  static const Color _pOrange = Color(0xFFCF7E3D);     // 橙色 - 警告、中等难度
+  static const Color _pGreen = Color(0xFF8FB35A);      // 浅绿 - 成功状态、通过
+  static const Color _pPink = Color(0xFFAF949D);       // 浅粉 - 特殊强调、相关企业
+  static const Color _pBackground = Color(0xFF232323); // 深灰 - 背景
+  static const Color _pLight = Color(0xFFECECEC);      // 浅灰 - 次要文本、边框
 
   // 题解相关状态
   List<Solution> _solutions = [];
@@ -184,30 +194,41 @@ public:
   @override
   Widget build(BuildContext context) {
     return TechBackground(
-      showGradientOrbs: false,  // 不显示渐变光球，与题库有所区别
+      showGradientOrbs: false,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Column(
-          children: [
-            // 自定义AppBar
-            _buildAppBar(context),
-            // TabBar
-            _buildTabBar(),
-            // TabBarView
-            Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildProblemDetailTab(),
-                  _buildSolutionTab(),
-                  _buildCompaniesTab(),
-                  _buildSubmissionTab(),
-                ],
-              ),
+        body: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0xFF333333),
+                Color(0xFF232323),
+              ],
             ),
-          ],
+          ),
+          child: Column(
+            children: [
+              // 自定义AppBar
+              _buildAppBar(context),
+              // TabBar
+              _buildTabBar(),
+              // TabBarView
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildProblemDetailTab(),
+                    _buildSolutionTab(),
+                    _buildCompaniesTab(),
+                    _buildSubmissionTab(),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-        // 右下角悬浮按钮
         floatingActionButton: _buildFloatingActionButton(),
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       ),
@@ -227,10 +248,10 @@ public:
             bottom: AppTokens.space2,
           ),
           decoration: BoxDecoration(
-            color: BubeiColors.surface.withOpacity(0.85),
+            color: LoginTheme.background,
             border: Border(
               bottom: BorderSide(
-                color: BubeiColors.divider.withOpacity(0.5),
+                color: LoginTheme.cardBorder,
                 width: 1,
               ),
             ),
@@ -246,19 +267,27 @@ public:
             children: [
               _buildBackButton(),
               const SizedBox(width: 8),
-              _buildNeonIdTag(),
-              const SizedBox(width: 8),
+              // ID标签和标题居中
               Expanded(
-                child: Text(
-                  widget.question['q'] ?? '编程题',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: 0.3,
+                child: Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildNeonIdTag(),
+                      const SizedBox(width: 8),
+                      Text(
+                        widget.question['q'] ?? '编程题',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.3,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
@@ -270,25 +299,13 @@ public:
     );
   }
 
-  // 霓虹ID标签
+  // ID标签 - 灰色填充
   Widget _buildNeonIdTag() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            BubeiColors.primary,
-            BubeiColors.primary.withOpacity(0.7),
-          ],
-        ),
+        color: const Color(0xFF3A3A3A),
         borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-        boxShadow: [
-          BoxShadow(
-            color: BubeiColors.primary.withOpacity(0.4),
-            blurRadius: 8,
-            spreadRadius: 0,
-          ),
-        ],
       ),
       child: Text(
         '#${widget.question['id'] ?? widget.question['displayIndex'] ?? 1}',
@@ -345,13 +362,9 @@ public:
       onTap: () => Navigator.pop(context),
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: BubeiColors.primary.withOpacity(0.1),
+        decoration: const BoxDecoration(
+          color: Color(0xFF3A3A3A),
           shape: BoxShape.circle,
-          border: Border.all(
-            color: BubeiColors.primary.withOpacity(0.3),
-            width: 1,
-          ),
         ),
         child: const Icon(
           Icons.arrow_back,
@@ -362,41 +375,241 @@ public:
     );
   }
 
-  // 构建TabBar（圆角胶囊样式）
+  // 构建TabBar - LeetCode风格
   Widget _buildTabBar() {
     return Container(
-      height: 44,
+      height: 48, // 增加高度：44 → 48
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: BubeiColors.surface.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(22),
+        border: Border(
+          bottom: BorderSide(
+            color: LoginTheme.cardBorder,
+            width: 1,
+          ),
+        ),
       ),
       child: TabBar(
         controller: _tabController,
-        indicator: BoxDecoration(
-          gradient: LinearGradient(
-            colors: BubeiColors.primaryGradient,
-          ),
-          borderRadius: BorderRadius.circular(20),
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(color: Colors.white, width: 2),
+          insets: EdgeInsets.symmetric(horizontal: 20), // 增加insets：16 → 20
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        indicatorPadding: const EdgeInsets.all(4),
-        labelColor: Colors.white,  // 白色选中文字，更清晰
-        unselectedLabelColor: BubeiColors.textSecondary,
+        indicatorSize: TabBarIndicatorSize.label, // 改为label模式
+        indicatorPadding: const EdgeInsets.only(bottom: 0),
+        labelColor: Colors.white,
+        unselectedLabelColor: LoginTheme.textSecondary,
         labelStyle: const TextStyle(
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
         unselectedLabelStyle: const TextStyle(
-          fontSize: 11,
+          fontSize: 13,
           fontWeight: FontWeight.w500,
         ),
         dividerColor: Colors.transparent,
+        tabAlignment: TabAlignment.center, // 居中对齐
         tabs: const [
-          Tab(text: '题目详情'),
-          Tab(text: '题解'),
-          Tab(text: '相关企业'),
-          Tab(text: '提交记录'),
+          Tab(child: Text('题目详情', softWrap: false)), // 防止换行
+          Tab(child: Text('题解', softWrap: false)),
+          Tab(child: Text('相关企业', softWrap: false)),
+          Tab(child: Text('提交记录', softWrap: false)),
+        ],
+      ),
+    );
+  }
+
+  // ==================== 辅助卡片组件 ====================
+
+  // 基础卡片（白边+黑色填充）
+  Container _buildPremiumCard({
+    required Widget child,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return Container(
+      padding: padding ?? const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF232323), // 黑色填充
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Colors.white, // 白色边框
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white.withOpacity(0.08), // 白色柔光阴影
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  // 彩色边框卡片
+  Container _buildAccentCard({
+    required Widget child,
+    required Color accentColor, // 彩色点缀
+    EdgeInsetsGeometry? padding,
+  }) {
+    return Container(
+      padding: padding ?? const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF232323),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accentColor, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: accentColor.withOpacity(0.15), // 彩色阴影
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  // 带图标的卡片头部
+  Container _buildCardWithIconHeader({
+    required Widget child,
+    required IconData icon,
+    required String title,
+    required Color iconColor,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return Container(
+      padding: padding ?? const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF232323),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: iconColor, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: iconColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(icon, size: 14, color: iconColor),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: iconColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  // 带抛光效果的卡片
+  Container _buildGlossyCard({
+    required Widget child,
+    required Color borderColor,
+    EdgeInsetsGeometry? padding,
+  }) {
+    return Container(
+      padding: padding ?? const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF232323),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor, width: 1.5),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.white.withOpacity(0.03), // 顶部微妙高光
+            Colors.transparent,
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.3, 1.0],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: borderColor.withOpacity(0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  // 背景纹理包裹器
+  Widget _buildTabWithTexture({required Widget content}) {
+    return Stack(
+      children: [
+        // 背景纹理层（2%透明度，非常微妙）
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.02,
+            child: CustomPaint(
+              painter: _DotPatternPainter(),
+            ),
+          ),
+        ),
+        // 内容层
+        content,
+      ],
+    );
+  }
+
+  // 统计卡片（原有）
+  Widget _buildStatCard(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Column(
+        children: [
+          Text(label, style: TextStyle(fontSize: 11, color: color.withOpacity(0.8), fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 20, color: color, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  // 统计卡片（新版 - 顶部蓝色背景使用）
+  Widget _buildStatCardNew(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        children: [
+          Text(label, style: TextStyle(fontSize: 11, color: color.withOpacity(0.8), fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 18, color: color, fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -413,126 +626,128 @@ public:
     final constraints = question['constraints'];
     final tags = question['tags'];
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Tags标签显示（霓虹胶囊样式）
-          if (tags != null && tags is List && tags.isNotEmpty) ...[
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: (tags as List).map<Widget>((tag) {
-                return TechTag(
-                  label: tag.toString(),
-                  color: BubeiColors.primary,
-                  showGlow: false,
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 16),
-          ],
+    return _buildTabWithTexture(
+      content: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Tags标签显示（彩色霓虹胶囊样式，不要呼吸特效）
+            if (tags != null && tags is List && tags.isNotEmpty) ...[
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: (tags as List).map<Widget>((tag) {
+                  final index = tags.indexOf(tag);
+                  final colors = [
+                    _pBlue,   // 第1个tag - 浅蓝
+                    _pRed,    // 第2个tag - 暖红
+                    _pOrange, // 第3个tag - 橙色
+                    _pPink,   // 第4个tag - 浅粉
+                  ];
+                  return TechTag(
+                    label: tag.toString(),
+                    color: colors[index % colors.length],
+                    showGlow: false,
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 20),
+            ],
 
-          // 题目描述（包含进阶理解）
-          _buildSectionTitle('题目描述'),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-              height: 1.6,
+            // 题目描述（不带方框）
+            Text(
+              description,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+                height: 1.6,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          // 进阶理解融入题目描述下方
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: BubeiColors.surface,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              border: Border.all(color: BubeiColors.divider),
-            ),
-            child: Column(
+
+            const SizedBox(height: 20),
+
+            // 进阶理解（无框，仅图标+标题+内容）
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.psychology_outlined, size: 14, color: BubeiColors.primaryLight),
-                    SizedBox(width: 6),
+                    Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: _pPink.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(Icons.psychology_outlined, size: 12, color: _pPink),
+                    ),
+                    const SizedBox(width: 8),
                     Text(
                       '进阶理解',
                       style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: BubeiColors.primaryLight,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _pPink,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   question['advancedUnderstanding'] ?? _getDefaultAdvancedUnderstanding(question),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.white70,
-                    height: 1.5,
-                  ),
+                  style: const TextStyle(fontSize: 13, color: Colors.white70, height: 1.6),
                 ),
               ],
             ),
-          ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // 关键知识点 - 紧凑显示
-          _buildKeyPointsCompact(question),
+            // 关键知识点 - 紧凑显示（青色图标）
+            _buildKeyPointsCompact(question),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // 示例区 - 2-3个代表性示例
-          _buildExamplesSection(testCases),
+            // 示例区 - 2-3个代表性示例（绿色边框）
+            _buildExamplesSection(testCases),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // 约束条件区
-          if (constraints != null && constraints.toString().isNotEmpty)
-            _buildConstraintsSection(constraints.toString()),
+            // 约束条件区
+            if (constraints != null && constraints.toString().isNotEmpty)
+              _buildConstraintsSection(constraints.toString()),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // 边界情况
-          _buildEdgeCasesCompact(question),
+            // 边界情况（橙色图标）
+            _buildEdgeCasesCompact(question),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          // 提示区
-          if (hint != null) _buildHintSection(hint.toString()),
+            // 提示区
+            if (hint != null) _buildHintSection(hint.toString()),
 
-          const SizedBox(height: 80), // 底部留白给悬浮按钮
-        ],
+            const SizedBox(height: 80), // 底部留白给悬浮按钮
+          ],
+        ),
       ),
     );
   }
 
-  // 构建小节标题
+  // 构建小节标题 - 灰色背景白字
   Widget _buildSectionTitle(String title) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: BubeiColors.primary.withOpacity(0.2),
+        color: const Color(0xFF3A3A3A),
         borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-        border: Border.all(
-          color: BubeiColors.primary.withOpacity(0.4),
-        ),
       ),
       child: Text(
         title,
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
-          color: BubeiColors.primaryLight,
+          color: Colors.white,
         ),
       ),
     );
@@ -700,36 +915,45 @@ public:
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.lightbulb_outline, size: 14, color: Color(0xFF4EC9B0)),
-            SizedBox(width: 6),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: _pBlue.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(Icons.lightbulb_outline, size: 12, color: _pBlue),
+            ),
+            const SizedBox(width: 8),
             Text(
               '关键知识点',
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF4EC9B0),
+                fontWeight: FontWeight.w600,
+                color: _pBlue,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: 8,
+          runSpacing: 8,
           children: keyPoints.take(5).map<Widget>((point) {
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: BubeiColors.surfaceDim,
-                borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+                color: _pBlue,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 point.toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: Colors.white70,
+                  color: _pBlue.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             );
@@ -745,37 +969,45 @@ public:
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.warning_amber_outlined, size: 14, color: Colors.orange),
-            SizedBox(width: 6),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: _pOrange.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(Icons.warning_amber_outlined, size: 12, color: _pOrange),
+            ),
+            const SizedBox(width: 8),
             Text(
               '边界情况',
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Colors.orange,
+                fontWeight: FontWeight.w600,
+                color: _pOrange,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: 8,
+          runSpacing: 8,
           children: edgeCases.take(4).map<Widget>((caseItem) {
             return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                color: _pOrange,
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 caseItem.toString(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: Colors.orange,
+                  color: _pOrange.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             );
@@ -788,60 +1020,64 @@ public:
   // 构建题解标签页
   Widget _buildSolutionTab() {
     if (_solutions.isEmpty) {
-      return const Center(
-        child: Text('暂无题解', style: TextStyle(color: Colors.white54)),
+      return _buildTabWithTexture(
+        content: const Center(
+          child: Text('暂无题解', style: TextStyle(color: Colors.white54)),
+        ),
       );
     }
 
     final currentSolution = _solutions[_selectedSolutionIndex];
     final codeVersion = currentSolution.getCodeVersion(_selectedLanguage);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 解法选择器
-          if (_solutions.length > 1)
-            SolutionMethodSelector(
-              solutions: _solutions,
-              selectedIndex: _selectedSolutionIndex,
-              onMethodSelected: (index) {
-                setState(() {
-                  _selectedSolutionIndex = index;
-                  // 更新默认语言
-                  final supportedLangs = _solutions[index].supportedLanguages;
-                  if (supportedLangs.isNotEmpty && !supportedLangs.contains(_selectedLanguage)) {
-                    _selectedLanguage = supportedLangs.first;
-                  }
-                });
-              },
-            ),
-          if (_solutions.length > 1) const SizedBox(height: 20),
+    return _buildTabWithTexture(
+      content: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 解法选择器
+            if (_solutions.length > 1)
+              SolutionMethodSelector(
+                solutions: _solutions,
+                selectedIndex: _selectedSolutionIndex,
+                onMethodSelected: (index) {
+                  setState(() {
+                    _selectedSolutionIndex = index;
+                    // 更新默认语言
+                    final supportedLangs = _solutions[index].supportedLanguages;
+                    if (supportedLangs.isNotEmpty && !supportedLangs.contains(_selectedLanguage)) {
+                      _selectedLanguage = supportedLangs.first;
+                    }
+                  });
+                },
+              ),
+            if (_solutions.length > 1) const SizedBox(height: 20),
 
-          // 解题思路卡片
-          _buildSolutionDetailCard(currentSolution),
-          const SizedBox(height: 20),
+            // 解题思路卡片（青色边框+灯泡图标）
+            _buildSolutionDetailCard(currentSolution),
+            const SizedBox(height: 20),
 
-          // 语言选择器和复杂度
-          _buildLanguageAndComplexityRow(currentSolution),
-          const SizedBox(height: 16),
+            // 语言选择器和复杂度
+            _buildLanguageAndComplexityRow(currentSolution),
+            const SizedBox(height: 16),
 
-          // 代码块
-          if (codeVersion != null)
-            CodeBlock(
-              code: codeVersion.code,
-              language: _selectedLanguage.name,
-              title: 'solution${_selectedLanguage.extension}',
-              showLineNumbers: true,
-              showCopyButton: true,
-              enableHighlight: true,
-            )
-          else
-            _buildNoCodePlaceholder(),
+            // 代码块
+            if (codeVersion != null)
+              CodeBlock(
+                code: codeVersion.code,
+                language: _selectedLanguage.name,
+                title: 'solution${_selectedLanguage.extension}',
+                showLineNumbers: true,
+                showCopyButton: true,
+                enableHighlight: true,
+              )
+            else
+              _buildNoCodePlaceholder(),
 
-          const SizedBox(height: 80),
-        ],
+            const SizedBox(height: 80),
+          ],
+        ),
       ),
     );
   }
@@ -851,9 +1087,9 @@ public:
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: BubeiColors.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-        border: Border.all(color: BubeiColors.divider),
+        color: const Color(0xFF232323),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -861,63 +1097,56 @@ public:
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: BubeiColors.primary.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+                  color: _pBlue.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.lightbulb_outline,
-                      color: Colors.amber,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      solution.method.label,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: BubeiColors.primaryLight,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+                child: Icon(Icons.lightbulb, size: 14, color: _pBlue),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                solution.method.label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: _pBlue,
+                  letterSpacing: 0.5,
                 ),
               ),
-              if (solution.isRecommended) ...[
-                const SizedBox(width: 8),
+              const Spacer(),
+              if (solution.isRecommended)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+                    color: _pOrange.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: _pOrange.withOpacity(0.4)),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.star, size: 10, color: Colors.amber),
-                      SizedBox(width: 2),
+                      Icon(Icons.star, size: 10, color: _pOrange),
+                      const SizedBox(width: 3),
                       Text(
-                        '推荐',
+                        '推荐解法',
                         style: TextStyle(
                           fontSize: 10,
-                          color: Colors.amber,
+                          color: LoginTheme.accentYellow,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
             ],
           ),
           const SizedBox(height: 12),
           Text(
             solution.approach,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 13,
               color: Colors.white70,
               height: 1.6,
             ),
@@ -944,13 +1173,13 @@ public:
           },
         ),
         const SizedBox(height: 8),
-        // 复杂度标签 - 使用 Wrap 防止溢出
+        // 复杂度��签 - 使用 Wrap 防止溢出
         Wrap(
           spacing: 8,
           runSpacing: 4,
           children: [
-            _buildComplexityBadge('⏱️', solution.timeComplexity, const Color(0xFF4EC9B0)),
-            _buildComplexityBadge('💾', solution.spaceComplexity, const Color(0xFF569CD6)),
+            _buildComplexityBadge('⏱️', solution.timeComplexity, _pOrange),
+            _buildComplexityBadge('💾', solution.spaceComplexity, _pPink),
           ],
         ),
       ],
@@ -959,23 +1188,23 @@ public:
 
   // 构建复杂度徽章
   Widget _buildComplexityBadge(String icon, String value, Color color) {
+    final textColor = color.computeLuminance() > 0.5 ? Colors.black : Colors.white;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color,
         borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 12)),
+          Text(icon, style: TextStyle(fontSize: 12, color: textColor)),
           const SizedBox(width: 4),
           Text(
             value,
             style: TextStyle(
               fontSize: 12,
-              color: color,
+              color: textColor,
               fontWeight: FontWeight.w600,
               fontFamily: 'monospace',
             ),
@@ -1014,92 +1243,94 @@ public:
     // 根据题目特征匹配相关企业
     final companies = _getRelatedCompanies();
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 标题区域（卡片样式，与题解界面一致）
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: BubeiColors.surface,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              border: Border.all(color: BubeiColors.divider),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: BubeiColors.primary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+    return _buildTabWithTexture(
+      content: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 标题区域（白色边框卡片）
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFF232323),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: _pPink.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Icon(Icons.business, size: 14, color: _pPink),
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.business,
-                            color: BubeiColors.primaryLight,
-                            size: 14,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            '相关企业',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: BubeiColors.primaryLight,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 8),
+                      Text(
+                        '相关企业',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: _pPink,
+                          letterSpacing: 0.5,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.location_on, size: 12, color: Colors.amber.shade300),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${companies.length}家企业',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: Colors.amber,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  '根据题目特征智能匹配，以下企业可能考察此类题目',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.white70,
-                    height: 1.5,
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '根据题目特征智能匹配，以下企业可能考察此类题目',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.white70,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: _pPink.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: _pPink.withOpacity(0.4)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.business_center, size: 12, color: _pPink),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${companies.length}家',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: _pPink,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 20),
-          // 企业列表
-          ...companies.map((company) => _buildCompanyCard(company)),
-          const SizedBox(height: 80),
-        ],
+            const SizedBox(height: 20),
+            // 企业列表
+            ...companies.map((company) => _buildCompanyCard(company)),
+            const SizedBox(height: 80),
+          ],
+        ),
       ),
     );
   }
@@ -1113,104 +1344,22 @@ public:
     final totalSubmissions = mockSubmissions.length;
     final passedCount = mockSubmissions.where((s) => (s['passed'] as bool?) == true).length;
     final passRate = totalSubmissions > 0 ? (passedCount / totalSubmissions * 100).round() : 0;
+    final passRateColor = passRate >= 50 ? _pGreen : _pOrange;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 标题区域（卡片样式，与题解界面一致）
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: BubeiColors.surface,
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              border: Border.all(color: BubeiColors.divider),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: BubeiColors.primary.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.send,
-                            color: BubeiColors.primaryLight,
-                            size: 14,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            '提交记录',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: BubeiColors.primaryLight,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: BubeiColors.success.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                      ),
-                      child: Text(
-                        '$totalSubmissions 次提交',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: BubeiColors.success,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // 统计概览
-                Row(
-                  children: [
-                    _buildStatItem('通过', passedCount.toString(), BubeiColors.success),
-                    const SizedBox(width: 24),
-                    _buildStatItem('未通过', (totalSubmissions - passedCount).toString(), Colors.red),
-                    const SizedBox(width: 24),
-                    _buildStatItem('通过率', '$passRate%', passRate >= 50 ? BubeiColors.success : Colors.orange),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // 通过率进度条
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: totalSubmissions > 0 ? passedCount / totalSubmissions : 0,
-                    backgroundColor: Colors.red.withOpacity(0.2),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      passRate >= 50 ? BubeiColors.success : Colors.orange,
-                    ),
-                    minHeight: 6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-          // 提交记录列表
-          ...mockSubmissions.map((submission) {
-            final index = mockSubmissions.indexOf(submission);
-            return _buildSubmissionCard(submission as Map<String, dynamic>, index + 1);
-          }),
-          const SizedBox(height: 80),
-        ],
+    return _buildTabWithTexture(
+      content: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 提交记录列表
+            ...mockSubmissions.map((submission) {
+              final index = mockSubmissions.indexOf(submission);
+              return _buildSubmissionCard(submission as Map<String, dynamic>, index + 1);
+            }),
+            const SizedBox(height: 80),
+          ],
+        ),
       ),
     );
   }
@@ -1251,6 +1400,7 @@ public:
           ),
         );
       },
+      color: _pGreen,
     );
   }
 
@@ -1315,26 +1465,34 @@ public:
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.code, size: 14, color: BubeiColors.primaryLight),
-            SizedBox(width: 6),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: _pGreen.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(Icons.play_arrow, size: 14, color: _pGreen),
+            ),
+            const SizedBox(width: 8),
             Text(
               '示例',
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: BubeiColors.primaryLight,
+                fontWeight: FontWeight.w600,
+                color: LoginTheme.accentGreen,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         ...exampleList.asMap().entries.map((entry) {
           final index = entry.key;
           final example = entry.value;
           return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+            padding: const EdgeInsets.only(bottom: 12),
             child: _buildSingleExample(
               example['input']?.toString() ?? '',
               example['output']?.toString() ?? '',
@@ -1356,9 +1514,8 @@ public:
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: BubeiColors.surfaceDim,
-        borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-        border: Border.all(color: BubeiColors.divider),
+        color: const Color(0xFF232323),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1368,23 +1525,32 @@ public:
               '示例 $exampleNumber:',
               style: const TextStyle(
                 fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
               ),
             ),
           if (exampleNumber > 1) const SizedBox(height: 8),
-          _buildExampleLine('nums = ', input),
-          const SizedBox(height: 4),
+          _buildExampleLine('输入: ', input),
+          const SizedBox(height: 6),
           _buildExampleLine('输出: ', output),
           if (explanation != null && explanation.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              explanation,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.white60,
-                fontStyle: FontStyle.italic,
-              ),
+            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline, size: 12, color: Colors.white70),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    explanation,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.white,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ],
@@ -1511,31 +1677,27 @@ public:
     final companyName = company['name'] as String;
     final shortName = company['shortName'] as String? ?? companyName.substring(0, 1);
     final color = company['color'] as Color;
-    final frequency = company['frequency'] as String? ?? '较常考';
+    final frequency = company['frequency'] as String? ?? 'medium';
     final reason = company['reason'] as String? ?? '面试常见';
     final industry = company['industry'] as String? ?? '互联网';
     final logoUrl = company['logoUrl'] as String?;
+
+    final frequencyColor = _getFrequencyColor(frequency);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: BubeiColors.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-        border: Border.all(
-          color: frequency == '高频'
-              ? color.withOpacity(0.4)
-              : BubeiColors.divider,
-        ),
-        boxShadow: frequency == '高频'
-            ? [
-                BoxShadow(
-                  color: color.withOpacity(0.15),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
+        color: const Color(0xFF232323),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: frequencyColor.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -1544,15 +1706,15 @@ public:
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+              color: frequencyColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: color.withOpacity(0.3),
+                color: frequencyColor.withOpacity(0.3),
                 width: 1,
               ),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd - 1),
+              borderRadius: BorderRadius.circular(9),
               child: logoUrl != null
                   ? Image.network(
                       logoUrl,
@@ -1561,10 +1723,10 @@ public:
                       height: 44,
                       errorBuilder: (context, error, stackTrace) {
                         debugPrint('Logo load error for $logoUrl: $error');
-                        return _buildLogoFallback(shortName, color);
+                        return _buildLogoFallback(shortName, frequencyColor);
                       },
                     )
-                  : _buildLogoFallback(shortName, color),
+                  : _buildLogoFallback(shortName, frequencyColor),
             ),
           ),
           const SizedBox(width: 14),
@@ -1579,12 +1741,12 @@ public:
                       companyName,
                       style: const TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    _buildFrequencyBadge(frequency, color),
+                    _buildFrequencyBadge(frequency, frequencyColor),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -1612,7 +1774,7 @@ public:
                   industry,
                   style: TextStyle(
                     fontSize: 11,
-                    color: color.withOpacity(0.8),
+                    color: frequencyColor.withOpacity(0.9),
                   ),
                 ),
               ],
@@ -1627,6 +1789,42 @@ public:
         ],
       ),
     );
+  }
+
+  // 获取频次颜色
+  Color _getFrequencyColor(String frequency) {
+    switch (frequency.toLowerCase()) {
+      case 'high':
+      case '高频':
+        return _pRed;     // 高频 - 暖红
+      case 'medium':
+      case '中频':
+      case '较常考':
+        return _pOrange;  // 中频 - 橙色
+      case 'low':
+      case '低频':
+        return _pLight;   // 低频 - 浅灰
+      default:
+        return _pLight;
+    }
+  }
+
+  // 获取频次标签
+  String _getFrequencyLabel(String frequency) {
+    switch (frequency.toLowerCase()) {
+      case 'high':
+      case '高频':
+        return '高频';
+      case 'medium':
+      case '中频':
+      case '较常考':
+        return '中频';
+      case 'low':
+      case '低频':
+        return '低频';
+      default:
+        return frequency;
+    }
   }
 
   /// Logo加载失败时的备选显示
@@ -1660,43 +1858,34 @@ public:
 
   // 构建频率标签
   Widget _buildFrequencyBadge(String frequency, Color color) {
-    IconData icon;
-    Color badgeColor;
-
-    switch (frequency) {
-      case '高频':
-        icon = Icons.local_fire_department;
-        badgeColor = Colors.orange;
-        break;
-      case '较常考':
-        icon = Icons.trending_up;
-        badgeColor = Colors.blue;
-        break;
-      default:
-        icon = Icons.check_circle_outline;
-        badgeColor = Colors.green;
-    }
+    final label = _getFrequencyLabel(frequency);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: badgeColor.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: badgeColor.withOpacity(0.3),
-          width: 0.5,
+          color: color.withOpacity(0.4),
+          width: 1,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 10, color: badgeColor),
-          const SizedBox(width: 3),
+          Icon(
+            frequency.toLowerCase() == 'high' || frequency == '高频'
+              ? Icons.local_fire_department
+              : Icons.trending_up,
+            size: 10,
+            color: color,
+          ),
+          const SizedBox(width: 4),
           Text(
-            frequency,
+            label,
             style: TextStyle(
               fontSize: 10,
-              color: badgeColor,
+              color: color,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -1708,139 +1897,73 @@ public:
   Widget _buildSubmissionCard(Map<String, dynamic> submission, int index) {
     final bool passed = submission['passed'] ?? false;
     final String language = submission['language'] ?? 'Python';
-    final String time = submission['time'] ?? '0ms';
-    final String memory = submission['memory'] ?? '10MB';
+    final String time = passed ? (submission['time'] ?? '0ms') : 'N/A';
+    final String memory = passed ? (submission['memory'] ?? '10MB') : 'N/A';
     final String date = submission['date'] ?? '刚刚';
+    final String statusText = passed ? '执行通过' : '执行出错';
 
-    final statusColor = passed ? BubeiColors.success : Colors.red;
+    // 使用纯红或纯绿
+    final statusColor = passed ? const Color(0xFF00C853) : const Color(0xFFFF1744);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: BubeiColors.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-        border: Border.all(
-          color: passed
-              ? BubeiColors.success.withOpacity(0.3)
-              : Colors.red.withOpacity(0.3),
+      margin: const EdgeInsets.only(bottom: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white10,
+            width: 1,
+          ),
         ),
-        boxShadow: passed
-            ? [
-                BoxShadow(
-                  color: BubeiColors.success.withOpacity(0.1),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 状态图标（渐变背景）
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: passed
-                    ? [BubeiColors.success, BubeiColors.success.withOpacity(0.6)]
-                    : [Colors.red, Colors.red.withOpacity(0.6)],
-              ),
-              borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              boxShadow: [
-                BoxShadow(
-                  color: statusColor.withOpacity(0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(
-              passed ? Icons.check : Icons.close,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      '提交 #$index',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // 状态标签（渐变背景）
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: passed
-                              ? [BubeiColors.success.withOpacity(0.3), BubeiColors.success.withOpacity(0.1)]
-                              : [Colors.red.withOpacity(0.3), Colors.red.withOpacity(0.1)],
-                        ),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                        border: Border.all(
-                          color: statusColor.withOpacity(0.4),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            passed ? Icons.check_circle : Icons.cancel,
-                            size: 12,
-                            color: statusColor,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            passed ? '通过' : '未通过',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: statusColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // 详情信息
-                Row(
-                  children: [
-                    // 语言
-                    _buildSubmissionDetail(Icons.code, language, BubeiColors.primaryLight),
-                    const SizedBox(width: 16),
-                    // 执行时间
-                    _buildSubmissionDetail(Icons.timer_outlined, time, Colors.amber),
-                    const SizedBox(width: 16),
-                    // 内存
-                    _buildSubmissionDetail(Icons.memory, memory, Colors.blue),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // 时间
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          // 第一行：执行是否通过 + 语言
+          Row(
             children: [
+              Text(
+                statusText,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: statusColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                language,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: Colors.white70,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // 第二行：用时 + 内存 + 时间
+          Row(
+            children: [
+              Text(
+                '用时: $time',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.white54,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Text(
+                '内存: $memory',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.white54,
+                ),
+              ),
+              const Spacer(),
               Text(
                 date,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   color: Colors.white38,
                 ),
               ),
@@ -1876,7 +1999,7 @@ public:
         style: const TextStyle(
           fontFamily: 'monospace',
           fontSize: 12,
-          color: Color(0xFF9CDCFE),
+          color: Colors.white,
         ),
         children: [
           TextSpan(
@@ -2049,9 +2172,11 @@ public:
 // 脉冲动画悬浮按钮
 class _PulsingFloatingActionButton extends StatefulWidget {
   final VoidCallback onPressed;
+  final Color color;
 
   const _PulsingFloatingActionButton({
     required this.onPressed,
+    required this.color,
   });
 
   @override
@@ -2062,37 +2187,16 @@ class _PulsingFloatingActionButton extends StatefulWidget {
 class _PulsingFloatingActionButtonState
     extends State<_PulsingFloatingActionButton>
     with TickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
   late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
 
   @override
   void initState() {
     super.initState();
-
-    // 脉冲动画控制器
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-
-    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
-    );
-
-    _pulseController.repeat(reverse: true);
-
-    // 缩放动画控制器
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 100),
       vsync: this,
     );
-
     _scaleAnimation = Tween<double>(begin: 1.0, end: 0.9).animate(
       CurvedAnimation(
         parent: _scaleController,
@@ -2103,7 +2207,6 @@ class _PulsingFloatingActionButtonState
 
   @override
   void dispose() {
-    _pulseController.dispose();
     _scaleController.dispose();
     super.dispose();
   }
@@ -2111,58 +2214,28 @@ class _PulsingFloatingActionButtonState
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) {
-        setState(() => _isPressed = true);
-        _scaleController.forward();
-      },
+      onTapDown: (_) => _scaleController.forward(),
       onTapUp: (_) {
         _scaleController.reverse();
-        setState(() => _isPressed = false);
         widget.onPressed();
       },
-      onTapCancel: () {
-        _scaleController.reverse();
-        setState(() => _isPressed = false);
-      },
+      onTapCancel: () => _scaleController.reverse(),
       child: AnimatedBuilder(
-        animation: Listenable.merge([_pulseController, _scaleController]),
+        animation: _scaleController,
         builder: (context, child) {
           return Transform.scale(
             scale: _scaleAnimation.value,
             child: Container(
-              width: 64,
-              height: 64,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF4EC9B0),
-                    BubeiColors.primary,
-                  ],
-                ),
-                boxShadow: [
-                  // 基础阴影
-                  BoxShadow(
-                    color: const Color(0xFF4EC9B0).withOpacity(0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                  // 脉冲发光效果
-                  BoxShadow(
-                    color: BubeiColors.primary.withOpacity(
-                      0.3 + _pulseAnimation.value * 0.4,
-                    ),
-                    blurRadius: 20 + _pulseAnimation.value * 15,
-                    spreadRadius: _pulseAnimation.value * 3,
-                  ),
-                ],
+                color: widget.color,
               ),
               child: const Icon(
                 Icons.code,
                 color: Colors.white,
-                size: 28,
+                size: 24,
               ),
             ),
           );
@@ -2170,4 +2243,24 @@ class _PulsingFloatingActionButtonState
       ),
     );
   }
+}
+
+// 点状纹理绘制器
+class _DotPatternPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 1;
+
+    const dotSpacing = 8.0;
+    for (double x = 0; x < size.width; x += dotSpacing) {
+      for (double y = 0; y < size.height; y += dotSpacing) {
+        canvas.drawCircle(Offset(x, y), 0.5, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

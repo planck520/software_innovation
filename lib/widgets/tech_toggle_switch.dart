@@ -10,12 +10,14 @@ class TechToggleSwitch extends StatefulWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
   final bool isEnabled;
+  final Color? activeColor;
 
   const TechToggleSwitch({
     super.key,
     this.value = false,
     this.onChanged,
     this.isEnabled = true,
+    this.activeColor,
   });
 
   @override
@@ -72,6 +74,7 @@ class _TechToggleSwitchState extends State<TechToggleSwitch>
 
   @override
   Widget build(BuildContext context) {
+    final activeColor = widget.activeColor ?? AppColors.primary;
     return GestureDetector(
       onTap: _handleTap,
       child: AnimatedBuilder(
@@ -90,10 +93,13 @@ class _TechToggleSwitchState extends State<TechToggleSwitch>
                   height: AppTokens.toggleHeight,
                   decoration: BoxDecoration(
                     gradient: widget.value && widget.isEnabled
-                        ? const LinearGradient(
+                        ? LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: AppColors.primaryGradient,
+                            colors: [
+                              activeColor,
+                              activeColor.withOpacity(0.8),
+                            ],
                           )
                         : null,
                     color: widget.value && widget.isEnabled
