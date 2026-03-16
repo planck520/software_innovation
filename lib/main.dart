@@ -3262,14 +3262,24 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
             height: 48,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: [Color(0xFF5F6572), Color(0xFF3D424D)],
+              gradient: LinearGradient(
+                colors: checked
+                    ? const [Color(0xFF07BBEC), Color(0xFF5A616F)]
+                    : const [Color(0xFF5F6572), Color(0xFF3D424D)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              border: Border.all(
+                color: checked
+                    ? const Color(0xFFB7E749).withOpacity(0.45)
+                    : Colors.white.withOpacity(0.12),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.35),
+                  color: checked
+                      ? const Color(0xFF07BBEC).withOpacity(0.25)
+                      : Colors.black.withOpacity(0.35),
                   blurRadius: 14,
                   offset: const Offset(0, 8),
                 ),
@@ -3277,7 +3287,9 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
             ),
             child: Icon(
               checked ? Icons.verified_rounded : Icons.bolt_rounded,
-              color: Colors.white,
+              color: checked
+                  ? const Color(0xFFECECEC)
+                  : Colors.white.withOpacity(0.92),
               size: 22,
             ),
           ),
@@ -4073,28 +4085,12 @@ class _AchievementPageState extends State<AchievementPage>
             ),
           ),
           const SizedBox(width: 12),
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFF1F4F8), Color(0xFFCAD0DA), Color(0xFF9199A8)],
-              stops: [0.0, 0.55, 1.0],
-            ).createShader(bounds),
-            blendMode: BlendMode.srcIn,
-            child: Text(
-              "成就系统",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.3),
-                    offset: const Offset(0, 1),
-                    blurRadius: 4,
-                  ),
-                ],
-              ),
+          Text(
+            "成就系统",
+            style: TextStyle(
+              color: BubeiColors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ],
@@ -7854,14 +7850,24 @@ class _ProfilePageState extends State<ProfilePage> {
             height: 54,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: const LinearGradient(
-                colors: _metalGradient,
+              gradient: LinearGradient(
+                colors: checked
+                    ? const [Color(0xFF07BBEC), Color(0xFF5A616F)]
+                    : _metalGradient,
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              border: Border.all(
+                color: checked
+                    ? const Color(0xFFB7E749).withOpacity(0.45)
+                    : Colors.white.withOpacity(0.12),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.32),
+                  color: checked
+                      ? const Color(0xFF07BBEC).withOpacity(0.25)
+                      : Colors.black.withOpacity(0.32),
                   blurRadius: 14,
                   offset: const Offset(0, 8),
                 ),
@@ -7869,7 +7875,9 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             child: Icon(
               checked ? Icons.verified_rounded : Icons.bolt_rounded,
-              color: Colors.white,
+              color: checked
+                  ? const Color(0xFFECECEC)
+                  : Colors.white.withOpacity(0.92),
               size: 24,
             ),
           ),
@@ -12164,17 +12172,30 @@ class _StepperButtonState extends State<_StepperButton>
 // --- AI 评估报告页 (stitch 面试分析报告界面 风格) ---
 class ReportPage extends StatelessWidget {
   final Map<String, dynamic> reportData;
+  static const Color _paletteCyan = Color(0xFF07BBEC);
+  static const Color _paletteCoral = Color(0xFFE85E5A);
+  static const Color _paletteOrange = Color(0xFFEC922C);
+  static const Color _paletteLime = Color(0xFFB7E749);
+  static const Color _paletteMauve = Color(0xFFD19FAB);
+  static const Color _paletteDark = Color(0xFF232323);
+  static const Color _paletteLight = Color(0xFFECECEC);
+  static const Color _metalPrimary = Color(0xFF5A616F);
+  static const Color _metalPrimaryLight = Color(0xFFE0E5ED);
+  static const Color _metalPrimaryDim = Color(0xFF3A404B);
+  static const List<Color> _metalGradient = [
+    Color(0xFF5A616F),
+    Color(0xFF3A404B),
+  ];
   const ReportPage({super.key, required this.reportData});
 
   @override
   Widget build(BuildContext context) {
     final int score = reportData['totalScore'] ?? reportData['score'] ?? 85;
 
-    return TechBackground(
-      showGradientOrbs: false,
-      child: Scaffold(
-        backgroundColor: LoginTheme.background,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: BubeiColors.background,
+      body: PremiumStaticBackground(
+        child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
               children: [
@@ -12226,13 +12247,13 @@ class ReportPage extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: BubeiColors.surface,
                 borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                border: Border.all(color: AppColors.border.withOpacity(0.5)),
+                border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
               ),
               child: Icon(
                 Icons.arrow_back,
-                color: AppColors.textPrimary,
+                color: BubeiColors.textPrimary,
                 size: 9.8,
               ),
             ),
@@ -12242,7 +12263,7 @@ class ReportPage extends StatelessWidget {
             child: Text(
               "面试分析报告",
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: BubeiColors.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -12252,13 +12273,13 @@ class ReportPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: BubeiColors.surface,
               borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
             ),
             child: Icon(
               Icons.share_outlined,
-              color: AppColors.textPrimary,
+              color: BubeiColors.textPrimary,
               size: 9.8,
             ),
           ),
@@ -12269,10 +12290,10 @@ class ReportPage extends StatelessWidget {
 
   Widget _buildScoreGauge(int score) {
     final Color scoreColor = score >= 80
-        ? AppColors.primary
-        : score >= 60
-        ? AppColors.secondary
-        : AppColors.warning;
+      ? _paletteCyan
+      : score >= 60
+      ? _paletteOrange
+      : _paletteCoral;
     final String grade = score >= 90
         ? "优秀"
         : score >= 80
@@ -12297,9 +12318,9 @@ class ReportPage extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: 1,
                   strokeWidth: 12,
-                  backgroundColor: AppColors.surfaceDim,
+                  backgroundColor: BubeiColors.surfaceDim,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.surfaceDim,
+                    BubeiColors.surfaceDim,
                   ),
                 ),
               ),
@@ -12360,17 +12381,36 @@ class ReportPage extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           "综合评分",
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 14, color: BubeiColors.textSecondary),
         ),
       ],
+    );
+  }
+
+  Widget _buildPanelCard({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF2D3139).withOpacity(0.96),
+            const Color(0xFF23272F).withOpacity(0.96),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+        border: Border.all(color: const Color(0xFF505560)),
+        boxShadow: BubeiColors.cardShadow,
+      ),
+      child: child,
     );
   }
 
   Widget _buildAbilitySection() {
     final abilities = _parseAbilities();
 
-    return GlassCard(
-      padding: const EdgeInsets.all(14),
+    return _buildPanelCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -12379,17 +12419,20 @@ class ReportPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: _paletteMauve.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.bar_chart,
-                  color: AppColors.primary,
+                  color: _paletteLight,
                   size: 12.6,
                 ),
               ),
               const SizedBox(width: 12),
-              Text("能力评估", style: AppTextStyles.title),
+              Text(
+                "能力评估",
+                style: AppTextStyles.title.copyWith(color: BubeiColors.textPrimary),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -12406,26 +12449,26 @@ class ReportPage extends StatelessWidget {
                               RadarEntry(value: ability['value'] as double),
                         )
                         .toList(),
-                    fillColor: AppColors.primary.withOpacity(0.15),
-                    borderColor: AppColors.primary,
-                    borderWidth: 2.2,
-                    entryRadius: 2.8,
+                    fillColor: _paletteMauve.withOpacity(0.16),
+                    borderColor: _paletteLight.withOpacity(0.92),
+                    borderWidth: 2.4,
+                    entryRadius: 3.0,
                   ),
                 ],
                 radarBackgroundColor: Colors.transparent,
                 radarBorderData: BorderSide(
-                  color: AppColors.border.withOpacity(0.35),
+                  color: _paletteLight.withOpacity(0.25),
                 ),
                 gridBorderData: BorderSide(
-                  color: AppColors.border.withOpacity(0.18),
+                  color: _paletteLight.withOpacity(0.12),
                 ),
                 tickBorderData: BorderSide(
-                  color: AppColors.border.withOpacity(0.28),
+                  color: _paletteLight.withOpacity(0.18),
                 ),
                 tickCount: 5,
                 titlePositionPercentageOffset: 0.2,
                 titleTextStyle: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: _paletteLight.withOpacity(0.8),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -12461,13 +12504,13 @@ class ReportPage extends StatelessWidget {
 
   List<Map<String, dynamic>> _parseAbilities() {
     final palette = [
-      AppColors.primary,
-      AppColors.cyberPurple,
-      const Color(0xFF10B981),
-      const Color(0xFFF59E0B),
-      const Color(0xFF38BDF8),
-      const Color(0xFFE11D48),
-      const Color(0xFF8B5CF6),
+      _paletteCyan,
+      _paletteCoral,
+      _paletteOrange,
+      _paletteLime,
+      _paletteMauve,
+      _paletteLight,
+      const Color(0xFF9CA3AF),
     ];
 
     final fallback = [
@@ -12529,9 +12572,9 @@ class ReportPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceDim,
+        color: BubeiColors.surfaceDim,
         borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-        border: Border.all(color: AppColors.border.withOpacity(0.3)),
+        border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -12546,7 +12589,7 @@ class ReportPage extends StatelessWidget {
             name,
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: BubeiColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -12555,7 +12598,7 @@ class ReportPage extends StatelessWidget {
             "${value.toStringAsFixed(0)}%",
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.textPrimary,
+              color: BubeiColors.textPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -12567,9 +12610,15 @@ class ReportPage extends StatelessWidget {
   Widget _buildEmotionTrend() {
     // 模拟情绪趋势数据 (Q1-Q10)
     final emotions = [65, 70, 60, 75, 80, 72, 85, 78, 88, 82];
+    final emotionPalette = [
+      _paletteCyan,
+      _paletteCoral,
+      _paletteOrange,
+      _paletteLime,
+      _paletteMauve,
+    ];
 
-    return GlassCard(
-      padding: const EdgeInsets.all(14),
+    return _buildPanelCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -12578,17 +12627,20 @@ class ReportPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.cyberPurple.withOpacity(0.1),
+                  color: _paletteMauve.withOpacity(0.18),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.show_chart,
-                  color: AppColors.cyberPurple,
+                  color: _paletteMauve,
                   size: 12.6,
                 ),
               ),
               const SizedBox(width: 12),
-              Text("情绪趋势", style: AppTextStyles.title),
+              Text(
+                "情绪趋势",
+                style: AppTextStyles.title.copyWith(color: BubeiColors.textPrimary),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -12601,6 +12653,7 @@ class ReportPage extends StatelessWidget {
                 final index = entry.key;
                 final value = entry.value;
                 final normalizedHeight = (value / 100) * 100;
+                final barColor = emotionPalette[index % emotionPalette.length];
 
                 return Expanded(
                   child: Padding(
@@ -12620,8 +12673,8 @@ class ReportPage extends StatelessWidget {
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
                                   colors: [
-                                    AppColors.primary,
-                                    AppColors.cyberPurple,
+                                    _paletteDark,
+                                    barColor,
                                   ],
                                 ),
                                 borderRadius: BorderRadius.circular(4),
@@ -12634,7 +12687,7 @@ class ReportPage extends StatelessWidget {
                           "Q${index + 1}",
                           style: TextStyle(
                             fontSize: 9,
-                            color: AppColors.textTertiary,
+                            color: BubeiColors.textTertiary,
                           ),
                         ),
                       ],
@@ -12680,10 +12733,10 @@ class ReportPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: BubeiColors.surface,
         borderRadius: BorderRadius.circular(AppTokens.radiusLg),
         border: Border(left: BorderSide(color: color, width: 4)),
-        boxShadow: AppTokens.shadowSm,
+        boxShadow: BubeiColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -12723,7 +12776,7 @@ class ReportPage extends StatelessWidget {
                       item,
                       style: TextStyle(
                         fontSize: 13,
-                        color: AppColors.textSecondary,
+                        color: BubeiColors.textSecondary,
                         height: 1.5,
                       ),
                     ),
@@ -12747,11 +12800,12 @@ class ReportPage extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(colors: AppColors.primaryGradient),
+              gradient: const LinearGradient(colors: _metalGradient),
               borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+              border: Border.all(color: const Color(0xFF565D6A)),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.28),
                   blurRadius: 15,
                   offset: const Offset(0, 4),
                 ),
@@ -12761,7 +12815,7 @@ class ReportPage extends StatelessWidget {
               child: Text(
                 "再次面试",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: _paletteLight,
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
@@ -12779,15 +12833,15 @@ class ReportPage extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              color: AppColors.cardBackground,
+              color: BubeiColors.surface,
               borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-              border: Border.all(color: AppColors.border.withOpacity(0.5)),
+              border: Border.all(color: const Color(0xFF505560)),
             ),
             child: Center(
               child: Text(
                 "返回首页",
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: BubeiColors.textSecondary,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
@@ -12821,6 +12875,21 @@ class InterviewChatPage extends StatefulWidget {
 
 class _InterviewChatPageState extends State<InterviewChatPage>
     with SingleTickerProviderStateMixin {
+  static const Color _paletteCyan = Color(0xFF07BBEC);
+  static const Color _paletteCoral = Color(0xFFE85E5A);
+  static const Color _paletteOrange = Color(0xFFEC922C);
+  static const Color _paletteLime = Color(0xFFB7E749);
+  static const Color _paletteMauve = Color(0xFFD19FAB);
+  static const Color _paletteDark = Color(0xFF232323);
+  static const Color _paletteLight = Color(0xFFECECEC);
+  static const Color _metalPrimary = Color(0xFF5A616F);
+  static const Color _metalPrimaryLight = Color(0xFFE0E5ED);
+  static const Color _metalPrimaryDim = Color(0xFF3A404B);
+  static const List<Color> _metalGradient = [
+    Color(0xFF5A616F),
+    Color(0xFF3A404B),
+  ];
+
   // --- 变量定义区 ---
   CameraController? _cameraController;
   final FlutterSoundRecorder _recorder = FlutterSoundRecorder();
@@ -13270,10 +13339,10 @@ class _InterviewChatPageState extends State<InterviewChatPage>
         _showExitDialog();
         return false; // 拦截系统返回，改为弹窗确认
       },
-      child: TechBackground(
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
+      child: Scaffold(
+        backgroundColor: BubeiColors.background,
+        body: PremiumStaticBackground(
+          child: SafeArea(
             child: Column(
               children: [
                 // 顶部状态栏
@@ -13296,9 +13365,9 @@ class _InterviewChatPageState extends State<InterviewChatPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: BubeiColors.surface,
         border: Border(
-          bottom: BorderSide(color: AppColors.border.withOpacity(0.3)),
+          bottom: BorderSide(color: BubeiColors.divider.withOpacity(0.9)),
         ),
       ),
       child: Row(
@@ -13309,12 +13378,12 @@ class _InterviewChatPageState extends State<InterviewChatPage>
             child: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.surfaceDim, // 使用深色模式感知的颜色
+                color: BubeiColors.surfaceDim,
                 borderRadius: BorderRadius.circular(AppTokens.radiusSm),
               ),
               child: Icon(
                 Icons.arrow_back,
-                color: AppColors.textPrimary,
+                color: BubeiColors.textPrimary,
                 size: 12.6,
               ),
             ),
@@ -13330,12 +13399,12 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: BubeiColors.textPrimary,
                   ),
                 ),
                 Text(
                   "${widget.interviewerType} · 进行中",
-                  style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+                  style: TextStyle(fontSize: 10, color: BubeiColors.textTertiary),
                 ),
               ],
             ),
@@ -13344,7 +13413,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: _paletteCyan.withOpacity(0.18),
               borderRadius: BorderRadius.circular(AppTokens.radiusFull),
             ),
             child: Row(
@@ -13352,7 +13421,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
               children: [
                 const Icon(
                   Icons.timer_outlined,
-                  color: AppColors.primary,
+                  color: _paletteCyan,
                   size: 8.4,
                 ),
                 const SizedBox(width: 4),
@@ -13361,7 +13430,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
+                    color: _paletteCyan,
                   ),
                 ),
               ],
@@ -13374,7 +13443,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.error.withOpacity(0.1),
+                color: _paletteCoral.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(AppTokens.radiusFull),
               ),
               child: Text(
@@ -13382,7 +13451,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.error,
+                  color: _paletteCoral,
                 ),
               ),
             ),
@@ -13405,9 +13474,9 @@ class _InterviewChatPageState extends State<InterviewChatPage>
     return Container(
       height: 180,
       decoration: BoxDecoration(
-        color: const Color(0xFF1a1f2e),
+        color: BubeiColors.surface,
         borderRadius: BorderRadius.circular(AppTokens.radiusLg),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFF505560)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppTokens.radiusLg),
@@ -13430,7 +13499,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                       ),
                     )
                   : Container(
-                      color: const Color(0xFF1a1f2e),
+                      color: BubeiColors.surface,
                       child: Center(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -13441,13 +13510,13 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3),
+                                  color: _metalPrimary.withOpacity(0.5),
                                   width: 2,
                                 ),
                               ),
                               child: Icon(
                                 Icons.person,
-                                color: AppColors.primary.withOpacity(0.5),
+                                color: _metalPrimaryLight.withOpacity(0.85),
                                 size: 24.5,
                               ),
                             ),
@@ -13455,7 +13524,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                             Text(
                               "摄像头预览",
                               style: TextStyle(
-                                color: AppColors.cardBackground,
+                                color: BubeiColors.textSecondary,
                                 fontSize: 11,
                               ),
                             ),
@@ -13478,8 +13547,11 @@ class _InterviewChatPageState extends State<InterviewChatPage>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.9),
+                  gradient: const LinearGradient(
+                    colors: [_paletteCyan, _paletteOrange],
+                  ),
                   borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+                  border: Border.all(color: _paletteLight.withOpacity(0.3)),
                 ),
                 child: Text(
                   "Q${_currentQuestionIndex + 1}/$_totalQuestions",
@@ -13511,8 +13583,9 @@ class _InterviewChatPageState extends State<InterviewChatPage>
       height: 45,
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
+        color: BubeiColors.surface.withOpacity(0.92),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: BubeiColors.border.withOpacity(0.8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -13523,7 +13596,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
               Text(
                 "情绪",
                 style: TextStyle(
-                  color: AppColors.success,
+                  color: BubeiColors.success,
                   fontSize: 8,
                   fontWeight: FontWeight.w600,
                 ),
@@ -13531,7 +13604,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
               Text(
                 "$_emotionScore%",
                 style: TextStyle(
-                  color: AppColors.success,
+                  color: BubeiColors.success,
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                 ),
@@ -13567,24 +13640,24 @@ class _InterviewChatPageState extends State<InterviewChatPage>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.cyberPurple.withOpacity(0.05),
+            _metalPrimary.withOpacity(0.2),
+            BubeiColors.surface.withOpacity(0.85),
           ],
         ),
         borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: const Color(0xFF505560)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.15),
+              color: _metalPrimary.withOpacity(0.24),
               borderRadius: BorderRadius.circular(6),
             ),
             child: const Icon(
               Icons.help_outline,
-              color: AppColors.primary,
+              color: _metalPrimaryLight,
               size: 11.2,
             ),
           ),
@@ -13594,7 +13667,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
               currentQuestion,
               style: TextStyle(
                 fontSize: 12,
-                color: AppColors.textPrimary,
+                color: BubeiColors.textPrimary,
                 height: 1.3,
               ),
               maxLines: 2,
@@ -13635,22 +13708,22 @@ class _InterviewChatPageState extends State<InterviewChatPage>
             top:
                 alignment == Alignment.topLeft ||
                     alignment == Alignment.topRight
-                ? BorderSide(color: AppColors.primary, width: 2)
+                ? BorderSide(color: _metalPrimary, width: 2)
                 : BorderSide.none,
             bottom:
                 alignment == Alignment.bottomLeft ||
                     alignment == Alignment.bottomRight
-                ? BorderSide(color: AppColors.primary, width: 2)
+                ? BorderSide(color: _metalPrimary, width: 2)
                 : BorderSide.none,
             left:
                 alignment == Alignment.topLeft ||
                     alignment == Alignment.bottomLeft
-                ? BorderSide(color: AppColors.primary, width: 2)
+                ? BorderSide(color: _metalPrimary, width: 2)
                 : BorderSide.none,
             right:
                 alignment == Alignment.topRight ||
                     alignment == Alignment.bottomRight
-                ? BorderSide(color: AppColors.primary, width: 2)
+                ? BorderSide(color: _metalPrimary, width: 2)
                 : BorderSide.none,
           ),
         ),
@@ -13674,8 +13747,8 @@ class _InterviewChatPageState extends State<InterviewChatPage>
               margin: const EdgeInsets.symmetric(horizontal: 1),
               decoration: BoxDecoration(
                 color: _isRecording
-                    ? AppColors.primary
-                    : AppColors.textTertiary,
+                    ? _paletteLime
+                    : BubeiColors.textTertiary,
                 borderRadius: BorderRadius.circular(2),
               ),
             );
@@ -13689,8 +13762,9 @@ class _InterviewChatPageState extends State<InterviewChatPage>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: BubeiColors.surface,
         borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+        border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
       ),
       child: ListView.builder(
         controller: _scrollController,
@@ -13719,8 +13793,8 @@ class _InterviewChatPageState extends State<InterviewChatPage>
         decoration: BoxDecoration(
           gradient: isAi
               ? null
-              : LinearGradient(colors: AppColors.primaryGradient),
-          color: isAi ? AppColors.surfaceDim : null, // AI消息用深色模式感知的颜色
+              : const LinearGradient(colors: [_paletteCyan, _paletteMauve]),
+            color: isAi ? BubeiColors.surfaceDim : null,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -13729,7 +13803,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
+              color: const Color(0x22000000),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -13738,7 +13812,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
         child: Text(
           content,
           style: TextStyle(
-            color: isAi ? AppColors.textPrimary : Colors.white,
+            color: isAi ? BubeiColors.textPrimary : Colors.white,
             fontSize: 14,
             height: 1.5,
           ),
@@ -13751,9 +13825,9 @@ class _InterviewChatPageState extends State<InterviewChatPage>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: BubeiColors.surface,
         border: Border(
-          top: BorderSide(color: AppColors.border.withOpacity(0.3)),
+          top: BorderSide(color: BubeiColors.divider.withOpacity(0.9)),
         ),
       ),
       child: SafeArea(
@@ -13765,12 +13839,12 @@ class _InterviewChatPageState extends State<InterviewChatPage>
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceDim,
+                  color: BubeiColors.surfaceDim,
                   borderRadius: BorderRadius.circular(AppTokens.radiusMd),
                 ),
                 child: Icon(
                   _isTypingMode ? Icons.mic : Icons.keyboard,
-                  color: AppColors.primary,
+                  color: _paletteLight,
                   size: 15.4,
                 ),
               ),
@@ -13783,7 +13857,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                       controller: _textController,
                       decoration: InputDecoration(
                         hintText: "输入回复...",
-                        hintStyle: TextStyle(color: AppColors.textTertiary),
+                        hintStyle: TextStyle(color: BubeiColors.textTertiary),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(
                             AppTokens.radiusFull,
@@ -13791,7 +13865,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                           borderSide: BorderSide.none,
                         ),
                         filled: true,
-                        fillColor: AppColors.surfaceDim,
+                        fillColor: BubeiColors.surfaceDim,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 10,
@@ -13821,35 +13895,32 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
                                         colors: [
-                                          Color(0xFF1b3cff),
-                                          Color(0xFF0ad4ff),
+                                          _paletteLime,
+                                          Color(0xFF86B33A),
                                         ],
                                       )
                                     : const LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
-                                        colors: [
-                                          Color(0xFF0b1224),
-                                          Color(0xFF14233f),
-                                        ],
+                                        colors: [_paletteDark, _metalPrimaryDim],
                                       ),
                                 borderRadius: BorderRadius.circular(
                                   AppTokens.radiusFull,
                                 ),
                                 border: Border.all(
                                   color: _isRecording
-                                      ? AppColors.cyberBlue.withOpacity(0.55)
-                                      : Colors.white.withOpacity(0.08),
+                                      ? _paletteLime.withOpacity(0.75)
+                                      : _metalPrimary.withOpacity(0.85),
                                   width: 1.1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color:
                                         (_isRecording
-                                                ? AppColors.cyberBlue
-                                                : AppColors.primary)
-                                            .withOpacity(0.45),
-                                    blurRadius: _isRecording ? 22 : 16,
+                                          ? _paletteLime
+                                                : _metalPrimaryDim)
+                                            .withOpacity(0.35),
+                                    blurRadius: _isRecording ? 18 : 10,
                                     spreadRadius: 1,
                                     offset: const Offset(0, 6),
                                   ),
@@ -13897,11 +13968,12 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: AppColors.primaryGradient),
+                    gradient: const LinearGradient(colors: [_paletteCyan, _paletteMauve]),
                     borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+                    border: Border.all(color: _paletteLight.withOpacity(0.25)),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
+                        color: _paletteCyan.withOpacity(0.25),
                         blurRadius: 8,
                       ),
                     ],
@@ -13920,14 +13992,14 @@ class _InterviewChatPageState extends State<InterviewChatPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: BubeiColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTokens.radiusXl),
         ),
-        title: Text("确认退出？", style: TextStyle(color: AppColors.textPrimary)),
+        title: Text("确认退出？", style: TextStyle(color: BubeiColors.textPrimary)),
         content: Text(
           "退出后当前面试进度将不会保存",
-          style: TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: BubeiColors.textSecondary),
         ),
         actionsAlignment: MainAxisAlignment.center,
         actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
@@ -13942,7 +14014,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(0, 44),
-                        side: BorderSide(color: AppColors.border),
+                        side: BorderSide(color: BubeiColors.border),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -13951,7 +14023,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                       child: Text(
                         "继续面试",
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: BubeiColors.textPrimary,
                           fontSize: 12,
                         ),
                       ),
@@ -13965,7 +14037,7 @@ class _InterviewChatPageState extends State<InterviewChatPage>
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(0, 44),
-                        backgroundColor: AppColors.error,
+                        backgroundColor: BubeiColors.error,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -14001,7 +14073,7 @@ class _EmotionCurvePainter extends CustomPainter {
     if (data.isEmpty) return;
 
     final paint = Paint()
-      ..color = AppColors.primary
+      ..color = BubeiColors.primary
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -14011,8 +14083,8 @@ class _EmotionCurvePainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          AppColors.primary.withOpacity(0.3),
-          AppColors.primary.withOpacity(0.05),
+          BubeiColors.primary.withOpacity(0.3),
+          BubeiColors.primary.withOpacity(0.05),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
@@ -14064,7 +14136,7 @@ class _EmotionCurvePainter extends CustomPainter {
 
     // 绘制数据点
     final dotPaint = Paint()
-      ..color = AppColors.primary
+      ..color = BubeiColors.primary
       ..style = PaintingStyle.fill;
 
     final dotBorderPaint = Paint()
@@ -14102,7 +14174,7 @@ class _MiniEmotionCurvePainter extends CustomPainter {
     if (data.isEmpty) return;
 
     final paint = Paint()
-      ..color = AppColors.success
+      ..color = BubeiColors.success
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
