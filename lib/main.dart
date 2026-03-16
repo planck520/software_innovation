@@ -3683,6 +3683,19 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
 class InterviewRoomPage extends StatelessWidget {
   const InterviewRoomPage({super.key});
 
+  static const LinearGradient _roomMetalGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0xFF30343D), Color(0xFF242830)],
+  );
+
+  static const LinearGradient _roomSilverGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF1F4F8), Color(0xFFCAD0DA), Color(0xFF9199A8)],
+    stops: [0.0, 0.55, 1.0],
+  );
+
   @override
   Widget build(BuildContext context) {
     return PremiumStaticBackground(
@@ -3701,34 +3714,81 @@ class InterviewRoomPage extends StatelessWidget {
                         width: 90,
                         height: 90,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary.withOpacity(0.15),
-                              AppColors.cyberPurple.withOpacity(0.1),
-                            ],
-                          ),
+                          gradient: _roomMetalGradient,
                           borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: const Color(0xFF585F6B),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.25),
+                              blurRadius: 14,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
                         child: Icon(
                           Icons.meeting_room,
-                          color: AppColors.primary,
+                          color: const Color(0xFFE2E6EE),
                           size: 45,
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Text(
-                        "面试房间",
-                        style: TextStyle(
-                          color: AppColors.textPrimary,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Stack(
+                        children: [
+                          Text(
+                            "面试房间",
+                            style: TextStyle(
+                              foreground: Paint()
+                                ..style = PaintingStyle.stroke
+                                ..strokeWidth = 1.4
+                                ..color = const Color(0xFFEEF1F5).withOpacity(
+                                  0.9,
+                                ),
+                              fontSize: 30,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 3,
+                            ),
+                          ),
+                          ShaderMask(
+                            shaderCallback: (bounds) => _roomSilverGradient
+                                .createShader(
+                                  Rect.fromLTWH(
+                                    0,
+                                    0,
+                                    bounds.width,
+                                    bounds.height,
+                                  ),
+                                ),
+                            child: Text(
+                              "面试房间",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.3),
+                                    offset: const Offset(0, 2),
+                                    blurRadius: 6,
+                                  ),
+                                  Shadow(
+                                    color: Colors.white.withOpacity(0.22),
+                                    offset: const Offset(0, -1),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Text(
                         "选择您想要的面试方式",
                         style: TextStyle(
-                          color: AppColors.textSecondary,
+                          color: const Color(0xFFACB2BE),
                           fontSize: 14,
                         ),
                       ),
@@ -3791,12 +3851,13 @@ class InterviewRoomPage extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.cardBackground.withOpacity(0.5),
+                      gradient: _roomMetalGradient,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF585F6B)),
                     ),
                     child: Icon(
                       Icons.arrow_back_ios_new,
-                      color: AppColors.textPrimary,
+                      color: const Color(0xFFE2E6EE),
                       size: 16,
                     ),
                   ),
@@ -3823,13 +3884,27 @@ class InterviewRoomPage extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: isPrimary
-              ? LinearGradient(colors: AppColors.primaryGradient)
-              : null,
-          color: isPrimary ? null : AppColors.cardBackground.withOpacity(0.6),
+              ? const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF343A45), Color(0xFF272C36)],
+                )
+              : const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF2F343D), Color(0xFF232730)],
+                ),
           borderRadius: BorderRadius.circular(16),
-          border: isPrimary
-              ? null
-              : Border.all(color: AppColors.border.withOpacity(0.3)),
+          border: Border.all(
+            color: isPrimary ? const Color(0xFF626A77) : const Color(0xFF505764),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.22),
+              blurRadius: 12,
+              offset: const Offset(0, 7),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -3837,13 +3912,15 @@ class InterviewRoomPage extends StatelessWidget {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: isPrimary
-                    ? Colors.white.withOpacity(0.2)
-                    : AppColors.primary.withOpacity(0.1),
+                    ? const Color(0x33E6EAF1)
+                    : const Color(0x223B82F6),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
-                color: isPrimary ? Colors.white : AppColors.primary,
+                color: isPrimary
+                    ? const Color(0xFFE8ECF3)
+                    : const Color(0xFF9AB3FF),
                 size: 24,
               ),
             ),
@@ -3851,7 +3928,9 @@ class InterviewRoomPage extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                color: isPrimary ? Colors.white : AppColors.textPrimary,
+                color: isPrimary
+                    ? const Color(0xFFF1F4F8)
+                    : const Color(0xFFE2E6EE),
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -3861,8 +3940,8 @@ class InterviewRoomPage extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 color: isPrimary
-                    ? Colors.white.withOpacity(0.8)
-                    : AppColors.textSecondary,
+                    ? const Color(0xFFBBC2CD)
+                    : const Color(0xFFA7AFBC),
                 fontSize: 11,
               ),
             ),
@@ -3978,23 +4057,44 @@ class _AchievementPageState extends State<AchievementPage>
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: BubeiColors.surface.withOpacity(0.5),
+                gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF30343D), Color(0xFF242830)],
+                ),
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF585F6B)),
               ),
               child: Icon(
                 Icons.arrow_back_ios_new,
-                color: BubeiColors.textPrimary,
+                color: const Color(0xFFE2E6EE),
                 size: 16,
               ),
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            "成就系统",
-            style: TextStyle(
-              color: BubeiColors.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFF1F4F8), Color(0xFFCAD0DA), Color(0xFF9199A8)],
+              stops: [0.0, 0.55, 1.0],
+            ).createShader(bounds),
+            blendMode: BlendMode.srcIn,
+            child: Text(
+              "成就系统",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.3),
+                    offset: const Offset(0, 1),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -4006,8 +4106,13 @@ class _AchievementPageState extends State<AchievementPage>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: BubeiColors.surface.withOpacity(0.8),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF2E333C), Color(0xFF232730)],
+        ),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF565D69)),
       ),
       child: AnimatedBuilder(
         animation: _tabController,
@@ -4033,11 +4138,20 @@ class _AchievementPageState extends State<AchievementPage>
                       height: 40,
                       margin: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: AppColors.primaryGradient,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [Color(0xFF434A56), Color(0xFF303642)],
                         ),
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: AppColors.neonShadow,
+                        border: Border.all(color: const Color(0xFF666E7B)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -4045,8 +4159,8 @@ class _AchievementPageState extends State<AchievementPage>
                   TabBar(
                     controller: _tabController,
                     indicator: const BoxDecoration(),
-                    labelColor: Colors.white,
-                    unselectedLabelColor: BubeiColors.textSecondary,
+                    labelColor: const Color(0xFFF1F4F8),
+                    unselectedLabelColor: const Color(0xFFA3ABBA),
                     labelStyle: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -4422,7 +4536,9 @@ class _BadgeCardState extends State<_BadgeCard>
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: AppColors.primary.withOpacity(opacity),
+                                  color: const Color(
+                                    0xFFE3C68B,
+                                  ).withOpacity(opacity),
                                   width: 2,
                                 ),
                               ),
@@ -4430,13 +4546,22 @@ class _BadgeCardState extends State<_BadgeCard>
                           );
                         },
                       ),
-                    // 图标背景 - 保留彩色点缀
+                    // 图标背景 - 香槟金金属质感
                     Container(
                       width: 56,
                       height: 56,
                       decoration: BoxDecoration(
                         gradient: widget.badge.unlocked
-                            ? LinearGradient(colors: AppColors.primaryGradient)
+                            ? const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFFF6E5BC),
+                                  Color(0xFFE4C88C),
+                                  Color(0xFFB88A44),
+                                ],
+                                stops: [0.0, 0.58, 1.0],
+                              )
                             : null,
                         color: widget.badge.unlocked
                             ? null
@@ -4447,7 +4572,7 @@ class _BadgeCardState extends State<_BadgeCard>
                       child: Icon(
                         widget.badge.icon,
                         color: widget.badge.unlocked
-                            ? Colors.white
+                            ? const Color(0xFF5A4017)
                             : BubeiColors.textTertiary,
                         size: 28,
                       ),
@@ -4511,7 +4636,7 @@ class _BadgeCardState extends State<_BadgeCard>
                   widget.badge.unlocked ? "已解锁" : "未解锁",
                   style: TextStyle(
                     color: widget.badge.unlocked
-                        ? AppColors.success
+                        ? const Color(0xFFE8C785)
                         : BubeiColors.textTertiary,
                     fontSize: 11,
                   ),
@@ -4545,11 +4670,17 @@ class _BadgeDetailDialog extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: badge.unlocked ? AppColors.primary : BubeiColors.divider,
+            color: badge.unlocked ? const Color(0xFFC7A468) : BubeiColors.divider,
             width: 2,
           ),
           boxShadow: badge.unlocked
-              ? AppColors.multiColorGlow
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.3),
+                    blurRadius: 14,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
               : BubeiColors.cardShadow,
         ),
         child: Column(
@@ -4560,7 +4691,11 @@ class _BadgeDetailDialog extends StatelessWidget {
               height: 4,
               decoration: BoxDecoration(
                 gradient: badge.unlocked
-                    ? LinearGradient(colors: AppColors.primaryGradient)
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xFFF1DBAE), Color(0xFFD9B475)],
+                      )
                     : null,
                 color: badge.unlocked ? null : BubeiColors.divider,
                 borderRadius: const BorderRadius.only(
@@ -4579,16 +4714,33 @@ class _BadgeDetailDialog extends StatelessWidget {
                     height: 80,
                     decoration: BoxDecoration(
                       gradient: badge.unlocked
-                          ? LinearGradient(colors: AppColors.primaryGradient)
+                          ? const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFFF7E7C1),
+                                Color(0xFFE2C486),
+                                Color(0xFFB58947),
+                              ],
+                              stops: [0.0, 0.56, 1.0],
+                            )
                           : null,
                       color: badge.unlocked ? null : BubeiColors.surfaceDim,
                       shape: BoxShape.circle,
-                      boxShadow: badge.unlocked ? AppColors.neonShadow : null,
+                      boxShadow: badge.unlocked
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ]
+                          : null,
                     ),
                     child: Icon(
                       badge.icon,
                       color: badge.unlocked
-                          ? Colors.white
+                          ? const Color(0xFF5A4017)
                           : BubeiColors.textTertiary,
                       size: 40,
                     ),
@@ -4612,7 +4764,7 @@ class _BadgeDetailDialog extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: badge.unlocked
-                          ? AppColors.success.withOpacity(0.2)
+                          ? const Color(0x33D7B06B)
                           : BubeiColors.textTertiary.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -4620,7 +4772,7 @@ class _BadgeDetailDialog extends StatelessWidget {
                       badge.unlocked ? "已解锁" : "未解锁",
                       style: TextStyle(
                         color: badge.unlocked
-                            ? AppColors.success
+                            ? const Color(0xFFE8C785)
                             : BubeiColors.textTertiary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -4639,7 +4791,7 @@ class _BadgeDetailDialog extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.info_outline,
-                          color: AppColors.primary,
+                          color: const Color(0xFFB7BFCC),
                           size: 16,
                         ),
                         const SizedBox(width: 8),
@@ -4692,7 +4844,7 @@ class _BadgeDetailDialog extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () => Navigator.pop(context),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: const Color(0xFF3D4450),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -4775,10 +4927,17 @@ class _LevelCardState extends State<_LevelCard>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: AppColors.primaryGradient,
+          colors: const [Color(0xFF363C47), Color(0xFF2A2F38)],
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: AppColors.multiColorGlow,
+        border: Border.all(color: const Color(0xFF636B79)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -4986,7 +5145,7 @@ class _PrivilegeCard extends StatelessWidget {
                         value: value,
                         backgroundColor: BubeiColors.surfaceDim,
                         valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.primary,
+                          const Color(0xFFBCC4D0),
                         ),
                         minHeight: 3,
                       );
@@ -4999,7 +5158,7 @@ class _PrivilegeCard extends StatelessWidget {
           Text(
             requirement,
             style: TextStyle(
-              color: AppColors.primary,
+              color: const Color(0xFFBCC4D0),
               fontSize: 10,
               fontWeight: FontWeight.w600,
             ),
@@ -5127,7 +5286,7 @@ class _TopThreeRanking extends StatelessWidget {
           Text(
             "${rank.score}分",
             style: TextStyle(
-              color: AppColors.primary,
+              color: const Color(0xFFBCC4D0),
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -5154,23 +5313,23 @@ class _RankingItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: isMe
-            ? LinearGradient(
+            ? const LinearGradient(
                 colors: [
-                  AppColors.primary.withOpacity(0.15),
-                  AppColors.primary.withOpacity(0.05),
+                  Color(0x333B424E),
+                  Color(0x112A2F38),
                 ],
               )
             : null,
         color: isMe ? null : BubeiColors.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isMe ? AppColors.primary : BubeiColors.divider,
+          color: isMe ? const Color(0xFF7A8392) : BubeiColors.divider,
           width: isMe ? 1.5 : 1,
         ),
         boxShadow: isMe
             ? [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: Colors.black.withOpacity(0.2),
                   blurRadius: 8,
                 ),
               ]
@@ -5185,7 +5344,7 @@ class _RankingItem extends StatelessWidget {
               "${user.rank}",
               style: TextStyle(
                 color: user.rank <= 3
-                    ? AppColors.primary
+                    ? const Color(0xFFC1C9D4)
                     : BubeiColors.textSecondary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -5200,7 +5359,7 @@ class _RankingItem extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: isMe ? AppColors.primary : BubeiColors.divider,
+                color: isMe ? const Color(0xFF7A8392) : BubeiColors.divider,
                 width: isMe ? 2 : 1,
               ),
             ),
@@ -5215,7 +5374,7 @@ class _RankingItem extends StatelessWidget {
             child: Text(
               user.name,
               style: TextStyle(
-                color: isMe ? AppColors.primary : BubeiColors.textPrimary,
+                color: isMe ? const Color(0xFFE5EAF1) : BubeiColors.textPrimary,
                 fontSize: 14,
                 fontWeight: isMe ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -5225,7 +5384,7 @@ class _RankingItem extends StatelessWidget {
           Text(
             "${user.score}分",
             style: TextStyle(
-              color: AppColors.primary,
+              color: const Color(0xFFBCC4D0),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -5243,13 +5402,13 @@ class _RankingItem extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(opacity * 0.3),
+                    color: const Color(0xFFBBC2CF).withOpacity(opacity * 0.26),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     "我",
                     style: TextStyle(
-                      color: AppColors.primary,
+                      color: const Color(0xFFE8EDF5),
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
