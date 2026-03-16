@@ -38,6 +38,7 @@ class _EditorSettingsPageState extends State<EditorSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return PremiumStaticBackground(
+      pureBlack: true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(

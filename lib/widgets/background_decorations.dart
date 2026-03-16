@@ -2025,11 +2025,25 @@ class _TechPioneersHomeBackgroundState extends State<TechPioneersHomeBackground>
 /// 静态高级黑纹理背景（主页面）
 class PremiumStaticBackground extends StatelessWidget {
   final Widget child;
+  final bool pureBlack;
 
-  const PremiumStaticBackground({super.key, required this.child});
+  const PremiumStaticBackground({
+    super.key,
+    required this.child,
+    this.pureBlack = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    if (pureBlack) {
+      return Stack(
+        children: [
+          const Positioned.fill(child: ColoredBox(color: Colors.black)),
+          child,
+        ],
+      );
+    }
+
     return Stack(
       children: [
         const Positioned.fill(

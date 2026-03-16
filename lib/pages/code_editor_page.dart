@@ -1081,6 +1081,7 @@ class Solution {
   @override
   Widget build(BuildContext context) {
     return PremiumStaticBackground(
+      pureBlack: true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: _buildAppBar(),

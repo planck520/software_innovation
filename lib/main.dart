@@ -3078,7 +3078,7 @@ class _MainEntryPageState extends State<MainEntryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: BubeiColors.background,
+      backgroundColor: Colors.black,
       body: PageView(controller: _pageController, children: _pages),
     );
   }
@@ -3711,6 +3711,7 @@ class InterviewRoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PremiumStaticBackground(
+      pureBlack: true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
@@ -4032,6 +4033,7 @@ class _AchievementPageState extends State<AchievementPage>
   @override
   Widget build(BuildContext context) {
     return PremiumStaticBackground(
+      pureBlack: true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
@@ -6128,6 +6130,7 @@ class _HistoryPageState extends State<HistoryPage> {
               totalInterviews;
 
     return PremiumStaticBackground(
+      pureBlack: true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
@@ -8340,8 +8343,9 @@ class _ProfilePageState extends State<ProfilePage> {
               historyCount;
 
     return Scaffold(
-      backgroundColor: BubeiColors.background,
+      backgroundColor: Colors.black,
       body: PremiumStaticBackground(
+        pureBlack: true,
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -9772,6 +9776,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
         splashFactory: NoSplash.splashFactory,
       ),
       child: PremiumStaticBackground(
+        pureBlack: true,
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
@@ -10749,6 +10754,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return PremiumStaticBackground(
+      pureBlack: true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
@@ -12193,8 +12199,9 @@ class ReportPage extends StatelessWidget {
     final int score = reportData['totalScore'] ?? reportData['score'] ?? 85;
 
     return Scaffold(
-      backgroundColor: BubeiColors.background,
+      backgroundColor: Colors.black,
       body: PremiumStaticBackground(
+        pureBlack: true,
         child: SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -13340,8 +13347,9 @@ class _InterviewChatPageState extends State<InterviewChatPage>
         return false; // 拦截系统返回，改为弹窗确认
       },
       child: Scaffold(
-        backgroundColor: BubeiColors.background,
+        backgroundColor: Colors.black,
         body: PremiumStaticBackground(
+          pureBlack: true,
           child: SafeArea(
             child: Column(
               children: [
