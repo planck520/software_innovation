@@ -150,7 +150,7 @@ class AppTextStyles {
   // ==================== 分节标题样式 ====================
   static TextStyle get sectionTitle => TextStyle(
     fontSize: 20,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w800,
     letterSpacing: -0.1,
     color: AppColors.textPrimary,
     height: 1.25,
