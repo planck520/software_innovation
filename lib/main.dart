@@ -466,6 +466,306 @@ void _refreshUserBadgesByIndex(int userIndex) {
 // 记录当前登录的用户索引
 int currentUserIndex = -1;
 
+List<int> _buildEmotionTrendByQuestion(
+  List<double> emotionHistory,
+  int questionCount,
+  int fallbackScore,
+) {
+  if (questionCount <= 0) return const [];
+  if (emotionHistory.isEmpty) {
+    final v = fallbackScore.clamp(0, 100);
+    return List<int>.filled(questionCount, v);
+  }
+  if (questionCount == 1) {
+    return [emotionHistory.last.round().clamp(0, 100)];
+  }
+
+  final result = <int>[];
+  final int n = emotionHistory.length;
+  for (int i = 0; i < questionCount; i++) {
+    final double t = i / (questionCount - 1);
+    final int idx = (t * (n - 1)).round().clamp(0, n - 1);
+    result.add(emotionHistory[idx].round().clamp(0, 100));
+  }
+  return result;
+}
+
+Future<Map<String, dynamic>> generateInterviewReport({
+  required List<Map<String, dynamic>> messages,
+  required List<Map<String, dynamic>> mainQuestionDetails,
+  required List<Map<String, dynamic>> algorithmQuestionResults,
+  required int currentQuestionIndex,
+  required double emotionScore,
+  required List<double> emotionHistory,
+  required String job,
+  required String jobCategory,
+  required String? company,
+  required String interviewerType,
+  required String formattedTime,
+}) async {
+  // 整理问答详情
+  final List<Map<String, dynamic>> qaDetails = [];
+  for (int i = 0; i < messages.length; i++) {
+    if (messages[i]['role'] == 'assistant' &&
+        i + 1 < messages.length &&
+        messages[i + 1]['role'] == 'user') {
+      qaDetails.add({
+        "question": messages[i]['content'] ?? "",
+        "answer": messages[i + 1]['content'] ?? "",
+      });
+    }
+  }
+
+  final String mainQuestionSummary = mainQuestionDetails.isEmpty
+      ? '无结构化大问题记录'
+      : mainQuestionDetails.map((item) {
+          final int mainIndex = item['mainIndex'] as int? ?? 0;
+          final String category = (item['category'] ?? '').toString();
+          final String question = (item['question'] ?? '').toString();
+          final List<dynamic> sub = item['subQuestions'] is List ? item['subQuestions'] as List : const [];
+          final subSummary = sub.asMap().entries.map((e) {
+            final s = e.value is Map ? e.value as Map : const {};
+            final String content = (s['question'] ?? '').toString();
+            return '  - 追问${e.key + 1}: $content';
+          }).join('\n');
+          return '大问题$mainIndex($category): $question${subSummary.isNotEmpty ? '\n$subSummary' : ''}';
+        }).join('\n');
+
+  final String algorithmSummary = algorithmQuestionResults.isEmpty
+      ? '无算法题作答记录'
+      : algorithmQuestionResults.map((item) {
+          final int mainIndex = item['mainIndex'] as int? ?? 0;
+          final String question = (item['question'] ?? '').toString();
+          final String status = (item['status'] ?? '未作答').toString();
+          final int passed = item['passedCases'] as int? ?? 0;
+          final int total = item['totalCases'] as int? ?? 0;
+          final String language = (item['language'] ?? '').toString();
+          return '算法题(大问题$mainIndex): $question | 状态: $status | 用例: $passed/$total | 语言: $language';
+        }).join('\n');
+
+  // 构造评分请求 prompt：强制结构化 JSON 输出，便于稳定提取
+  final String abilityPrompt = '''
+你是结构化面试评估专家。请根据以下真实面试问答内容进行评估。
+
+要求：
+1) 输出六项能力分数（0-100整数）：技术深度、架构思维、沟通协作、应变能力、表达清晰、业务理解。
+2) 输出核心优势3条，待提升点3条。
+3) 每一条都要引用具体面试细节（技术词、项目名、方案、指标、场景），禁止空泛表达。
+4) 禁止使用"继续努力""建议加强基础"等套话。
+5) 只输出 JSON，不要输出解释文字，不要使用 Markdown 代码块。
+
+面试结构（10个大问题，每个大问题最多10个追问）：
+$mainQuestionSummary
+
+算法题作答结果（必须纳入评估）：
+$algorithmSummary
+
+面试问答：
+${qaDetails.map((e) => "Q: ${e['question']}\nA: ${e['answer']}").join("\n")}
+
+JSON schema:
+{
+  "scores": {
+    "技术深度": 0,
+    "架构思维": 0,
+    "沟通协作": 0,
+    "应变能力": 0,
+    "表达清晰": 0,
+    "业务理解": 0
+  },
+  "coreStrengths": ["...", "...", "..."],
+  "improvementPoints": ["...", "...", "..."]
+}
+''';
+
+  // DeepSeek API 调用
+  final List<Map<String, String>> deepseekMessages = [
+    {"role": "system", "content": "你是结构化面试评估专家。"},
+    {"role": "user", "content": abilityPrompt},
+  ];
+  String deepseekReply = "";
+  try {
+    deepseekReply = await DeepseekClient.chat(messages: deepseekMessages);
+  } catch (e) {
+    deepseekReply = "AI评分服务异常：$e";
+  }
+
+  // 解析分数和优势/待提升点
+  final abilities = <Map<String, dynamic>>[];
+  List<String> coreStrengthsList = [];
+  List<String> improvementPointsList = [];
+  String _extractJsonText(String raw) {
+    final blockMatch = RegExp(r'```json\s*([\s\S]*?)```', caseSensitive: false)
+        .firstMatch(raw);
+    if (blockMatch != null) {
+      return blockMatch.group(1)?.trim() ?? raw;
+    }
+    final start = raw.indexOf('{');
+    final end = raw.lastIndexOf('}');
+    if (start != -1 && end != -1 && end > start) {
+      return raw.substring(start, end + 1);
+    }
+    return raw;
+  }
+
+  List<String> _cleanItems(dynamic value) {
+    if (value is! List) return [];
+    return value
+        .map((e) => e.toString().trim())
+        .map((e) => e.replaceFirst(RegExp(r'^[0-9]+[.)、]\s*'), '').trim())
+        .where((e) => e.isNotEmpty)
+        .take(3)
+        .toList();
+  }
+
+  try {
+    final jsonText = _extractJsonText(deepseekReply);
+    final parsed = jsonDecode(jsonText);
+    if (parsed is Map<String, dynamic>) {
+      final scores = parsed['scores'];
+      if (scores is Map) {
+        final orderedKeys = ['技术深度', '架构思维', '沟通协作', '应变能力', '表达清晰', '业务理解'];
+        for (final key in orderedKeys) {
+          final raw = scores[key];
+          final int value = (raw is num ? raw.round() : int.tryParse(raw?.toString() ?? '') ?? 80)
+              .clamp(0, 100);
+          abilities.add({"name": key, "value": value});
+        }
+      }
+      coreStrengthsList = _cleanItems(parsed['coreStrengths']);
+      improvementPointsList = _cleanItems(parsed['improvementPoints']);
+    }
+  } catch (_) {
+    // JSON 解析失败时走文本兜底解析
+  }
+
+  if (abilities.length < 6 || coreStrengthsList.isEmpty || improvementPointsList.isEmpty) {
+    String currentSection = '';
+    final lines = deepseekReply.split('\n');
+    for (final raw in lines) {
+      final line = raw.trim();
+      if (line.isEmpty) continue;
+
+      if (line.contains('技术深度')) {
+        final v = int.tryParse(line.replaceAll(RegExp(r'[^0-9]'), '')) ?? 80;
+        if (!abilities.any((a) => a['name'] == '技术深度')) {
+          abilities.add({"name": "技术深度", "value": v.clamp(0, 100)});
+        }
+        continue;
+      }
+      if (line.contains('架构思维')) {
+        final v = int.tryParse(line.replaceAll(RegExp(r'[^0-9]'), '')) ?? 80;
+        if (!abilities.any((a) => a['name'] == '架构思维')) {
+          abilities.add({"name": "架构思维", "value": v.clamp(0, 100)});
+        }
+        continue;
+      }
+      if (line.contains('沟通协作')) {
+        final v = int.tryParse(line.replaceAll(RegExp(r'[^0-9]'), '')) ?? 80;
+        if (!abilities.any((a) => a['name'] == '沟通协作')) {
+          abilities.add({"name": "沟通协作", "value": v.clamp(0, 100)});
+        }
+        continue;
+      }
+      if (line.contains('应变能力')) {
+        final v = int.tryParse(line.replaceAll(RegExp(r'[^0-9]'), '')) ?? 80;
+        if (!abilities.any((a) => a['name'] == '应变能力')) {
+          abilities.add({"name": "应变能力", "value": v.clamp(0, 100)});
+        }
+        continue;
+      }
+      if (line.contains('表达清晰')) {
+        final v = int.tryParse(line.replaceAll(RegExp(r'[^0-9]'), '')) ?? 80;
+        if (!abilities.any((a) => a['name'] == '表达清晰')) {
+          abilities.add({"name": "表达清晰", "value": v.clamp(0, 100)});
+        }
+        continue;
+      }
+      if (line.contains('业务理解')) {
+        final v = int.tryParse(line.replaceAll(RegExp(r'[^0-9]'), '')) ?? 80;
+        if (!abilities.any((a) => a['name'] == '业务理解')) {
+          abilities.add({"name": "业务理解", "value": v.clamp(0, 100)});
+        }
+        continue;
+      }
+
+      if (line.contains('核心优势')) {
+        currentSection = 'core';
+        continue;
+      }
+      if (line.contains('待提升点')) {
+        currentSection = 'improve';
+        continue;
+      }
+
+      final item = line.replaceFirst(RegExp(r'^[0-9]+[.)、]\s*'), '').trim();
+      if (item.isEmpty) continue;
+      if (currentSection == 'core' && coreStrengthsList.length < 3) {
+        coreStrengthsList.add(item);
+      } else if (currentSection == 'improve' && improvementPointsList.length < 3) {
+        improvementPointsList.add(item);
+      }
+    }
+  }
+
+  // 最终兜底，保证能力维度齐全
+  final defaultScoreMap = {
+    '技术深度': 80,
+    '架构思维': 80,
+    '沟通协作': 80,
+    '应变能力': 80,
+    '表达清晰': 80,
+    '业务理解': 80,
+  };
+  final existingNames = abilities.map((e) => e['name']).toSet();
+  defaultScoreMap.forEach((name, score) {
+    if (!existingNames.contains(name)) {
+      abilities.add({"name": name, "value": score});
+    }
+  });
+
+  // 情绪稳定分数用情绪曲线平均值
+  final double avgEmotion = emotionHistory.isNotEmpty
+      ? emotionHistory.reduce((a, b) => a + b) / emotionHistory.length
+      : emotionScore;
+  final int mainQuestionCount = mainQuestionDetails.length;
+  final List<int> emotionTrendByQuestion = _buildEmotionTrendByQuestion(
+    emotionHistory,
+    mainQuestionCount,
+    avgEmotion.round(),
+  );
+  abilities.add({"name": "情绪稳定", "value": avgEmotion.round()});
+
+  // 总分为所有能力分数平均值，范围0-100
+  final scores = abilities.map((e) => (e['value'] as int).clamp(0, 100)).toList();
+  final int totalScore = scores.isNotEmpty
+      ? (scores.reduce((a, b) => a + b) / scores.length).round()
+      : 80;
+
+  final Map<String, dynamic> newReport = {
+    "job": job,
+    "jobCategory": jobCategory,
+    "company": company,
+    "date": DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now()),
+    "totalScore": totalScore,
+    "coreStrengths": coreStrengthsList,
+    "improvementPoints": improvementPointsList,
+    "feedback": "核心优势：${coreStrengthsList.join('；')}\n待提升点：${improvementPointsList.join('；')}",
+    "interviewerType": interviewerType,
+    "duration": formattedTime,
+    "questionCount": mainQuestionDetails.length,
+    "emotionScore": avgEmotion.round(),
+    "emotionTrendByQuestion": emotionTrendByQuestion,
+    "emotionHistory": emotionHistory,
+    "abilities": abilities,
+    "qaDetails": qaDetails,
+    "mainQuestionDetails": mainQuestionDetails,
+    "algorithmQuestionResults": algorithmQuestionResults,
+  };
+
+  return newReport;
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
@@ -12169,6 +12469,133 @@ class _StepperButtonState extends State<_StepperButton>
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+// --- 报告生成页 ---
+class ReportGeneratingPage extends StatefulWidget {
+  final List<Map<String, dynamic>> messages;
+  final List<Map<String, dynamic>> mainQuestionDetails;
+  final List<Map<String, dynamic>> algorithmQuestionResults;
+  final List<double> emotionHistory;
+  final int currentQuestionIndex;
+  final double emotionScore;
+  final String job;
+  final String jobCategory;
+  final String? company;
+  final String interviewerType;
+  final String formattedTime;
+
+  const ReportGeneratingPage({
+    super.key,
+    required this.messages,
+    required this.mainQuestionDetails,
+    required this.algorithmQuestionResults,
+    required this.emotionHistory,
+    required this.currentQuestionIndex,
+    required this.emotionScore,
+    required this.job,
+    required this.jobCategory,
+    required this.company,
+    required this.interviewerType,
+    required this.formattedTime,
+  });
+
+  @override
+  State<ReportGeneratingPage> createState() => _ReportGeneratingPageState();
+}
+
+class _ReportGeneratingPageState extends State<ReportGeneratingPage> {
+  String _statusText = "AI 正在分析你的回答，请稍候...";
+  bool _hasError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startGeneration();
+  }
+
+  Future<void> _startGeneration() async {
+    setState(() {
+      _statusText = "AI 正在生成你的面试报告...";
+      _hasError = false;
+    });
+
+    try {
+      final newReport = await generateInterviewReport(
+        messages: widget.messages,
+        mainQuestionDetails: widget.mainQuestionDetails,
+        algorithmQuestionResults: widget.algorithmQuestionResults,
+        currentQuestionIndex: widget.currentQuestionIndex,
+        emotionScore: widget.emotionScore,
+        emotionHistory: widget.emotionHistory,
+        job: widget.job,
+        jobCategory: widget.jobCategory,
+        company: widget.company,
+        interviewerType: widget.interviewerType,
+        formattedTime: widget.formattedTime,
+      );
+
+      globalUsers[currentUserIndex]['history'].insert(0, newReport);
+      await saveUserData();
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (c) => ReportPage(reportData: newReport)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _statusText = "生成报告时出现问题，请重试";
+        _hasError = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TechBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CyberLoadingIndicator(size: 80),
+                const SizedBox(height: 24),
+                Text(
+                  "面试结果生成中...",
+                  style: AppTextStyles.headline.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                  child: Text(
+                    _statusText,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Colors.white70,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                if (_hasError) ...[
+                  const SizedBox(height: 24),
+                  TechButton(
+                    text: "重试生成",
+                    onPressed: _startGeneration,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
