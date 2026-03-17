@@ -1,5 +1,6 @@
 /// 组件导出文件
 /// 统一导出所有UI组件，便于使用
+library;
 
 // 基础组件
 export 'glass_card.dart';

@@ -5,75 +5,75 @@ import 'app_colors.dart';
 class AppTextStyles {
   // ==================== 标题样式 ====================
   static TextStyle get displayLarge => TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.5,
+    fontSize: 34,
+    fontWeight: FontWeight.w800,
+    letterSpacing: -0.3,
     color: AppColors.textPrimary,
-    height: 1.2,
+    height: 1.15,
   );
 
   static TextStyle get displayMedium => TextStyle(
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: FontWeight.w700,
-    letterSpacing: -0.5,
+    letterSpacing: -0.2,
     color: AppColors.textPrimary,
-    height: 1.2,
+    height: 1.18,
   );
 
   static TextStyle get headline => TextStyle(
     fontSize: 24,
+    fontWeight: FontWeight.w700,
+    letterSpacing: -0.1,
+    color: AppColors.textPrimary,
+    height: 1.22,
+  );
+
+  static TextStyle get title => TextStyle(
+    fontSize: 17,
     fontWeight: FontWeight.w600,
-    letterSpacing: -0.25,
+    letterSpacing: 0.2,
     color: AppColors.textPrimary,
     height: 1.3,
   );
 
-  static TextStyle get title => TextStyle(
-    fontSize: 15,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0,
-    color: AppColors.textPrimary,
-    height: 1.4,
-  );
-
   static TextStyle get subtitle => TextStyle(
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: FontWeight.w500,
-    letterSpacing: 0,
+    letterSpacing: 0.2,
     color: AppColors.textPrimary,
-    height: 1.5,
+    height: 1.35,
   );
 
   // ==================== 正文样式 ====================
   static TextStyle get body => TextStyle(
-    fontSize: 13,
+    fontSize: 15,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0,
+    letterSpacing: 0.1,
     color: AppColors.textPrimary,
-    height: 1.5,
+    height: 1.45,
   );
 
   static TextStyle get bodyMedium => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0,
+    letterSpacing: 0.1,
     color: AppColors.textPrimary,
-    height: 1.5,
+    height: 1.45,
   );
 
   static TextStyle get bodySmall => TextStyle(
     fontSize: 13,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.1,
+    letterSpacing: 0.15,
     color: AppColors.textPrimary,
-    height: 1.4,
+    height: 1.35,
   );
 
   // ==================== 辅助文字样式 ====================
   static TextStyle get caption => TextStyle(
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.1,
+    letterSpacing: 0.2,
     color: AppColors.textSecondary,
     height: 1.4,
   );
@@ -81,23 +81,23 @@ class AppTextStyles {
   static TextStyle get footnote => TextStyle(
     fontSize: 11,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.2,
+    letterSpacing: 0.25,
     color: AppColors.textTertiary,
     height: 1.3,
   );
 
   // ==================== 按钮文字样式 ====================
   static const TextStyle button = TextStyle(
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: FontWeight.w600,
-    letterSpacing: 0.5,
+    letterSpacing: 0.35,
     height: 1.2,
   );
 
   static const TextStyle buttonSmall = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
-    letterSpacing: 0.3,
+    letterSpacing: 0.25,
     height: 1.2,
   );
 
@@ -149,17 +149,17 @@ class AppTextStyles {
 
   // ==================== 分节标题样式 ====================
   static TextStyle get sectionTitle => TextStyle(
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: FontWeight.w700,
-    letterSpacing: -0.2,
+    letterSpacing: -0.1,
     color: AppColors.textPrimary,
-    height: 1.3,
+    height: 1.25,
   );
 
   static TextStyle get sectionSubtitle => TextStyle(
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: FontWeight.w400,
-    letterSpacing: 0.2,
+    letterSpacing: 0.25,
     color: AppColors.textSecondary,
     height: 1.4,
   );

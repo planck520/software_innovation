@@ -7,6 +7,55 @@ import 'bubei_colors.dart';
 
 /// 主题配置 - stitch_login_screen 蓝紫赛博风格
 class AppTheme {
+  static const List<String> _fontFallback = [
+    'PingFang SC',
+    'HarmonyOS Sans SC',
+    'Noto Sans CJK SC',
+    'Microsoft YaHei',
+    'sans-serif',
+  ];
+
+  static TextTheme _lightTextTheme() {
+    return TextTheme(
+      displayLarge: AppTextStyles.displayLarge,
+      displayMedium: AppTextStyles.displayMedium,
+      headlineLarge: AppTextStyles.headline,
+      headlineMedium: AppTextStyles.title.copyWith(color: AppColors.primary),
+      headlineSmall: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+      titleLarge: AppTextStyles.title,
+      titleMedium: AppTextStyles.subtitle.copyWith(color: AppColors.textSecondary),
+      titleSmall: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+      bodyLarge: AppTextStyles.body.copyWith(color: AppColors.textPrimary.withOpacity(0.96)),
+      bodyMedium: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+      bodySmall: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+      labelLarge: AppTextStyles.button.copyWith(color: AppColors.primary),
+      labelMedium: AppTextStyles.buttonSmall.copyWith(color: AppColors.textPrimary),
+      labelSmall: AppTextStyles.label.copyWith(color: AppColors.textSecondary),
+    ).apply(
+      bodyColor: AppColors.textPrimary,
+      displayColor: AppColors.textPrimary,
+    );
+  }
+
+  static TextTheme _darkTextTheme() {
+    return TextTheme(
+      displayLarge: AppTextStyles.displayLarge.copyWith(color: BubeiColors.textPrimary),
+      displayMedium: AppTextStyles.displayMedium.copyWith(color: BubeiColors.textPrimary),
+      headlineLarge: AppTextStyles.headline.copyWith(color: BubeiColors.textPrimary),
+      headlineMedium: AppTextStyles.title.copyWith(color: BubeiColors.primaryLight),
+      headlineSmall: AppTextStyles.subtitle.copyWith(color: BubeiColors.textPrimary),
+      titleLarge: AppTextStyles.title.copyWith(color: BubeiColors.textPrimary),
+      titleMedium: AppTextStyles.subtitle.copyWith(color: BubeiColors.textSecondary),
+      titleSmall: AppTextStyles.bodyMedium.copyWith(color: BubeiColors.textSecondary),
+      bodyLarge: AppTextStyles.body.copyWith(color: BubeiColors.textPrimary.withOpacity(0.95)),
+      bodyMedium: AppTextStyles.bodyMedium.copyWith(color: BubeiColors.textSecondary),
+      bodySmall: AppTextStyles.bodySmall.copyWith(color: BubeiColors.textTertiary),
+      labelLarge: AppTextStyles.button.copyWith(color: BubeiColors.textPrimary),
+      labelMedium: AppTextStyles.buttonSmall.copyWith(color: BubeiColors.textPrimary),
+      labelSmall: AppTextStyles.label.copyWith(color: BubeiColors.textSecondary),
+    );
+  }
+
   static ThemeData get lightTheme {
     return ThemeData.light().copyWith(
       // 基础配置
@@ -33,7 +82,10 @@ class AppTheme {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: AppTextStyles.title,
+        titleTextStyle: AppTextStyles.title.copyWith(
+          fontWeight: FontWeight.w700,
+          color: AppColors.primary,
+        ),
         iconTheme: IconThemeData(color: AppColors.textPrimary),
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarBrightness: Brightness.light,
@@ -45,7 +97,7 @@ class AppTheme {
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface.withOpacity(0.9),
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textTertiary,
+        unselectedItemColor: AppColors.textSecondary,
         elevation: 0,
         type: BottomNavigationBarType.fixed,
         selectedLabelStyle: AppTextStyles.label,
@@ -86,7 +138,9 @@ class AppTheme {
           horizontal: AppTokens.space4,
           vertical: 16,
         ),
-        hintStyle: AppTextStyles.caption,
+        hintStyle: AppTextStyles.caption.copyWith(
+          color: AppColors.textSecondary.withOpacity(0.85),
+        ),
       ),
 
       // 按钮主题
@@ -103,19 +157,25 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTokens.radiusMd),
           ),
-          textStyle: AppTextStyles.button,
+          textStyle: AppTextStyles.button.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+          ),
         ),
       ),
 
       // 文本按钮主题
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+          foregroundColor: AppColors.cyberPurple,
           padding: const EdgeInsets.symmetric(
             horizontal: AppTokens.space4,
             vertical: 8,
           ),
-          textStyle: AppTextStyles.buttonSmall,
+          textStyle: AppTextStyles.buttonSmall.copyWith(
+            color: AppColors.cyberPurple,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
 
@@ -136,22 +196,7 @@ class AppTheme {
       ),
 
       // 文字主题
-      textTheme: TextTheme(
-        displayLarge: AppTextStyles.displayLarge,
-        displayMedium: AppTextStyles.displayMedium,
-        headlineLarge: AppTextStyles.headline,
-        headlineMedium: AppTextStyles.title,
-        headlineSmall: AppTextStyles.subtitle,
-        titleLarge: AppTextStyles.title,
-        titleMedium: AppTextStyles.subtitle,
-        titleSmall: AppTextStyles.body,
-        bodyLarge: AppTextStyles.body,
-        bodyMedium: AppTextStyles.bodyMedium,
-        bodySmall: AppTextStyles.bodySmall,
-        labelLarge: AppTextStyles.button,
-        labelMedium: AppTextStyles.buttonSmall,
-        labelSmall: AppTextStyles.label,
-      ),
+      textTheme: _lightTextTheme(),
 
       // Icon 主题
       iconTheme: IconThemeData(
@@ -273,7 +318,6 @@ class AppTheme {
         onSurface: BubeiColors.textPrimary,
         error: BubeiColors.error,
         onError: Colors.white,
-        background: BubeiColors.background,
       ),
 
       // AppBar 主题
@@ -282,10 +326,9 @@ class AppTheme {
         foregroundColor: BubeiColors.textPrimary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: const TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          color: BubeiColors.textPrimary,
+        titleTextStyle: AppTextStyles.title.copyWith(
+          color: BubeiColors.primaryLight,
+          fontWeight: FontWeight.w700,
         ),
         iconTheme: const IconThemeData(color: BubeiColors.textPrimary),
         systemOverlayStyle: const SystemUiOverlayStyle(
@@ -298,11 +341,17 @@ class AppTheme {
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: BubeiColors.surface,
         selectedItemColor: BubeiColors.primary,
-        unselectedItemColor: BubeiColors.textTertiary,
+        unselectedItemColor: BubeiColors.textSecondary,
         elevation: 0,
         type: BottomNavigationBarType.fixed,
-        selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+        selectedLabelStyle: AppTextStyles.label.copyWith(
+          fontSize: 11.5,
+          color: BubeiColors.textPrimary,
+        ),
+        unselectedLabelStyle: AppTextStyles.footnote.copyWith(
+          fontSize: 11,
+          color: BubeiColors.textTertiary,
+        ),
       ),
 
       // 卡片主题
@@ -331,7 +380,9 @@ class AppTheme {
           borderSide: const BorderSide(color: BubeiColors.inputFocusedBorder, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        hintStyle: const TextStyle(color: BubeiColors.textTertiary),
+        hintStyle: AppTextStyles.caption.copyWith(
+          color: BubeiColors.textSecondary.withOpacity(0.88),
+        ),
       ),
 
       // 按钮主题
@@ -346,9 +397,10 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BubeiColors.radiusSmall),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
+          textStyle: AppTextStyles.button.copyWith(
+            color: BubeiColors.buttonForeground,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
           ),
         ),
       ),
@@ -358,24 +410,15 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: BubeiColors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          textStyle: AppTextStyles.buttonSmall.copyWith(
+            color: BubeiColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
 
       // 文字主题
-      textTheme: TextTheme(
-        displayLarge: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: BubeiColors.textPrimary),
-        displayMedium: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: BubeiColors.textPrimary),
-        headlineLarge: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: BubeiColors.textPrimary),
-        headlineMedium: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: BubeiColors.textPrimary),
-        headlineSmall: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: BubeiColors.textPrimary),
-        titleLarge: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: BubeiColors.textPrimary),
-        titleMedium: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: BubeiColors.textPrimary),
-        bodyLarge: const TextStyle(fontSize: 16, color: BubeiColors.textSecondary),
-        bodyMedium: const TextStyle(fontSize: 14, color: BubeiColors.textSecondary),
-        bodySmall: const TextStyle(fontSize: 12, color: BubeiColors.textTertiary),
-        labelLarge: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: BubeiColors.textPrimary),
-      ),
+      textTheme: _darkTextTheme(),
 
       // Icon 主题
       iconTheme: const IconThemeData(

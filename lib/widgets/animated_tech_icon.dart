@@ -341,19 +341,19 @@ class _TechStatusIconState extends State<TechStatusIcon>
               color: color,
               size: 11.2 * _animation.value + 5.6,
             ),
-            if (label != null) ...[
-              const SizedBox(width: 6),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w400,
-                  color: color,
-                  letterSpacing: widget.isActive ? 0.2 : 0,
-                ),
-                child: Text(label!),
+            ...[
+            const SizedBox(width: 6),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: widget.isActive ? FontWeight.w600 : FontWeight.w400,
+                color: color,
+                letterSpacing: widget.isActive ? 0.2 : 0,
               ),
-            ],
+              child: Text(label),
+            ),
+          ],
           ],
         );
       },

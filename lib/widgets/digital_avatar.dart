@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_tokens.dart';
 
 /// 数字人头像组件
 /// 支持网络图片和自定义渐变头像

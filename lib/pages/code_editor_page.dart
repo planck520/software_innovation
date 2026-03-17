@@ -1080,39 +1080,29 @@ class Solution {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: LoginTheme.background,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          // 代码编辑器区（VSCode Dark+风格）
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF1E1E1E),
-                    BubeiColors.background,
-                  ],
-                ),
-              ),
+    return PremiumStaticBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: _buildAppBar(),
+        body: Column(
+          children: [
+            // 代码编辑器区（VSCode Dark+风格）
+            Expanded(
               child: _buildCodeEditor(),
             ),
-          ),
 
-          // 控制台面板（可展开/收起）
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            height: _showConsole ? 360 : 0,
-            child: _showConsole ? _buildConsolePanel() : const SizedBox.shrink(),
-          ),
+            // 控制台面板（可展开/收起）
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              height: _showConsole ? 360 : 0,
+              child: _showConsole ? _buildConsolePanel() : const SizedBox.shrink(),
+            ),
 
-          // 底部按钮栏
-          _buildBottomBar(),
-        ],
+            // 底部按钮栏
+            _buildBottomBar(),
+          ],
+        ),
       ),
     );
   }
