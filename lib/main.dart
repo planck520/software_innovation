@@ -3430,6 +3430,17 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
   @override
   void initState() {
     super.initState();
+    // 检查用户登录状态，如果未登录则跳转到登录页
+    if (currentUserIndex < 0 || currentUserIndex >= globalUsers.length) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          TechPageTransitions.fade(builder: (c) => const LoginPage()),
+          (route) => false,
+        );
+      });
+      return;
+    }
     _initCheckInData();
   }
 
@@ -4598,9 +4609,7 @@ class InterviewRoomPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isPrimary
-                    ? const Color(0x33E6EAF1)
-                    : const Color(0x223B82F6),
+                color: const Color(0x33E6EAF1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -4730,7 +4739,7 @@ class _AchievementPageState extends State<AchievementPage>
 
   Widget _buildHeader() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Row(
         children: [
           GestureDetector(
@@ -4819,6 +4828,7 @@ class _AchievementPageState extends State<AchievementPage>
                   TabBar(
                     controller: _tabController,
                     indicator: const BoxDecoration(),
+                    dividerColor: Colors.transparent,
                     labelColor: const Color(0xFFF1F4F8),
                     unselectedLabelColor: const Color(0xFFA3ABBA),
                     labelStyle: const TextStyle(
@@ -4972,15 +4982,15 @@ class _AchievementPageState extends State<AchievementPage>
   // ==================== 排行榜页 ====================
   Widget _buildRankingTab() {
     final rankings = [
-      _RankingData("Alex", 9800, 1, "https://i.pravatar.cc/150?img=1"),
-      _RankingData("Jordan", 9500, 2, "https://i.pravatar.cc/150?img=2"),
-      _RankingData("Morgan", 9200, 3, "https://i.pravatar.cc/150?img=3"),
-      _RankingData("Taylor", 8900, 4, "https://i.pravatar.cc/150?img=4"),
-      _RankingData("Casey", 8500, 5, "https://i.pravatar.cc/150?img=5"),
-      _RankingData("Riley", 8200, 6, "https://i.pravatar.cc/150?img=6"),
-      _RankingData("Quinn", 7800, 7, "https://i.pravatar.cc/150?img=7"),
-      _RankingData("Avery", 7500, 8, "https://i.pravatar.cc/150?img=8"),
-      _RankingData("我", 6000, 9, "https://i.pravatar.cc/150?img=9", isMe: true),
+      _RankingData("Alex", 9800, 1, "assets/images/rankings/avatar_1.png"),
+      _RankingData("Jordan", 9500, 2, "assets/images/rankings/avatar_2.png"),
+      _RankingData("Morgan", 9200, 3, "assets/images/rankings/avatar_3.png"),
+      _RankingData("Taylor", 8900, 4, "assets/images/rankings/avatar_4.png"),
+      _RankingData("Casey", 8500, 5, "assets/images/rankings/avatar_5.png"),
+      _RankingData("Riley", 8200, 6, "assets/images/rankings/avatar_6.png"),
+      _RankingData("Quinn", 7800, 7, "assets/images/rankings/avatar_7.png"),
+      _RankingData("Avery", 7500, 8, "assets/images/rankings/avatar_8.png"),
+      _RankingData("我", 6000, 9, "assets/images/rankings/avatar_9.png", isMe: true),
     ];
 
     return Column(
@@ -5900,7 +5910,7 @@ class _TopThreeRanking extends StatelessWidget {
                   ],
                 ),
                 child: CircleAvatar(
-                  backgroundImage: NetworkImage(rank.avatar),
+                  backgroundImage: AssetImage(rank.avatar),
                   radius: 28,
                 ),
               ),
@@ -6024,7 +6034,7 @@ class _RankingItem extends StatelessWidget {
               ),
             ),
             child: CircleAvatar(
-              backgroundImage: NetworkImage(user.avatar),
+              backgroundImage: AssetImage(user.avatar),
               radius: 18,
             ),
           ),
@@ -6130,7 +6140,7 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   static const List<Color> _historyMetalGradient = [
     Color(0xFF232323),
-    Color(0xFF07BBEC),
+    Color(0xFFEC922C),
   ];
   static const Color _historyNumberColor = Color(0xFFECECEC);
   static const Color _historyAccentMint = Color(0xFFB7E749);
@@ -6346,9 +6356,7 @@ class _HistoryPageState extends State<HistoryPage> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: _historyMetalGradient,
-                            ),
+                            color: Colors.transparent,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Column(
@@ -6514,9 +6522,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                   vertical: 14,
                                 ),
                                 decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: _historyMetalGradient,
-                                  ),
+                                  color: const Color(0xFFB87333),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Center(
@@ -6831,7 +6837,18 @@ class _HistoryPageState extends State<HistoryPage> {
         children: [
           // 返回按钮
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              if (_isSelectMode) {
+                // 如果在选择模式，退出选择模式而不是返回上一页
+                setState(() {
+                  _isSelectMode = false;
+                  _selectedIndices.clear();
+                });
+              } else {
+                // 否则正常返回
+                Navigator.pop(context);
+              }
+            },
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -10417,7 +10434,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 16, 20, 16),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
       child: Row(
         children: [
           // 返回按钮
@@ -10480,7 +10497,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
       child: Container(
         height: 44,
         decoration: BoxDecoration(
-          color: AppColors.surface.withOpacity(0.9),
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: AppColors.border.withOpacity(0.3),
@@ -10562,7 +10579,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                   height: 38,
                   padding: const EdgeInsets.symmetric(horizontal: 14),
                   decoration: BoxDecoration(
-                    color: AppColors.surface.withOpacity(0.9),
+                    color: AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: AppColors.border.withOpacity(0.3),
@@ -10621,7 +10638,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
         width: 38,
         height: 38,
         decoration: BoxDecoration(
-          color: AppColors.surface.withOpacity(0.9),
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: AppColors.border.withOpacity(0.3),
@@ -10666,7 +10683,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
         margin: const EdgeInsets.only(top: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.surface.withOpacity(0.9),
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: AppColors.border.withOpacity(0.3),
@@ -10698,7 +10715,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white : AppColors.surface.withOpacity(0.9),
+          color: isSelected ? Colors.white : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isSelected ? Colors.white : AppColors.border.withOpacity(0.3),
@@ -10793,7 +10810,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: AppColors.surface.withOpacity(0.9),
+          color: AppColors.cardBackground,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: AppColors.border.withOpacity(0.3),
@@ -10808,7 +10825,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
               width: 24,
               height: 24,
               decoration: BoxDecoration(
-                color: LoginTheme.cardBackground,
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Center(
@@ -10985,7 +11002,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.surface.withOpacity(0.9),
+                      color: AppColors.cardBackground,
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: AppColors.border.withOpacity(0.3)),
                     ),
@@ -11014,7 +11031,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.surface.withOpacity(0.9),
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.border.withOpacity(0.3)),
               ),
@@ -11055,7 +11072,7 @@ class _QuestionBankPageState extends State<QuestionBankPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withOpacity(0.9),
+                  color: AppColors.cardBackground,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppColors.border.withOpacity(0.3)),
                 ),
@@ -11318,7 +11335,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
       'color': InterviewTheme.accentGreen,
       'traits': ['业务理解', '项目经验', '团队协作'],
       'style': '务实型',
-      'description': '关注实际业务能力，评估你如何将技术应用到真实��务场景。',
+      'description': '关注实际业务能力，评估你如何将技术应用到真实业务场景。',
       'avatarUrl':
           'https://api.dicebear.com/9.x/micah/png?seed=Sophia&backgroundColor=d1f4d1&size=128&baseColor=f9c9b6&earringsProbability=100',
     },
@@ -11433,24 +11450,26 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
       position: _headerSlideAnimation,
       child: FadeTransition(
         opacity: _headerFadeAnimation,
-        child: Row(
-          children: [
-            // 返回按钮
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                ),
-                child: Icon(
-                  Icons.arrow_back_ios_new,
-                  color: AppColors.textSecondary,
-                  size: 16,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: Row(
+            children: [
+              // 返回按钮
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_ios_new,
+                    color: AppColors.textSecondary,
+                    size: 16,
+                  ),
                 ),
               ),
-            ),
             const SizedBox(width: 12),
             Expanded(child: Text("定制面试", style: TextStyle(
               color: AppColors.textPrimary,
@@ -11486,6 +11505,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -11525,7 +11545,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
               curve: Curves.easeOut,
               width: 140,
               decoration: BoxDecoration(
-                color: LoginTheme.cardBackground,
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(AppTokens.radiusLg),
                 border: Border.all(
                   color: isSelected ? color : LoginTheme.cardBorder.withOpacity(0.5),
@@ -11628,7 +11648,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
-                              color: LoginTheme.surface,
+                              color: AppColors.cardBackground,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(Icons.info_outline, color: InterviewTheme.textSecondary, size: 10),
@@ -11648,7 +11668,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   Widget _buildQuestionComposition() {
     return GlassCard(
-      backgroundColor: LoginTheme.cardBackground,
+      backgroundColor: AppColors.cardBackground,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -11695,10 +11715,15 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isSelected ? Colors.white : LoginTheme.cardBackground,
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [Color(0xFF5F6674), Color(0xFF3D434E)],
+                          )
+                        : null,
+                    color: isSelected ? null : AppColors.cardBackground,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSelected ? Colors.white : LoginTheme.cardBorder,
+                      color: isSelected ? Colors.transparent : LoginTheme.cardBorder,
                       width: 1,
                     ),
                   ),
@@ -11707,7 +11732,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                      color: isSelected ? LoginTheme.background : InterviewTheme.textSecondary,
+                      color: isSelected ? Colors.white : InterviewTheme.textSecondary,
                     ),
                   ),
                 ),
@@ -11727,7 +11752,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
           Container(
             height: 36,
             decoration: BoxDecoration(
-              color: LoginTheme.cardBackground,
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: LoginTheme.cardBorder.withOpacity(0.5)),
             ),
@@ -11739,7 +11764,12 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                     onTap: () => setState(() => timeLimit = timeLimitOptions[index]),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.white : Colors.transparent,
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [Color(0xFF5F6674), Color(0xFF3D434E)],
+                              )
+                            : null,
+                        color: isSelected ? null : Colors.transparent,
                         borderRadius: BorderRadius.circular(9),
                       ),
                       alignment: Alignment.center,
@@ -11748,7 +11778,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                          color: isSelected ? LoginTheme.background : InterviewTheme.textSecondary,
+                          color: isSelected ? Colors.white : InterviewTheme.textSecondary,
                         ),
                       ),
                     ),
@@ -11775,7 +11805,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   Widget _buildJobSection() {
     return GlassCard(
-      backgroundColor: LoginTheme.cardBackground,
+      backgroundColor: AppColors.cardBackground,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -11798,7 +11828,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: LoginTheme.cardBackground,
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: LoginTheme.cardBorder),
             ),
@@ -11832,7 +11862,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: LoginTheme.cardBackground,
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: LoginTheme.cardBorder),
             ),
@@ -11863,7 +11893,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             decoration: BoxDecoration(
-              color: LoginTheme.cardBackground,
+              color: AppColors.cardBackground,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: LoginTheme.cardBorder),
             ),
@@ -11900,7 +11930,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
               height: 40,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
-                color: LoginTheme.cardBackground,
+                color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: LoginTheme.cardBorder),
               ),
@@ -11927,7 +11957,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   Widget _buildAdaptiveDifficulty() {
     return GlassCard(
-      backgroundColor: LoginTheme.cardBackground,
+      backgroundColor: AppColors.cardBackground,
       padding: const EdgeInsets.all(20),
       child: Row(
         children: [
@@ -11966,7 +11996,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
   Widget _buildQuestionPreferences() {
     return GlassCard(
-      backgroundColor: LoginTheme.cardBackground,
+      backgroundColor: AppColors.cardBackground,
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -12076,13 +12106,6 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
             ],
           ),
           borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-          boxShadow: [
-            BoxShadow(
-              color: InterviewTheme.accentBlue.withOpacity(0.4),
-              blurRadius: 15,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -12637,16 +12660,16 @@ class _AnimatedStepperState extends State<_AnimatedStepper>
             ),
           ),
         ),
-        // 减少按钮 - 黑白配色
+        // 减少按钮 - 银灰色渐变
         _StepperButton(
           icon: Icons.remove,
           isEnabled: canDecrement,
           onTap: _handleDecrement,
           isPrimary: false,
-          color: Colors.white,
+          useSilverGradient: true,
         ),
         const SizedBox(width: 6),
-        // 数值 - 黑白配色
+        // 数值 - 银灰色渐变
         AnimatedBuilder(
           animation: _valueAnimation,
           builder: (context, child) {
@@ -12657,10 +12680,12 @@ class _AnimatedStepperState extends State<_AnimatedStepper>
                 height: 28,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: LoginTheme.surface,
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF5F6674), Color(0xFF3D434E)],
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: LoginTheme.cardBorder,
+                    color: Colors.transparent,
                     width: 1,
                   ),
                 ),
@@ -12677,13 +12702,13 @@ class _AnimatedStepperState extends State<_AnimatedStepper>
           },
         ),
         const SizedBox(width: 6),
-        // 增加按钮 - 黑白配色
+        // 增加按钮 - 银灰色渐变
         _StepperButton(
           icon: Icons.add,
           isEnabled: canIncrement,
           onTap: _handleIncrement,
           isPrimary: true,
-          color: Colors.white,
+          useSilverGradient: true,
         ),
       ],
     );
@@ -12697,6 +12722,7 @@ class _StepperButton extends StatefulWidget {
   final VoidCallback onTap;
   final bool isPrimary;
   final Color? color;
+  final bool useSilverGradient;
 
   const _StepperButton({
     required this.icon,
@@ -12704,6 +12730,7 @@ class _StepperButton extends StatefulWidget {
     required this.onTap,
     this.isPrimary = false,
     this.color,
+    this.useSilverGradient = false,
   });
 
   @override
@@ -12764,15 +12791,19 @@ class _StepperButtonState extends State<_StepperButton>
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                gradient: widget.isEnabled && widget.isPrimary
-                    ? LinearGradient(
-                        colors: [
-                          buttonColor,
-                          buttonColor.withOpacity(0.7),
-                        ],
+                gradient: widget.useSilverGradient && widget.isEnabled
+                    ? const LinearGradient(
+                        colors: [Color(0xFF5F6674), Color(0xFF3D434E)],
                       )
-                    : null,
-                color: widget.isEnabled && !widget.isPrimary
+                    : widget.isEnabled && widget.isPrimary
+                        ? LinearGradient(
+                            colors: [
+                              buttonColor,
+                              buttonColor.withOpacity(0.7),
+                            ],
+                          )
+                        : null,
+                color: widget.isEnabled && !widget.isPrimary && !widget.useSilverGradient
                     ? LoginTheme.surface
                     : widget.isEnabled
                         ? buttonColor
@@ -12787,7 +12818,11 @@ class _StepperButtonState extends State<_StepperButton>
               child: Icon(
                 widget.icon,
                 color: widget.isEnabled
-                    ? (widget.isPrimary ? Colors.black : InterviewTheme.textSecondary)
+                    ? (widget.useSilverGradient
+                        ? Colors.white
+                        : widget.isPrimary
+                            ? Colors.black
+                            : InterviewTheme.textSecondary)
                     : InterviewTheme.textSecondary.withOpacity(0.3),
                 size: 14,
               ),
@@ -13000,44 +13035,49 @@ class ReportPage extends StatelessWidget {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => Navigator.pop(context),
+            onTap: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                TechPageTransitions.fadeScale(
+                  builder: (c) => const BubeiHomePage(),
+                ),
+                (route) => false,
+              );
+            },
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: BubeiColors.surface,
+                color: Colors.transparent,
                 borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
               ),
               child: Icon(
-                Icons.arrow_back,
-                color: BubeiColors.textPrimary,
-                size: 9.8,
+                Icons.arrow_back_ios_new,
+                color: AppColors.textSecondary,
+                size: 16,
               ),
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              "面试分析报告",
-              style: TextStyle(
-                color: BubeiColors.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+          const SizedBox(width: 12),
+          Text(
+            "面试分析报告",
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
           ),
+          const Spacer(),
           // 分享按钮
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: BubeiColors.surface,
+              color: Colors.transparent,
               borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-              border: Border.all(color: BubeiColors.border.withOpacity(0.9)),
             ),
             child: Icon(
               Icons.share_outlined,
-              color: BubeiColors.textPrimary,
-              size: 9.8,
+              color: AppColors.textSecondary,
+              size: 16,
             ),
           ),
         ],
@@ -13552,7 +13592,15 @@ class ReportPage extends StatelessWidget {
       children: [
         // 重新面试
         GestureDetector(
-          onTap: () => Navigator.pop(context),
+          onTap: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              TechPageTransitions.fadeScale(
+                builder: (c) => const BubeiHomePage(),
+              ),
+              (route) => false,
+            );
+          },
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -13584,7 +13632,13 @@ class ReportPage extends StatelessWidget {
         // 返回首页
         GestureDetector(
           onTap: () {
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            Navigator.pushAndRemoveUntil(
+              context,
+              TechPageTransitions.fadeScale(
+                builder: (c) => const BubeiHomePage(),
+              ),
+              (route) => false,
+            );
           },
           child: Container(
             width: double.infinity,

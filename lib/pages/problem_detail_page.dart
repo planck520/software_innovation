@@ -193,7 +193,8 @@ public:
 
   @override
   Widget build(BuildContext context) {
-    return PremiumStaticBackground(
+    return Container(
+      color: const Color(0xFF1a1f2c), // 与面试历史详情一致
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
@@ -204,14 +205,17 @@ public:
             _buildTabBar(),
             // TabBarView
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildProblemDetailTab(),
-                  _buildSolutionTab(),
-                  _buildCompaniesTab(),
-                  _buildSubmissionTab(),
-                ],
+              child: Container(
+                color: const Color(0xFF1a1f2c), // 与面试历史详情一致
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildProblemDetailTab(),
+                    _buildSolutionTab(),
+                    _buildCompaniesTab(),
+                    _buildSubmissionTab(),
+                  ],
+                ),
               ),
             ),
           ],

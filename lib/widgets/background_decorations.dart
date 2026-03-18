@@ -2082,7 +2082,7 @@ class _PremiumTexturePainter extends CustomPainter {
       ..shader = const LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [Color(0xFF21262F), Color(0xFF191D24), Color(0xFF14181E)],
+        colors: [Color(0xFF2A303A), Color(0xFF22272E), Color(0xFF1A1E26)],
         stops: [0.0, 0.45, 1.0],
       ).createShader(rect);
     canvas.drawRect(rect, bgPaint);
