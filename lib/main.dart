@@ -12870,11 +12870,36 @@ class ReportGeneratingPage extends StatefulWidget {
 class _ReportGeneratingPageState extends State<ReportGeneratingPage> {
   String _statusText = "AI 正在分析你的回答，请稍候...";
   bool _hasError = false;
+  double _progress = 0.0;
 
   @override
   void initState() {
     super.initState();
+    _startProgress();
     _startGeneration();
+  }
+
+  void _startProgress() {
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      setState(() => _progress = 10);
+    });
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (!mounted) return;
+      setState(() => _progress = 25);
+    });
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      setState(() => _progress = 45);
+    });
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (!mounted) return;
+      setState(() => _progress = 65);
+    });
+    Future.delayed(const Duration(milliseconds: 3000), () {
+      if (!mounted) return;
+      setState(() => _progress = 80);
+    });
   }
 
   Future<void> _startGeneration() async {
@@ -12903,6 +12928,8 @@ class _ReportGeneratingPageState extends State<ReportGeneratingPage> {
 
       if (!mounted) return;
 
+      setState(() => _progress = 100);
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (c) => ReportPage(reportData: newReport)),
@@ -12918,7 +12945,7 @@ class _ReportGeneratingPageState extends State<ReportGeneratingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return TechBackground(
+    return PremiumStaticBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
@@ -12926,12 +12953,59 @@ class _ReportGeneratingPageState extends State<ReportGeneratingPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CyberLoadingIndicator(size: 80),
-                const SizedBox(height: 24),
+                // 加载动画 - 使用BubeiColors.primary
+                SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 4,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      BubeiColors.primary.withOpacity(0.8),
+                    ),
+                    backgroundColor: BubeiColors.surfaceDim,
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // 进度百分比
+                Text(
+                  '${_progress.toInt()}%',
+                  style: TextStyle(
+                    color: BubeiColors.textPrimary,
+                    fontSize: 36,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // 进度条
+                Container(
+                  width: 280,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: BubeiColors.surfaceDim,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(3),
+                    child: LinearProgressIndicator(
+                      value: _progress / 100,
+                      backgroundColor: Colors.transparent,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        BubeiColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
                 Text(
                   "面试结果生成中...",
-                  style: AppTextStyles.headline.copyWith(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: BubeiColors.textPrimary,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -12939,16 +13013,18 @@ class _ReportGeneratingPageState extends State<ReportGeneratingPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 32.0),
                   child: Text(
                     _statusText,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.white70,
+                    style: TextStyle(
+                      color: BubeiColors.textSecondary,
+                      fontSize: 14,
                     ),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 if (_hasError) ...[
-                  const SizedBox(height: 24),
-                  TechButton(
+                  const SizedBox(height: 32),
+                  BubeiButton(
                     text: "重试生成",
+                    isSecondary: true,
                     onPressed: _startGeneration,
                   ),
                 ],
@@ -13719,6 +13795,7 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
   final ScrollController _scrollController = ScrollController();
 
   bool _recorderReady = false;
+  bool _cameraInitAttempted = false; // 防止摄像头初始化无限重试
 
   bool _isRecording = false;
   bool _isTypingMode = false;
@@ -14083,26 +14160,53 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
   }
 
   Future<void> _initEngine() async {
-    final hasPermission = await _ensureMicPermission();
-    if (!hasPermission) return;
+    // 检查麦克风权限
+    final hasMicPermission = await _ensureMicPermission();
+    if (!hasMicPermission) return;
 
+    // 初始化录音器
     if (!_recorderReady) {
       await _recorder.openRecorder();
       _recorderReady = true;
     }
+
+    // 如果已经尝试过初始化摄像头，跳过（防止模拟器中无限重试）
+    if (_cameraInitAttempted) return;
+
+    // 尝试初始化摄像头
     if (_cameras.isNotEmpty) {
-      // 查找前置摄像头
-      final frontCamera = _cameras.firstWhere(
-        (camera) => camera.lensDirection == CameraLensDirection.front,
-        orElse: () => _cameras.first,
-      );
-      _cameraController = CameraController(
-        frontCamera,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-      await _cameraController!.initialize();
-      if (mounted) setState(() {});
+      try {
+        // 检查摄像头权限
+        final cameraStatus = await Permission.camera.status;
+        if (!cameraStatus.isGranted) {
+          final result = await Permission.camera.request();
+          if (!result.isGranted) {
+            debugPrint("摄像头权限被拒绝，跳过摄像头初始化");
+            _cameraInitAttempted = true;
+            return;
+          }
+        }
+
+        // 查找前置摄像头
+        final frontCamera = _cameras.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front,
+          orElse: () => _cameras.first,
+        );
+        _cameraController = CameraController(
+          frontCamera,
+          ResolutionPreset.medium,
+          enableAudio: false,
+        );
+        await _cameraController!.initialize();
+        _cameraInitAttempted = true;
+        if (mounted) setState(() {});
+      } catch (e) {
+        debugPrint("摄像头初始化失败: $e");
+        _cameraInitAttempted = true;
+      }
+    } else {
+      debugPrint("没有可用的摄像头，跳过初始化");
+      _cameraInitAttempted = true;
     }
   }
 
@@ -14140,8 +14244,24 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
 
   Future<void> _captureAndAnalyzeEmotion() async {
     if (!mounted) return;
+
+    // 检查摄像头是否可用
     final controller = _cameraController;
-    if (controller == null || !controller.value.isInitialized || controller.value.isTakingPicture) {
+    if (controller == null) {
+      debugPrint('[Emotion] 摄像头未初始化，跳过');
+      return;
+    }
+    if (!controller.value.isInitialized) {
+      debugPrint('[Emotion] 摄像头未初始化完成，跳过');
+      return;
+    }
+    if (controller.value.isTakingPicture) {
+      debugPrint('[Emotion] 正在拍照，跳过');
+      return;
+    }
+    // 检查摄像头是否出错
+    if (controller.value.hasError) {
+      debugPrint('[Emotion] 摄像头有错误，跳过');
       return;
     }
 
@@ -14183,6 +14303,9 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
       });
     } catch (e) {
       debugPrint('[Emotion] analyzeFrame error: $e');
+      // 发生错误时停止情绪识别循环，避免模拟器环境下反复尝试
+      _emotionTimer?.cancel();
+      debugPrint('[Emotion] 发生错误，停止情绪识别循环');
     }
   }
 
@@ -14770,7 +14893,7 @@ Map<String, String> _buildSystemPrompt() {
         _showExitDialog();
         return false; // 拦截系统返回，改为弹窗确认
       },
-      child: TechBackground(
+      child: PremiumStaticBackground(
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: SafeArea(
