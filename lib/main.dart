@@ -13530,15 +13530,110 @@ class ReportPage extends StatelessWidget {
   }
 
   Widget _buildEmotionTrend() {
-    // 模拟情绪趋势数据 (Q1-Q10)
-    final emotions = [65, 70, 60, 75, 80, 72, 85, 78, 88, 82];
-    final emotionPalette = [
-      _paletteCyan,
-      _paletteCoral,
-      _paletteOrange,
-      _paletteLime,
-      _paletteMauve,
+    // 优先使用按时间采样的情绪历史，横轴为时间
+    final dynamic rawHistory = reportData['emotionHistory'];
+    List<double> history = [];
+    if (rawHistory is List) {
+      history = rawHistory
+          .map((e) => (e is num ? e.toDouble() : double.tryParse(e.toString()) ?? 0.0))
+          .map((e) => e.clamp(0.0, 100.0))
+          .toList();
+    }
+
+    // 展示用的情绪值与时间轴（单位：分钟）
+    final List<int> emotions = [];
+    final List<double> xValues = [];
+
+    if (history.isNotEmpty) {
+      const double intervalSeconds = 3.0; // 采样间隔与面试页保持一致
+      for (int i = 0; i < history.length; i++) {
+        final double tSeconds = i * intervalSeconds;
+        xValues.add(tSeconds / 60.0);
+        emotions.add(history[i].round());
+      }
+    } else {
+      // 兼容旧数据：根据按题目聚合的趋势与总时长平均展开到时间轴
+      final dynamic rawTrend = reportData['emotionTrendByQuestion'];
+      List<int> trend = [];
+      if (rawTrend is List) {
+        trend = rawTrend
+            .map((e) => (e is num ? e.round() : int.tryParse(e.toString()) ?? 0).clamp(0, 100))
+            .toList();
+      }
+      if (trend.isEmpty) {
+        final int fallbackCount =
+            ((reportData['questionCount'] as num?)?.toInt() ?? 1).clamp(1, 50);
+        final int fallbackScore =
+            ((reportData['emotionScore'] as num?)?.toInt() ?? 75).clamp(0, 100);
+        trend = List<int>.filled(fallbackCount, fallbackScore);
+      }
+
+      // 使用总时长将每个点均匀映射到时间
+      double totalMinutes = 0;
+      final String? durationStr = reportData['duration']?.toString();
+      if (durationStr != null && durationStr.contains(':')) {
+        final parts = durationStr.split(':');
+        if (parts.length == 2) {
+          final m = int.tryParse(parts[0]) ?? 0;
+          final s = int.tryParse(parts[1]) ?? 0;
+          totalMinutes = m + s / 60.0;
+        }
+      }
+
+      if (totalMinutes <= 0) {
+        for (int i = 0; i < trend.length; i++) {
+          xValues.add(i.toDouble());
+          emotions.add(trend[i]);
+        }
+      } else {
+        final int n = trend.length;
+        if (n == 1) {
+          xValues.add(0.0);
+          emotions.add(trend.first);
+        } else {
+          final double stepMinutes = totalMinutes / (n - 1);
+          for (int i = 0; i < n; i++) {
+            xValues.add(i * stepMinutes);
+            emotions.add(trend[i]);
+          }
+        }
+      }
+    }
+
+    if (emotions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final emotionSpots = [
+      for (int i = 0; i < emotions.length; i++)
+        FlSpot((i < xValues.length ? xValues[i] : i.toDouble()), emotions[i].toDouble()),
     ];
+
+    final rawFitSpots = _buildLinearFitSpots(emotions);
+    final fitSpots = [
+      for (int i = 0; i < rawFitSpots.length; i++)
+        FlSpot(
+          (i < xValues.length ? xValues[i] : rawFitSpots[i].x),
+          rawFitSpots[i].y,
+        ),
+    ];
+
+    final double maxX;
+    if (xValues.isNotEmpty) {
+      maxX = xValues.last > 0 ? xValues.last : 1.0;
+    } else {
+      maxX = emotions.length > 1 ? (emotions.length - 1).toDouble() : 1.0;
+    }
+
+    // 根据总时长选择合适的刻度间隔（单位：分钟）
+    double labelInterval;
+    if (maxX <= 5) {
+      labelInterval = 1;
+    } else if (maxX <= 15) {
+      labelInterval = 5;
+    } else {
+      labelInterval = 10;
+    }
 
     return _buildPanelCard(
       child: Column(
@@ -13549,74 +13644,110 @@ class ReportPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: _paletteMauve.withOpacity(0.18),
+                  color: AppColors.cyberPurple.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
-                  Icons.show_chart,
-                  color: _paletteMauve,
-                  size: 12.6,
-                ),
+                child: const Icon(Icons.show_chart, color: AppColors.cyberPurple, size: 12.6),
               ),
               const SizedBox(width: 12),
-              Text(
-                "情绪趋势",
-                style: AppTextStyles.title.copyWith(color: BubeiColors.textPrimary),
-              ),
+              Text("情绪趋势", style: AppTextStyles.title.copyWith(color: BubeiColors.textPrimary)),
             ],
           ),
           const SizedBox(height: 20),
-          // 柱状图
+          // 原始情绪折线 + 拟合趋势线
           SizedBox(
-            height: 120,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: emotions.asMap().entries.map((entry) {
-                final index = entry.key;
-                final value = entry.value;
-                final normalizedHeight = (value / 100) * 100;
-                final barColor = emotionPalette[index % emotionPalette.length];
-
-                return Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: normalizedHeight),
-                          duration: Duration(milliseconds: 800 + index * 100),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, animValue, child) {
-                            return Container(
-                              height: animValue,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    _paletteDark,
-                                    barColor,
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Q${index + 1}",
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: BubeiColors.textTertiary,
-                          ),
-                        ),
-                      ],
+            height: 180,
+            child: LineChart(
+              LineChartData(
+                minX: 0,
+                maxX: maxX,
+                minY: 0,
+                maxY: 100,
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: 20,
+                  getDrawingHorizontalLine: (_) {
+                    return FlLine(color: BubeiColors.border.withOpacity(0.25), strokeWidth: 1);
+                  },
+                ),
+                borderData: FlBorderData(
+                  show: true,
+                  border: Border.all(color: BubeiColors.border.withOpacity(0.35)),
+                ),
+                titlesData: FlTitlesData(
+                  topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: 20,
+                      reservedSize: 30,
+                      getTitlesWidget: (value, meta) => Text(
+                        value.toInt().toString(),
+                        style: TextStyle(fontSize: 10, color: BubeiColors.textTertiary),
+                      ),
                     ),
                   ),
-                );
-              }).toList(),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      interval: labelInterval,
+                      getTitlesWidget: (value, meta) {
+                        if (value < 0) return const SizedBox.shrink();
+                        final minutes = value.toDouble();
+                        final int m = minutes.round();
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(
+                            '${m.toString()}分',
+                            style: TextStyle(fontSize: 10, color: BubeiColors.textTertiary),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: emotionSpots,
+                    isCurved: true,
+                    curveSmoothness: 0.22,
+                    color: AppColors.primary,
+                    barWidth: 3,
+                    dotData: FlDotData(
+                      show: true,
+                      getDotPainter: (spot, percent, barData, index) {
+                        return FlDotCirclePainter(
+                          radius: 3.2,
+                          color: AppColors.primary,
+                          strokeWidth: 1,
+                          strokeColor: BubeiColors.surface,
+                        );
+                      },
+                    ),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppColors.primary.withOpacity(0.22),
+                          AppColors.primary.withOpacity(0.02),
+                        ],
+                      ),
+                    ),
+                  ),
+                  LineChartBarData(
+                    spots: fitSpots,
+                    isCurved: false,
+                    color: AppColors.cyberPurple,
+                    barWidth: 2,
+                    dashArray: const [6, 4],
+                    dotData: const FlDotData(show: false),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -13624,7 +13755,115 @@ class ReportPage extends StatelessWidget {
     );
   }
 
+  List<FlSpot> _buildLinearFitSpots(List<int> values) {
+    if (values.isEmpty) return const [];
+    if (values.length == 1) return [FlSpot(0, values.first.toDouble())];
+
+    final n = values.length.toDouble();
+    double sumX = 0;
+    double sumY = 0;
+    double sumXY = 0;
+    double sumXX = 0;
+
+    for (int i = 0; i < values.length; i++) {
+      final x = i.toDouble();
+      final y = values[i].toDouble();
+      sumX += x;
+      sumY += y;
+      sumXY += x * y;
+      sumXX += x * x;
+    }
+
+    final denominator = (n * sumXX - sumX * sumX);
+    final slope = denominator == 0 ? 0.0 : (n * sumXY - sumX * sumY) / denominator;
+    final intercept = denominator == 0 ? values.first.toDouble() : (sumY - slope * sumX) / n;
+
+    return [
+      for (int i = 0; i < values.length; i++)
+        FlSpot(i.toDouble(), slope * i + intercept),
+    ];
+  }
+
   Widget _buildAIDiagnosis() {
+    final String feedback = reportData['feedback']?.toString() ?? '';
+    final dynamic rawCore = reportData['coreStrengths'];
+    final dynamic rawImprove = reportData['improvementPoints'];
+
+    List<String> _splitItems(String text) {
+      if (text.isEmpty) return [];
+      return text
+          .split(RegExp(r'[；;.。]'))
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+
+    List<String> _readListField(dynamic value) {
+      if (value is! List) return [];
+      return value
+          .map((e) => e.toString().trim())
+          .map((e) => e.replaceFirst(RegExp(r'^[0-9]+[.)、]\s*'), '').trim())
+          .where((e) => e.isNotEmpty)
+          .take(3)
+          .toList();
+    }
+
+    List<String> _buildFallbackFromQa(bool isImprove) {
+      final qa = reportData['qaDetails'];
+      if (qa is! List) return [];
+      final result = <String>[];
+      for (final item in qa) {
+        if (item is! Map) continue;
+        final q = (item['question'] ?? '').toString().trim();
+        final a = (item['answer'] ?? '').toString().trim();
+        if (q.isEmpty || a.isEmpty) continue;
+        final answerSnippet = a.length > 34 ? '${a.substring(0, 34)}...' : a;
+        if (isImprove) {
+          result.add('在"$q"这题中，可补充量化结果与个人职责。当前回答：$answerSnippet');
+        } else {
+          result.add('在"$q"这题中给出了具体思路：$answerSnippet');
+        }
+        if (result.length >= 3) break;
+      }
+      return result;
+    }
+
+    String coreStrengthsText = '';
+    String improvementText = '';
+    if (feedback.isNotEmpty) {
+      final lines = feedback.split('\n');
+      for (final line in lines) {
+        if (line.contains('核心优势')) {
+          coreStrengthsText = line.replaceFirst('核心优势：', '').trim();
+        } else if (line.contains('待提升点')) {
+          improvementText = line.replaceFirst('待提升点：', '').trim();
+        }
+      }
+    }
+
+    final defaultCoreItems = [
+      "技术基础扎实，算法理解深入",
+      "表达清晰，逻辑性强",
+      "应变能力好，抗压性高",
+    ];
+    final defaultImproveItems = [
+      "项目经验描述可以更具体",
+      "行业知识面可进一步拓宽",
+      "部分回答可以更加简洁",
+    ];
+
+    final coreItemsFromList = _readListField(rawCore);
+    final improveItemsFromList = _readListField(rawImprove);
+    final coreItemsFromFeedback = _splitItems(coreStrengthsText);
+    final improveItemsFromFeedback = _splitItems(improvementText);
+
+    final coreItems = coreItemsFromList.isNotEmpty
+      ? coreItemsFromList
+      : (coreItemsFromFeedback.isNotEmpty ? coreItemsFromFeedback : _buildFallbackFromQa(false));
+    final improveItems = improveItemsFromList.isNotEmpty
+      ? improveItemsFromList
+      : (improveItemsFromFeedback.isNotEmpty ? improveItemsFromFeedback : _buildFallbackFromQa(true));
+
     return Column(
       children: [
         // 核心优势 (绿色边框)
@@ -13632,7 +13871,7 @@ class ReportPage extends StatelessWidget {
           title: "核心优势",
           icon: Icons.check_circle_outline,
           color: const Color(0xFF10B981),
-          items: ["技术基础扎实，算法理解深入", "表达清晰，逻辑性强", "应变能力好，抗压性高"],
+          items: coreItems.isNotEmpty ? coreItems : defaultCoreItems,
         ),
         const SizedBox(height: 16),
         // 待提升点 (琥珀色边框)
@@ -13640,7 +13879,7 @@ class ReportPage extends StatelessWidget {
           title: "待提升点",
           icon: Icons.lightbulb_outline,
           color: const Color(0xFFF59E0B),
-          items: ["项目经验描述可以更具体", "行业知识面可进一步拓宽", "部分回答可以更加简洁"],
+          items: improveItems.isNotEmpty ? improveItems : defaultImproveItems,
         ),
       ],
     );
@@ -13858,7 +14097,7 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
     if (q.isEmpty) return;
     if (!_skippedQuestions.contains(q)) _skippedQuestions.add(q);
   }
-  // 在AI回复后，若内容与跳过题目高度相关则自动替换为“请换新题”
+  // 在AI回复后，若内容与跳过题目高度相关则自动替换为"请换新题"
   String _filterSkippedQuestions(String content) {
     for (final q in _skippedQuestions) {
       if (q.isEmpty) continue;
@@ -14569,7 +14808,18 @@ Map<String, String> _buildSystemPrompt() {
   final String naturalEndPolicy =
       '当你判断可以自然结束本轮面试时，请先用1-3句话对候选人本次表现做口头总结，然后在回复的最后一行严格输出："${_kNaturalEndMarker}"，不得修改这句话中的任何文字、标点或顺序。输出该行后不要再提出新的问题。';
   final String antiReversePolicy =
-      '如果候选人反问面试官（如“你们公司技术栈是什么？”、“你怎么看XX？”、“你们团队氛围如何？”等），请不要直接回答，而是简要回应“相关信息可在正式面试后进一步交流”，并引导回面试主题。不要输出具体答案。';
+      '如果候选人反问面试官（如"你们公司技术栈是什么？"、"你怎么看XX？"、"你们团队氛围如何？"等），请不要直接回答，而是简要回应"相关信息可在正式面试后进一步交流"，并引导回面试主题。不要输出具体答案。';
+
+  // 第1个大问题（自我介绍+项目经历）的特殊追问限制
+  String introFollowUpPolicy = '';
+  if (currentMainNumber == 1) {
+    final int projectFollowUpCount = currentSubQuestionCount;
+    if (projectFollowUpCount >= 3) {
+      introFollowUpPolicy = '【重要】第1个大问题已追问$projectFollowUpCount次（含项目经历），已达项目追问上限3次。必须立即使用 [FLOW]MAIN|SUBJECTIVE 开启新的主观题大问题，严禁继续追问项目细节！';
+    } else {
+      introFollowUpPolicy = '第1个大问题（自我介绍+项目经历）当前已追问$currentSubQuestionCount次，最多允许追问3次项目细节，达到上限后必须进入下一题。';
+    }
+  }
 
   return {
     "role": "system",
@@ -14584,6 +14834,7 @@ Map<String, String> _buildSystemPrompt() {
         "$codePolicy"
         "$skipPolicy"
         "$hintPolicy"
+        "$introFollowUpPolicy"
         "面试采用大问题/小问题结构：第1个大问题固定为自我介绍（含项目经历），项目追问最多3轮，整体每个大问题最多10个针对性追问。"
         "第1个大问题围绕候选人介绍与项目经历能力深挖，但项目追问最多3轮（简介为主，避免过度展开）；后续大问题由主观题、客观题、算法题组成。"
         "主观题和客观题可以使用题库题或你自拟；算法题必须来自题库。"
