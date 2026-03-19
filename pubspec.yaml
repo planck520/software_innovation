@@ -50,6 +50,7 @@ dependencies:
   re_editor: ^0.7.0
   re_highlight: ^0.0.3
   http: ^1.2.0
+  image: ^4.0.0  # 图片压缩
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

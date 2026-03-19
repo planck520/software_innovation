@@ -1,0 +1,43 @@
+========================================
+情绪识别模型本地化 - 快速参考
+========================================
+
+【本地操作】
+1. 运行下载脚本：
+   python download_model.py
+
+2. 上传模型到服务器：
+   scp -r ~/.cache/huggingface/hub/models--dima806--facial_emotions_image_detection \
+       root@服务器IP:/root/.cache/huggingface/hub/
+
+3. 上传服务文件到服务器：
+   scp emotion_detector_server.py run_server.py start_emotion_server.sh \
+       root@服务器IP:/root/
+
+【服务器操作】
+4. 启动服务：
+   python run_server.py
+
+5. 验证服务：
+   curl http://localhost:5000/health
+
+========================================
+预期输出：
+{
+  "status": "ok",
+  "model_loaded": true,
+  "service": "emotion_detector"
+}
+========================================
+
+【注意事项】
+- 模型大小：约 200-300MB
+- 确保服务器安装了 Python 依赖
+- 首次启动可能需要几分钟加载模型
+- 确保防火墙开放 5000 端口
+
+【依赖安装】
+pip install torch transformers flask flask-cors pillow \
+    websocket-client numpy opencv-python
+
+========================================

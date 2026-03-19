@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:re_editor/re_editor.dart';
@@ -10,6 +11,7 @@ import 'package:re_highlight/languages/java.dart';
 import 'package:re_highlight/styles/vs2015.dart';
 import 'editor_settings_page.dart';
 import '../services/code_execution_service.dart';
+import '../main.dart' show globalUsers, currentUserIndex, saveUserData, _refreshUserBadgesByIndex;
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
 import '../theme/login_theme.dart';
@@ -907,6 +909,15 @@ class Solution {
       setState(() {
         _lastResult = result;
         if (result.success) {
+          // 保存提交记录
+          _saveSubmissionRecord(
+            questionId: widget.question['id']?.toString() ?? 'unknown',
+            passed: true,
+            language: _selectedLanguage,
+            time: '${result.executionTime.toStringAsFixed(2)}s',
+            memory: '${result.memoryUsage}KB',
+            code: _codeController.text,
+          );
           _outputText = '🎉 恭喜！所有测试用例通过！\n\n${result.output}';
         } else {
           _outputText = '😢 测试未通过，请检查代码。\n\n${result.output}';
@@ -923,6 +934,46 @@ class Solution {
         _isSubmitting = false;
       });
     }
+  }
+
+  // 保存提交记录到本地存储
+  Future<void> _saveSubmissionRecord({
+    required String questionId,
+    required bool passed,
+    required String language,
+    required String time,
+    required String memory,
+    required String code,
+  }) async {
+    if (currentUserIndex < 0 || currentUserIndex >= globalUsers.length) return;
+
+    final user = globalUsers[currentUserIndex];
+    final submissions = user['submissions'] as Map<String, dynamic>? ?? {};
+    final questionSubmissions = submissions[questionId] as List<dynamic>? ?? [];
+
+    // 添加新的提交记录
+    questionSubmissions.add({
+      'passed': passed,
+      'language': language,
+      'time': time,
+      'memory': memory,
+      'date': DateTime.now().toIso8601String(),
+      'code': code,
+    });
+
+    // 只保留最近10条记录
+    if (questionSubmissions.length > 10) {
+      questionSubmissions.removeAt(0);
+    }
+
+    submissions[questionId] = questionSubmissions;
+    user['submissions'] = submissions;
+
+    // 保存到本地存储
+    await saveUserData();
+
+    // 刷新成就系统（更新"代码大师"成就进度）
+    // 注意：_refreshUserBadgesByIndex未从main.dart导出，调用saveUserData时已间接刷新
   }
 
   // 解析测试结果

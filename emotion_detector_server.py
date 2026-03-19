@@ -48,23 +48,28 @@ EMOTION_CHINESE_MAP = {
 def init_emotion_model():
     """初始化情感检测模型"""
     global emotion_classifier
-    
+
+    # 添加这行：指定本地模型路径
+    model_path = "/root/.cache/huggingface/hub/models--dima806--facial_emotions_image_detection"
+
     try:
         model_name = "dima806/facial_emotions_image_detection"
         device = 0 if torch.cuda.is_available() else -1
-        
+
         logger.info(f"正在加载情感检测模型: {model_name}")
         logger.info(f"使用设备: {'GPU' if device == 0 else 'CPU'}")
-        
+
+        # 使用 local_files_only=True 确保从本地加载
         emotion_classifier = pipeline(
             "image-classification",
-            model=model_name,
-            device=device
+            model=model_path if os.path.exists(model_path) else model_name,
+            device=device,
+            local_files_only=True  # 新增：强制从本地加载
         )
-        
+
         logger.info("✅ 情感检测模型加载成功!")
         return True
-        
+
     except Exception as e:
         logger.error(f"❌ 加载情感检测模型失败: {e}")
         return False

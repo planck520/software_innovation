@@ -69,6 +69,7 @@ List<Map<String, dynamic>> globalUsers = [
     "avatarPath": null,
     "history": <Map<String, dynamic>>[], // 明确指定类型
     "badges": _createDefaultBadges(),
+    "submissions": <String, List<Map<String, dynamic>>>{},  // 新增提交记录字段
   },
   {
     "username": "huster",
@@ -77,6 +78,7 @@ List<Map<String, dynamic>> globalUsers = [
     "avatarPath": null,
     "history": <Map<String, dynamic>>[], // 明确指定类型
     "badges": _createDefaultBadges(),
+    "submissions": <String, List<Map<String, dynamic>>>{},  // 新增提交记录字段
   },
 ];
 
@@ -317,6 +319,30 @@ int _currentMonthInterviewDays(List<DateTime> sortedUniqueDays) {
       .length;
 }
 
+/// 获取用户第100次通过代码提交的日期
+DateTime? _getLastCodeSubmissionDate(Map<String, dynamic> submissions) {
+  List<DateTime> allDates = [];
+
+  submissions.forEach((key, value) {
+    if (value is List) {
+      for (var sub in value) {
+        if (sub is Map && sub['passed'] == true && sub['date'] is String) {
+          try {
+            final date = DateTime.parse(sub['date']);
+            allDates.add(date);
+          } catch (e) {
+            // 忽略解析错误
+          }
+        }
+      }
+    }
+  });
+
+  if (allDates.isEmpty) return null;
+  allDates.sort((a, b) => a.compareTo(b));
+  return allDates.length >= 100 ? allDates[99] : null;
+}
+
 void _refreshUserBadgesByIndex(int userIndex) {
   if (userIndex < 0 || userIndex >= globalUsers.length) {
     return;
@@ -437,14 +463,30 @@ void _refreshUserBadgesByIndex(int userIndex) {
     date: fullAttendanceDate,
   );
 
-  final codeMasterObtained = existingObtained('代码大师');
-  final codeMasterDate = existingDate('代码大师');
+  // 计算用户实际提交的代码题目数量（只计算通过的提交）
+  int totalCodeSubmissions = 0;
+  final submissions = user['submissions'] as Map<String, dynamic>? ?? {};
+  submissions.forEach((key, value) {
+    if (value is List && value.isNotEmpty) {
+      // 只计算通过的提交
+      final passedSubmissions = value.where((sub) => sub['passed'] == true).length;
+      totalCodeSubmissions += passedSubmissions;
+    }
+  });
+
+  final codeMasterReachedDate = totalCodeSubmissions >= 100
+      ? _getLastCodeSubmissionDate(submissions)
+      : null;
+  final codeMasterObtained = existingObtained('代码大师') || totalCodeSubmissions >= 100;
+  final codeMasterDate = existingDate('代码大师').isNotEmpty
+      ? existingDate('代码大师')
+      : (codeMasterReachedDate == null ? '' : _fmtDay(codeMasterReachedDate));
   updateBadge(
     name: '代码大师',
     obtained: codeMasterObtained,
     progress: codeMasterObtained
         ? (codeMasterDate.isNotEmpty ? '已完成于 $codeMasterDate' : '已完成')
-        : '当前进度: 78/100',
+        : '当前进度: ${totalCodeSubmissions.clamp(0, 100)}/100',
     date: codeMasterDate,
   );
 
@@ -798,6 +840,13 @@ Future<void> loadUserData() async {
     List<dynamic> decoded = jsonDecode(jsonStr);
     // 还原 globalUsers
     globalUsers = List<Map<String, dynamic>>.from(decoded);
+
+    // 兼容性处理：确保所有用户都有 submissions 字段
+    for (var user in globalUsers) {
+      if (!user.containsKey('submissions')) {
+        user['submissions'] = <String, List<Map<String, dynamic>>>{};
+      }
+    }
   }
 
   bool changed = false;
@@ -14266,20 +14315,33 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
     }
 
     try {
+      debugPrint('[Emotion] === 开始情绪识别 ===');
+      debugPrint('[Emotion] 情绪会话ID: $_emotionSessionId');
       debugPrint('[Emotion] capturing frame...');
+
       final frame = await controller.takePicture();
       final bytes = await frame.readAsBytes();
+      debugPrint('[Emotion] 图片大小: ${bytes.length} bytes');
+
+      debugPrint('[Emotion] 调用腾讯云 API...');
       final result = await _emotionService.analyzeFrame(
         sessionId: _emotionSessionId.isEmpty
             ? DateTime.now().millisecondsSinceEpoch.toString()
             : _emotionSessionId,
         imageBytes: bytes,
       );
+
       if (!mounted) return;
+
       if (result == null) {
-        debugPrint('[Emotion] analyzeFrame returned null');
+        debugPrint('[Emotion] ❌ API 返回 null - 可能是网络问题或未检测到人脸');
+        debugPrint('[Emotion] 继续下一次检测...');
         return;
       }
+
+      debugPrint('[Emotion] ✅ 识别成功!');
+      debugPrint('[Emotion] 情绪: ${result.chineseEmotion}');
+      debugPrint('[Emotion] 置信度: ${result.confidence}');
 
       setState(() {
         final c = result.confidence.clamp(0.0, 1.0);
@@ -14301,11 +14363,13 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
           _emotionStatus = "波动较大";
         }
       });
-    } catch (e) {
-      debugPrint('[Emotion] analyzeFrame error: $e');
-      // 发生错误时停止情绪识别循环，避免模拟器环境下反复尝试
-      _emotionTimer?.cancel();
-      debugPrint('[Emotion] 发生错误，停止情绪识别循环');
+
+      debugPrint('[Emotion] UI 更新完成 - 情绪分数: $_emotionScore, 状态: $_emotionStatus');
+    } catch (e, stackTrace) {
+      debugPrint('[Emotion] ❌ 发生错误: $e');
+      debugPrint('[Emotion] 堆栈: $stackTrace');
+      // 不再停止循环，让情绪识别继续尝试
+      debugPrint('[Emotion] 继续下一次检测...');
     }
   }
 

@@ -1,7 +1,6 @@
-import 'dart:convert';
 import 'dart:typed_data';
-
-import 'package:http/http.dart' as http;
+import 'package:software_innovation/services/tencent_face_service.dart';
+import 'package:software_innovation/utils/image_compressor.dart';
 
 /// 情绪分析结果模型
 class EmotionResult {
@@ -36,43 +35,51 @@ class EmotionResult {
   }
 }
 
-/// 调用情绪/表情检测微服务的客户端
+/// 调用情绪/表情检测的服务客户端
 ///
-/// 默认假设服务运行在 http://localhost:5000
+/// 现在使用腾讯云 API 进行情绪识别
 class EmotionService {
-  final String baseUrl; // 例如 http://192.168.1.10:5000
+  late final TencentFaceService tencentService;
 
-  const EmotionService({this.baseUrl = 'http://localhost:5000'});
+  EmotionService({
+    String? accessKeyId,
+    String? accessKeySecret,
+    String? baseUrl, // 保留此参数以兼容旧代码，但不再使用
+  }) {
+    final finalKeyId = accessKeyId;
+    final finalSecret = accessKeySecret;
+    tencentService = TencentFaceService(
+      secretId: finalKeyId,
+      secretKey: finalSecret,
+    );
+  }
 
-  /// 调用 /analyze_frame 接口
-  /// [sessionId] 用于和主系统的面试会话绑定，可以任意字符串
-  /// [imageBytes] 是一帧图片（如相机截图）的二进制数据
+  /// 分析视频帧情绪（使用腾讯云 API）
   Future<EmotionResult?> analyzeFrame({
     required String sessionId,
     required Uint8List imageBytes,
   }) async {
-    final url = Uri.parse('$baseUrl/analyze_frame');
-    final b64 = base64Encode(imageBytes);
+    try {
+      // 压缩图片
+      final compressed = await ImageCompressor.compress(imageBytes);
 
-    final resp = await http.post(
-      url,
-      headers: const {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'session_id': sessionId,
-        'frame_data': b64,
-      }),
-    );
+      // 调用腾讯云 API
+      final result = await tencentService.detectFaceAttributes(compressed);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Emotion server error: ${resp.statusCode} ${resp.body}');
+      if (result != null) {
+        return EmotionResult(
+          emotion: result.emotion,
+          confidence: result.confidence,
+          chineseEmotion: result.chineseEmotion,
+          allEmotions: result.allEmotions,
+        );
+      }
+
+      // 静默失败
+      return null;
+    } catch (e) {
+      print('情绪分析失败: $e');
+      return null;
     }
-
-    final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final success = data['success'] as bool? ?? false;
-    if (!success) {
-      return null; // 或者抛出异常，看你如何处理失败
-    }
-
-    return EmotionResult.fromJson(data);
   }
 }

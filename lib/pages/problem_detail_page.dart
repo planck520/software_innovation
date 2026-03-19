@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'code_editor_page.dart';
 import 'package:flutter/services.dart';
+import '../main.dart' show globalUsers, currentUserIndex;
+import '../theme/app_colors.dart';
 import '../theme/bubei_colors.dart';
 import '../theme/app_tokens.dart';
 import '../theme/login_theme.dart';
@@ -194,7 +196,7 @@ public:
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1a1f2c), // 与面试历史详情一致
+      color: const Color(0xFF2A2A2A), // 灰色系背景
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Column(
@@ -206,7 +208,7 @@ public:
             // TabBarView
             Expanded(
               child: Container(
-                color: const Color(0xFF1a1f2c), // 与面试历史详情一致
+                color: const Color(0xFF2A2A2A), // 灰色系背景
                 child: TabBarView(
                   controller: _tabController,
                   children: [
@@ -347,20 +349,20 @@ public:
     );
   }
 
-  // 返回按钮（带滑动返回动画效果）
+  // 返回按钮（面试历史样式）
   Widget _buildBackButton() {
     return GestureDetector(
       onTap: () => Navigator.pop(context),
       child: Container(
         padding: const EdgeInsets.all(8),
-        decoration: const BoxDecoration(
-          color: Color(0xFF3A3A3A),
-          shape: BoxShape.circle,
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTokens.radiusSm),
         ),
-        child: const Icon(
-          Icons.arrow_back,
-          color: Colors.white,
-          size: 20,
+        child: Icon(
+          Icons.arrow_back_ios_new,
+          color: AppColors.textSecondary,
+          size: 16,
         ),
       ),
     );
@@ -1328,8 +1330,15 @@ public:
 
   // 构建提交记录标签页
   Widget _buildSubmissionTab() {
+    // 获取当前题目的提交记录
+    final questionId = widget.question['id']?.toString() ?? '';
+    final localSubmissions = _getLocalSubmissions(questionId);
+
+    // 如果没有本地记录，使用模拟数据（向后兼容）
     final submissions = widget.question['submissions'] as List<dynamic>?;
-    final mockSubmissions = submissions ?? _getMockSubmissions();
+    final mockSubmissions = localSubmissions.isNotEmpty
+        ? localSubmissions
+        : (submissions ?? _getMockSubmissions());
 
     // 计算统计数据
     final totalSubmissions = mockSubmissions.length;
@@ -2127,6 +2136,52 @@ public:
     final difficulty = widget.question['difficulty'] ?? '中等';
 
     return CompanyDatabase.getRelatedCompanies(tagStrings, difficulty);
+  }
+
+  // 读取本地提交记录
+  List<Map<String, dynamic>> _getLocalSubmissions(String questionId) {
+    if (currentUserIndex < 0 || currentUserIndex >= globalUsers.length) {
+      return [];
+    }
+
+    final user = globalUsers[currentUserIndex];
+    final submissions = user['submissions'] as Map<String, dynamic>? ?? {};
+    final questionSubmissions = submissions[questionId] as List<dynamic>? ?? [];
+
+    // 格式化日期显示
+    return questionSubmissions.map<Map<String, dynamic>>((submission) {
+      final dateStr = submission['date'] as String? ?? '';
+      String formattedDate = '刚刚';
+
+      if (dateStr.isNotEmpty) {
+        try {
+          final date = DateTime.parse(dateStr);
+          final now = DateTime.now();
+          final diff = now.difference(date);
+
+          if (diff.inMinutes < 1) {
+            formattedDate = '刚刚';
+          } else if (diff.inHours < 1) {
+            formattedDate = '${diff.inMinutes}分钟前';
+          } else if (diff.inDays < 1) {
+            formattedDate = '${diff.inHours}小时前';
+          } else if (diff.inDays == 1) {
+            formattedDate = '昨天';
+          } else {
+            formattedDate = '${diff.inDays}天前';
+          }
+        } catch (e) {
+          formattedDate = dateStr;
+        }
+      }
+
+      return {
+        'passed': submission['passed'] ?? false,
+        'language': submission['language'] ?? 'Python',
+        'time': submission['time'] ?? 'N/A',
+        'date': formattedDate,
+      };
+    }).toList();
   }
 
   // 获取模拟提交记录
