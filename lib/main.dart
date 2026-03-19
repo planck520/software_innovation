@@ -14810,14 +14810,14 @@ Map<String, String> _buildSystemPrompt() {
   final String antiReversePolicy =
       '如果候选人反问面试官（如"你们公司技术栈是什么？"、"你怎么看XX？"、"你们团队氛围如何？"等），请不要直接回答，而是简要回应"相关信息可在正式面试后进一步交流"，并引导回面试主题。不要输出具体答案。';
 
-  // 第1个大问题（自我介绍+项目经历）的特殊追问限制
-  String introFollowUpPolicy = '';
+  // 第1个大问题的追问策略：区分项目经历与技术细节
+  String projectFollowUpStrategy = '';
   if (currentMainNumber == 1) {
-    final int projectFollowUpCount = currentSubQuestionCount;
-    if (projectFollowUpCount >= 3) {
-      introFollowUpPolicy = '【重要】第1个大问题已追问$projectFollowUpCount次（含项目经历），已达项目追问上限3次。必须立即使用 [FLOW]MAIN|SUBJECTIVE 开启新的主观题大问题，严禁继续追问项目细节！';
+    final int followUpCount = currentSubQuestionCount;
+    if (followUpCount >= 3) {
+      projectFollowUpStrategy = '【第1大问题追问策略】当前已追问$followUpCount次。关于项目经历的背景介绍、业务场景等已足够，请转向技术细节深挖（如技术选型原因、架构设计、难点解决、性能优化等），不要继续询问项目背景。';
     } else {
-      introFollowUpPolicy = '第1个大问题（自我介绍+项目经历）当前已追问$currentSubQuestionCount次，最多允许追问3次项目细节，达到上限后必须进入下一题。';
+      projectFollowUpStrategy = '【第1大问题追问策略】当前已追问$followUpCount次。前3轮可了解项目背景，但应优先深入技术实现细节（技术栈、架构、难点、优化等），避免过度关注业务描述。';
     }
   }
 
@@ -14834,9 +14834,9 @@ Map<String, String> _buildSystemPrompt() {
         "$codePolicy"
         "$skipPolicy"
         "$hintPolicy"
-        "$introFollowUpPolicy"
-        "面试采用大问题/小问题结构：第1个大问题固定为自我介绍（含项目经历），项目追问最多3轮，整体每个大问题最多10个针对性追问。"
-        "第1个大问题围绕候选人介绍与项目经历能力深挖，但项目追问最多3轮（简介为主，避免过度展开）；后续大问题由主观题、客观题、算法题组成。"
+        "$projectFollowUpStrategy"
+        "面试采用大问题/小问题结构：第1个大问题固定为自我介绍（含项目经历），整体每个大问题最多10个针对性追问。"
+        "第1个大问题要深挖技术能力：前3轮可了解项目背景，但应优先追问技术实现细节（技术栈、架构设计、核心难点、性能优化、代码实现等），避免过度关注业务描述。"
         "主观题和客观题可以使用题库题或你自拟；算法题必须来自题库。"
         "当前进度：当前处于第$currentMainNumber/$_totalQuestions个大问题，已完成$completedMainCount个大问题，当前大问题追问$currentSubQuestionCount/$_maxSubQuestionsPerMain，剩余大问题槽位$remainingSlots。"
         "类型进度：主观$subjectiveDone/$targetSubjective，客观$objectiveDone/$targetObjective，算法$algorithmDone/$targetAlgorithm。"
