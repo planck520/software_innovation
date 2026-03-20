@@ -15222,6 +15222,8 @@ Map<String, String> _buildSystemPrompt() {
               children: [
                 // 顶部状态栏
                 _buildHeader(),
+                // 控制按钮栏
+                _buildControlBar(),
                 // 视频预览区 + 当前问题 + 情绪曲线
                 _buildVideoSection(),
                 // 聊天区
@@ -15238,120 +15240,133 @@ Map<String, String> _buildSystemPrompt() {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        border: Border(bottom: BorderSide(color: AppColors.border.withOpacity(0.3))),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        color: Color(0xFF232323),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // 第一行：返回 + 标题 + 总时长
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () => _showExitDialog(),
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceDim,
-                    borderRadius: BorderRadius.circular(AppTokens.radiusSm),
-                  ),
-                  child: Icon(Icons.arrow_back, color: AppColors.textPrimary, size: 12.6),
-                ),
+          // 返回按钮
+          GestureDetector(
+            onTap: () => _showExitDialog(),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(AppTokens.radiusSm),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.job,
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                    ),
-                    Text(
-                      "${widget.interviewerType} · 进行中",
-                      style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
-                    ),
-                  ],
-                ),
+              child: Icon(
+                Icons.arrow_back_ios_new,
+                color: AppColors.textSecondary,
+                size: 16,
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.timer_outlined, color: AppColors.primary, size: 8.4),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formattedTime,
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          // 第二行：本题倒计时 + 跳过本题 + 结束
-          Row(
-            children: [
-              if (_questionRemainingSeconds != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.cyberPurple.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-                  ),
-                  child: Text(
-                    '本题 ${_formatRemainingTime()}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.cyberPurple,
-                    ),
-                  ),
+          const SizedBox(width: 8),
+          // 标题
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  widget.job,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-              const Spacer(),
-              if (widget.allowSkipQuestions)
-                GestureDetector(
-                  onTap: _skipCurrentQuestionManually,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-                    ),
-                    child: Text(
-                      '跳过本题',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.info,
-                      ),
-                    ),
-                  ),
+                Text(
+                  "${widget.interviewerType} · 进行中",
+                  style: TextStyle(fontSize: 10, color: AppColors.textTertiary),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-              if (widget.allowSkipQuestions) const SizedBox(width: 8),
-              GestureDetector(
-                onTap: _finishInterview,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.error.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppTokens.radiusFull),
-                  ),
-                  child: Text(
-                    "结束",
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.error),
+              ],
+            ),
+          ),
+          // 总时长（右上角）
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTokens.radiusFull),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.timer_outlined, color: AppColors.primary, size: 14),
+                const SizedBox(width: 4),
+                Text(
+                  _formattedTime,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 控制按钮栏（标题栏下方）
+  Widget _buildControlBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          // 本题剩余时间
+          if (_questionRemainingSeconds != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                '本题 ${_formatRemainingTime()}',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          const Spacer(),
+          // 跳过本题
+          if (widget.allowSkipQuestions)
+            GestureDetector(
+              onTap: _skipCurrentQuestionManually,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  '跳过本题',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
                 ),
               ),
-            ],
+            ),
+          if (widget.allowSkipQuestions) const SizedBox(width: 10),
+          // 结束按钮
+          GestureDetector(
+            onTap: _finishInterview,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                "结束",
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.error),
+              ),
+            ),
           ),
         ],
       ),
@@ -15413,11 +15428,6 @@ Map<String, String> _buildSystemPrompt() {
                       ),
                     ),
             ),
-            // 角标装饰
-            _buildCornerMark(Alignment.topLeft),
-            _buildCornerMark(Alignment.topRight),
-            _buildCornerMark(Alignment.bottomLeft),
-            _buildCornerMark(Alignment.bottomRight),
             // 右上角 - 迷你情绪曲线
             Positioned(
               right: 2,
@@ -15586,7 +15596,7 @@ Map<String, String> _buildSystemPrompt() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: AppColors.cardBackground,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(AppTokens.radiusLg),
       ),
       child: ListView.builder(
@@ -15614,8 +15624,7 @@ Map<String, String> _buildSystemPrompt() {
         ),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          gradient: isAi ? null : LinearGradient(colors: AppColors.primaryGradient),
-          color: isAi ? AppColors.surfaceDim : null,  // AI消息用深色模式感知的颜色
+          color: isAi ? AppColors.surfaceDim : const Color(0xFF2A3447),  // 用户消息用暗色
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(16),
             topRight: const Radius.circular(16),
@@ -15718,19 +15727,6 @@ Map<String, String> _buildSystemPrompt() {
                                       : Colors.white.withOpacity(0.08),
                                   width: 1.1,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: (_isRecording ? AppColors.cyberBlue : AppColors.primary).withOpacity(0.45),
-                                    blurRadius: _isRecording ? 22 : 16,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.35),
-                                    blurRadius: 18,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
                               ),
                               child: Center(
                                 child: Row(
