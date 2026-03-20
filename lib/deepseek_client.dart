@@ -1,11 +1,10 @@
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
+import 'config/env_config.dart';
 
 /// DeepSeek Chat API 客户端，统一封装大模型调用
 class DeepseekClient {
-  // 为方便演示，暂时直接写在代码里；正式环境建议改为从配置/安全存储中读取
-  static const String _apiKey = 'sk-92abdd053ad641cd971a10d8fba556d9';
+  static String get _apiKey => EnvConfig.apiKey;
   static const String _baseUrl = 'https://api.deepseek.com';
 
   /// 发送对话消息，返回完整回复文本（非流式）

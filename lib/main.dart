@@ -21,6 +21,8 @@ import 'package:permission_handler/permission_handler.dart';
 
 // 导入配置（避免循环依赖）
 import 'config/app_config.dart';
+import 'config/env_config.dart';
+import 'config/xfyun_config.dart';
 
 // 导入AI客户端和情绪服务
 import 'deepseek_client.dart';
@@ -810,6 +812,10 @@ JSON schema:
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 初始化环境变量
+  await EnvConfig.init();
+
   try {
     _cameras = await availableCameras();
   } catch (e) {
@@ -872,9 +878,9 @@ Future<void> saveThemeSetting() async {
 
 // --- 鉴权工具类 ---
 class XfAuth {
-  static const String appId = "c9945e5e";
-  static const String apiKey = "0a3dbc14d9fe900ecff024e108105748";
-  static const String apiSecret = "YWQyZDE1Y2I3MjBlNmIwMTA0OTM0ZTE1";
+  static String get appId => XfyunConfig.appId;
+  static String get apiKey => XfyunConfig.apiKey;
+  static String get apiSecret => XfyunConfig.apiSecret;
 
   static String getUrl(String hostUrl) {
     Uri uri = Uri.parse(hostUrl);

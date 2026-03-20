@@ -1,8 +1,10 @@
+import 'env_config.dart';
+
 /// 腾讯云配置
 class TencentConfig {
   // 人脸检测与属性分析 API 配置
-  static const String secretId = 'AKIDBwVu7EBzfJl2AEJMJEFBxzEVfGrKdptl';
-  static const String secretKey = 'vSoyynSvFOM8i8MODsrgO8oijlfbeZfr';
+  static String get secretId => EnvConfig.tencentSecretId;
+  static String get secretKey => EnvConfig.tencentSecretKey;
 
   // API 配置
   static const String endpoint = 'iai.tencentcloudapi.com';

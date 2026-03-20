@@ -49,3 +49,10 @@ nul
 .claude/
 temp_xrtc/
 .metadata
+
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development

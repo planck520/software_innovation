@@ -3,21 +3,18 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:intl/intl.dart';
 import 'package:web_socket_channel/io.dart';
+import 'config/xfyun_config.dart';
 
 class XfVoiceHandler {
-  final String appId = "c9945e5e";
-  final String apiKey = "0a3dbc14d9fe900ecff024e108105748";
-  final String apiSecret = "YWQyZDE1Y2I3MjBlNmIwMTA0OTM0ZTE1";
-
   IOWebSocketChannel? _channel;
 
   // 生成讯飞鉴权 URL
   String _getAuthUrl() {
     final date = DateFormat('EEE, dd MMM yyyy HH:mm:ss ' + 'GMT').format(DateTime.now().toUtc());
     final signatureOrigin = "host: iat-api.xfyun.cn\ndate: $date\nGET /v2/iat HTTP/1.1";
-    final hmacSha256 = Hmac(sha256, utf8.encode(apiSecret));
+    final hmacSha256 = Hmac(sha256, utf8.encode(XfyunConfig.apiSecret));
     final signature = base64.encode(hmacSha256.convert(utf8.encode(signatureOrigin)).bytes);
-    final authorizationOrigin = 'api_key="$apiKey", algorithm="hmac-sha256", headers="host date", signature="$signature"';
+    final authorizationOrigin = 'api_key="${XfyunConfig.apiKey}", algorithm="hmac-sha256", headers="host date", signature="$signature"';
     final authorization = base64.encode(utf8.encode(authorizationOrigin));
 
     return "wss://iat-api.xfyun.cn/v2/iat?authorization=$authorization&date=${Uri.encodeComponent(date)}&host=iat-api.xfyun.cn";
@@ -57,7 +54,7 @@ class XfVoiceHandler {
 
   void sendAudio(List<int> bytes, {int status = 1}) {
     final frame = {
-      "common": {"app_id": appId},
+      "common": {"app_id": XfyunConfig.appId},
       "business": {
         "language": "zh_cn",
         "domain": "iat",

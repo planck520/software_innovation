@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/env_config.dart';
 
 /// 企业数据模型
 class Company {
@@ -23,7 +24,7 @@ class Company {
   /// 获取logo URL (使用logo.dev图片CDN，需要域名格式)
   String? get logoUrl {
     if (logoName == null) return null;
-    const apiKey = 'pk_fbuqzGWbTui-LzrxeLxFrA';
+    final apiKey = EnvConfig.getOrNull('LOGO_DEV_API_KEY') ?? 'pk_fbuqzGWbTui-LzrxeLxFrA';
     return 'https://img.logo.dev/${logoName}?token=$apiKey';
   }
 
