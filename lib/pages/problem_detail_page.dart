@@ -2085,6 +2085,34 @@ public:
 
   // 获取默认边界情况
   List<dynamic> _getDefaultEdgeCases(Map<String, dynamic> question) {
+    final qTitle = (question['q'] ?? '').toString();
+
+    // 根据题目名称返回对应的边界情况
+    if (qTitle.contains('两数之和')) {
+      return ['数组长度为2的最小情况', '答案包含第一个或最后一个元素', '存在负数的情况', '目标值为负数的情况', '存在多个相同值的情况'];
+    } else if (qTitle.contains('反转字符串')) {
+      return ['空字符串情况', '只有一个字符的情况', '字符串长度为奇数/偶数', '包含空格和特殊字符'];
+    } else if (qTitle.contains('斐波那契')) {
+      return ['n=0和n=1的基础情况', 'n为较大数值(>40)', 'n为负数(题目应返回0或报错)', 'n为非整数'];
+    } else if (qTitle.contains('回文数')) {
+      return ['负数返回False', '末尾为0的正整数(10,100,1000)', '0本身是回文数', '最大int范围边界'];
+    } else if (qTitle.contains('最大子数组')) {
+      return ['全负数数组', '只有一个元素', '全正数数组', '包含0的数组', '最大和为0的情况'];
+    } else if (qTitle.contains('两数相加')) {
+      return ['链表长度不同', '进位处理(9+9=18)', '最终进位(999+1)', '空链表输入'];
+    } else if (qTitle.contains('无重复字符')) {
+      return ['空字符串', '全相同字符(bbbb)', '整个字符串无重复', '中文字符', '包含空格'];
+    } else if (qTitle.contains('LRU')) {
+      return ['容量为1的缓存', 'get不存在key', 'put相同key', '连续get/put操作'];
+    } else if (qTitle.contains('括号')) {
+      return ['空字符串返回True', '单个括号', '多余括号(()', '括号类型不匹配([)]', '顺序错误([]])'];
+    } else if (qTitle.contains('合并') && qTitle.contains('链表')) {
+      return ['一个链表为空', '两个链表都为空', '一个链表更长', '交替合并(1,3,5与2,4,6)'];
+    } else if (qTitle.contains('股票')) {
+      return ['价格单调递减(无买入时机)', '价格不变', '价格只涨一天', '首尾最高价'];
+    }
+
+    // 默认边界情况
     return [
       '数组长度为2的最小情况',
       '答案包含第一个或最后一个元素',

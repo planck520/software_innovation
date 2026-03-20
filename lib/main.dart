@@ -14376,10 +14376,10 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
 
   // 情绪状态
   String _emotionStatus = "沉稳自如";
-  int _emotionScore = 85;
+  int _emotionScore = 80;
 
   // 实时情绪数据
-  final List<double> _emotionHistory = [65, 70, 68, 75, 80, 78, 82, 85];
+  final List<double> _emotionHistory = [60, 65, 62, 70, 75, 72, 78, 80];
 
   // 情绪检测服务（根据平台自动选择地址）
   late final EmotionService _emotionService;
@@ -14592,19 +14592,36 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
 
       setState(() {
         final c = result.confidence.clamp(0.0, 1.0);
-        final curved = 100 * (1 - pow(1 - c, 2));
-        final mapped = curved.clamp(40, 98);
+
+        // 使用开方放大 + 线性组合公式
+        // 开方放大低置信度区域的变化，线性保持高置信度区域的敏感度
+        final amplified = 100 * (0.6 * pow(c, 0.6) + 0.4 * c);
+
+        // 指数移动平均平滑（考虑历史数据）
+        final double smoothed;
+        if (_emotionHistory.isNotEmpty) {
+          final lastScore = _emotionHistory.last;
+          // 平滑系数 0.35 让新数据有更大权重
+          smoothed = lastScore * 0.65 + amplified * 0.35;
+        } else {
+          smoothed = amplified;
+        }
+
+        // 扩大输出范围到 [25, 99]
+        final mapped = smoothed.clamp(25.0, 99.0);
         _emotionScore = mapped.toInt();
+
         _emotionHistory.add(_emotionScore.toDouble());
         if (_emotionHistory.length > 20) {
           _emotionHistory.removeAt(0);
         }
 
-        if (_emotionScore >= 85) {
+        // 调整后的阈值
+        if (_emotionScore >= 80) {
           _emotionStatus = "自信从容";
-        } else if (_emotionScore >= 70) {
+        } else if (_emotionScore >= 65) {
           _emotionStatus = "情绪稳定";
-        } else if (_emotionScore >= 55) {
+        } else if (_emotionScore >= 45) {
           _emotionStatus = "略显紧张";
         } else {
           _emotionStatus = "波动较大";
@@ -14986,17 +15003,17 @@ Map<String, String> _buildSystemPrompt() {
     if (isAlgorithmCategory || isCodingQuestion) {
       // 算法题全部从题库选择。
       final codingQuestions = <Map<String, dynamic>>[
-        {'q': '两数之和', 'a': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        for i in range(len(nums)):\n            for j in range(i+1, len(nums)):\n                if nums[i] + nums[j] == target:\n                    return [i, j]\n        return []', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        # Write your code here\n        pass\n', 'testCases': [{'input': '[2,7,11,15]\n9', 'output': '[0,1]'}, {'input': '[3,2,4]\n6', 'output': '[1,2]'}, {'input': '[3,3]\n6', 'output': '[0,1]'}]},
-        {'q': '反转字符串', 'a': 'def reverseString(s):\n    return s[::-1]', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def reverseString(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'hello', 'output': 'olleh'}, {'input': 'Hannah', 'output': 'hennaH'}]},
-        {'q': '斐波那契数列', 'a': 'def fib(n):\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n+1):\n        a, b = b, a + b\n    return b', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def fib(n):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '2', 'output': '1'}, {'input': '3', 'output': '2'}, {'input': '4', 'output': '3'}]},
-        {'q': '回文数', 'a': 'def isPalindrome(x):\n    if x < 0:\n        return False\n    return str(x) == str(x)[::-1]', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def isPalindrome(x):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '121', 'output': 'True'}, {'input': '-121', 'output': 'False'}, {'input': '10', 'output': 'False'}]},
-        {'q': '最大子数组和', 'a': 'def maxSubArray(nums):\n    max_sum = nums[0]\n    current_sum = nums[0]\n    for num in nums[1:]:\n        current_sum = max(num, current_sum + num)\n        max_sum = max(max_sum, current_sum)\n    return max_sum', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def maxSubArray(nums):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[-2,1,-3,4,-1,2,1,-5,4]', 'output': '6'}, {'input': '[1]', 'output': '1'}, {'input': '[5,4,-1,7,8]', 'output': '23'}]},
-        {'q': '两数相加', 'a': 'def addTwoNumbers(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    carry = 0\n    while l1 or l2 or carry:\n        val = carry\n        if l1:\n            val += l1.val\n            l1 = l1.next\n        if l2:\n            val += l2.val\n            l2 = l2.next\n        carry = val // 10\n        cur.next = ListNode(val % 10)\n        cur = cur.next\n    return dummy.next', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef addTwoNumbers(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[2,4,3]\n[5,6,4]', 'output': '[7,0,8]'}, {'input': '[0]\n[0]', 'output': '[0]'}, {'input': '[9,9,9,9,9,9,9]\n[1]', 'output': '[0,0,0,0,0,0,0,1]'}]},
-        {'q': '无重复字符的最长子串', 'a': 'def lengthOfLongestSubstring(s):\n    char_set = set()\n    left = 0\n    max_len = 0\n    for right in range(len(s)):\n        while s[right] in char_set:\n            char_set.remove(s[left])\n            left += 1\n        char_set.add(s[right])\n        max_len = max(max_len, right - left + 1)\n    return max_len', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def lengthOfLongestSubstring(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'abcabcbb', 'output': '3'}, {'input': 'bbbbb', 'output': '1'}, {'input': 'pwwkew', 'output': '3'}]},
-        {'q': 'LRU缓存机制', 'a': 'from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key):\n        if key not in self.cache:\n            return -1\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key, value):\n        if key in self.cache:\n            self.cache.move_to_end(key)\n        self.cache[key] = value\n        if len(self.cache) > self.capacity:\n            self.cache.popitem(last=False)', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'class LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}]},
-        {'q': '有效括号', 'a': 'def isValid(s):\n    stack = []\n    mapping = {")": "(", "]": "[", "}": "{"}\n    for char in s:\n        if char in mapping:\n            if not stack or stack.pop() != mapping[char]:\n                return False\n        else:\n            stack.append(char)\n    return not stack', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def isValid(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '()', 'output': 'True'}, {'input': '()[]{}', 'output': 'True'}, {'input': '(]', 'output': 'False'}]},
-        {'q': '合并两个有序链表', 'a': 'def mergeTwoLists(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            cur.next = l1\n            l1 = l1.next\n        else:\n            cur.next = l2\n            l2 = l2.next\n        cur = cur.next\n    cur.next = l1 or l2\n    return dummy.next', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef mergeTwoLists(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[1,2,4]\n[1,3,4]', 'output': '[1,1,2,3,4,4]'}, {'input': '[]\n[]', 'output': '[]'}, {'input': '[]\n[0]', 'output': '[0]'}]},
-        {'q': '买卖股票最佳时机', 'a': 'def maxProfit(prices):\n    min_price = float("inf")\n    max_profit = 0\n    for price in prices:\n        min_price = min(min_price, price)\n        max_profit = max(max_profit, price - min_price)\n    return max_profit', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': 'def maxProfit(prices):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[7,1,5,3,6,4]', 'output': '5'}, {'input': '[7,6,4,3,1]', 'output': '0'}]},
+        {'q': '两数之和', 'a': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        for i in range(len(nums)):\n            for j in range(i+1, len(nums)):\n                if nums[i] + nums[j] == target:\n                    return [i, j]\n        return []', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        # Write your code here\n        pass\n', 'testCases': [{'input': '[2,7,11,15]\n9', 'output': '[0,1]'}, {'input': '[3,2,4]\n6', 'output': '[1,2]'}, {'input': '[3,3]\n6', 'output': '[0,1]'}], 'edgeCases': ['数组长度为2的最小情况', '答案包含第一个或最后一个元素', '存在负数的情况', '目标值为负数的情况', '存在多个相同值的情况']},
+        {'q': '反转字符串', 'a': 'def reverseString(s):\n    return s[::-1]', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def reverseString(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'hello', 'output': 'olleh'}, {'input': 'Hannah', 'output': 'hennaH'}], 'edgeCases': ['空字符串情况', '只有一个字符的情况', '字符串长度为奇数/偶数', '包含空格和特殊字符']},
+        {'q': '斐波那契数列', 'a': 'def fib(n):\n    if n <= 1:\n        return n\n    a, b = 0, 1\n    for _ in range(2, n+1):\n        a, b = b, a + b\n    return b', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def fib(n):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '2', 'output': '1'}, {'input': '3', 'output': '2'}, {'input': '4', 'output': '3'}], 'edgeCases': ['n=0和n=1的基础情况', 'n为较大数值(>40)', 'n为负数(题目应返回0或报错)', 'n为非整数']},
+        {'q': '回文数', 'a': 'def isPalindrome(x):\n    if x < 0:\n        return False\n    return str(x) == str(x)[::-1]', 'type': 'coding', 'difficulty': '基础', 'hot': false, 'language': 'python', 'template': 'def isPalindrome(x):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '121', 'output': 'True'}, {'input': '-121', 'output': 'False'}, {'input': '10', 'output': 'False'}], 'edgeCases': ['负数返回False', '末尾为0的正整数(10,100,1000)', '0本身是回文数', '最大int范围边界']},
+        {'q': '最大子数组和', 'a': 'def maxSubArray(nums):\n    max_sum = nums[0]\n    current_sum = nums[0]\n    for num in nums[1:]:\n        current_sum = max(num, current_sum + num)\n        max_sum = max(max_sum, current_sum)\n    return max_sum', 'type': 'coding', 'difficulty': '基础', 'hot': true, 'language': 'python', 'template': 'def maxSubArray(nums):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[-2,1,-3,4,-1,2,1,-5,4]', 'output': '6'}, {'input': '[1]', 'output': '1'}, {'input': '[5,4,-1,7,8]', 'output': '23'}], 'edgeCases': ['全负数数组', '只有一个元素', '全正数数组', '包含0的数组', '最大和为0的情况']},
+        {'q': '两数相加', 'a': 'def addTwoNumbers(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    carry = 0\n    while l1 or l2 or carry:\n        val = carry\n        if l1:\n            val += l1.val\n            l1 = l1.next\n        if l2:\n            val += l2.val\n            l2 = l2.next\n        carry = val // 10\n        cur.next = ListNode(val % 10)\n        cur = cur.next\n    return dummy.next', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef addTwoNumbers(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[2,4,3]\n[5,6,4]', 'output': '[7,0,8]'}, {'input': '[0]\n[0]', 'output': '[0]'}, {'input': '[9,9,9,9,9,9,9]\n[1]', 'output': '[0,0,0,0,0,0,0,1]'}], 'edgeCases': ['链表长度不同', '进位处理(9+9=18)', '最终进位(999+1)', '空链表输入']},
+        {'q': '无重复字符的最长子串', 'a': 'def lengthOfLongestSubstring(s):\n    char_set = set()\n    left = 0\n    max_len = 0\n    for right in range(len(s)):\n        while s[right] in char_set:\n            char_set.remove(s[left])\n            left += 1\n        char_set.add(s[right])\n        max_len = max(max_len, right - left + 1)\n    return max_len', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def lengthOfLongestSubstring(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': 'abcabcbb', 'output': '3'}, {'input': 'bbbbb', 'output': '1'}, {'input': 'pwwkew', 'output': '3'}], 'edgeCases': ['空字符串', '全相同字符(bbbb)', '整个字符串无重复', '中文字符', '包含空格']},
+        {'q': 'LRU缓存机制', 'a': 'from collections import OrderedDict\n\nclass LRUCache:\n    def __init__(self, capacity):\n        self.capacity = capacity\n        self.cache = OrderedDict()\n\n    def get(self, key):\n        if key not in self.cache:\n            return -1\n        self.cache.move_to_end(key)\n        return self.cache[key]\n\n    def put(self, key, value):\n        if key in self.cache:\n            self.cache.move_to_end(key)\n        self.cache[key] = value\n        if len(self.cache) > self.capacity:\n            self.cache.popitem(last=False)', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'class LRUCache:\n    def __init__(self, capacity):\n        # Write your code here\n        pass\n    \n    def get(self, key):\n        # Write your code here\n        pass\n    \n    def put(self, key, value):\n        # Write your code here\n        pass\n', 'testCases': [{'input': '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]', 'output': '[null, null, null, 1, null, -1, null, -1, 3, 4]'}], 'edgeCases': ['容量为1的缓存', 'get不存在key', 'put相同key', '连续get/put操作']},
+        {'q': '有效括号', 'a': 'def isValid(s):\n    stack = []\n    mapping = {")": "(", "]": "[", "}": "{"}\n    for char in s:\n        if char in mapping:\n            if not stack or stack.pop() != mapping[char]:\n                return False\n        else:\n            stack.append(char)\n    return not stack', 'type': 'coding', 'difficulty': '中等', 'hot': true, 'language': 'python', 'template': 'def isValid(s):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '()', 'output': 'True'}, {'input': '()[]{}', 'output': 'True'}, {'input': '(]', 'output': 'False'}], 'edgeCases': ['空字符串返回True', '单个括号', '多余括号(()', '括号类型不匹配([)]', '顺序错误([]])']},
+        {'q': '合并两个有序链表', 'a': 'def mergeTwoLists(l1, l2):\n    dummy = ListNode(0)\n    cur = dummy\n    while l1 and l2:\n        if l1.val <= l2.val:\n            cur.next = l1\n            l1 = l1.next\n        else:\n            cur.next = l2\n            l2 = l2.next\n        cur = cur.next\n    cur.next = l1 or l2\n    return dummy.next', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': '# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\ndef mergeTwoLists(l1, l2):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[1,2,4]\n[1,3,4]', 'output': '[1,1,2,3,4,4]'}, {'input': '[]\n[]', 'output': '[]'}, {'input': '[]\n[0]', 'output': '[0]'}], 'edgeCases': ['一个链表为空', '两个链表都为空', '一个链表更长', '交替合并(1,3,5与2,4,6)']},
+        {'q': '买卖股票最佳时机', 'a': 'def maxProfit(prices):\n    min_price = float("inf")\n    max_profit = 0\n    for price in prices:\n        min_price = min(min_price, price)\n        max_profit = max(max_profit, price - min_price)\n    return max_profit', 'type': 'coding', 'difficulty': '困难', 'hot': true, 'language': 'python', 'template': 'def maxProfit(prices):\n    # Write your code here\n    pass\n', 'testCases': [{'input': '[7,1,5,3,6,4]', 'output': '5'}, {'input': '[7,6,4,3,1]', 'output': '0'}], 'edgeCases': ['价格单调递减(无买入时机)', '价格不变', '价格只涨一天', '首尾最高价']},
       ];
 
       if (codingQuestions.isNotEmpty) {
