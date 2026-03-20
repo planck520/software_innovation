@@ -1092,7 +1092,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       return;
     }
 
-    EasyLoading.show(status: '登录中...', maskType: EasyLoadingMaskType.black);
+    EasyLoading.show(
+      status: '登录中...',
+      maskType: EasyLoadingMaskType.black,
+      indicator: const WaveLoadingIndicator(
+        waveCount: 3,
+        waveSize: 10,
+        color: Colors.white,
+      ),
+    );
 
     await Future.delayed(const Duration(milliseconds: 1200));
 
@@ -13008,17 +13016,11 @@ class _ReportGeneratingPageState extends State<ReportGeneratingPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // 加载动画 - 使用BubeiColors.primary
-                SizedBox(
-                  width: 80,
-                  height: 80,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 4,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      BubeiColors.primary.withOpacity(0.8),
-                    ),
-                    backgroundColor: BubeiColors.surfaceDim,
-                  ),
+                // 加载动画 - 使用CyberLoadingIndicator
+                CyberLoadingIndicator(
+                  size: 80,
+                  color: BubeiColors.primary,
+                  strokeWidth: 3,
                 ),
                 const SizedBox(height: 32),
 
