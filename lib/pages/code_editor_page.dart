@@ -919,6 +919,13 @@ class Solution {
             code: _codeController.text,
           );
           _outputText = '🎉 恭喜！所有测试用例通过！\n\n${result.output}';
+
+          // 自动返回结果到上一页面
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              Navigator.pop(context, _buildInterviewResult());
+            }
+          });
         } else {
           _outputText = '😢 测试未通过，请检查代码。\n\n${result.output}';
         }
@@ -1001,6 +1008,34 @@ class Solution {
         }
       }
     }
+  }
+
+  // 构建面试结果数据
+  Map<String, dynamic> _buildInterviewResult() {
+    final int totalCases = _testCaseResults.length;
+    final int passedCases = _testCaseResults.where((e) => e).length;
+
+    String status = '未作答';
+    if (_lastResult != null) {
+      if (totalCases > 0) {
+        if (passedCases >= totalCases) {
+          status = 'AC';
+        } else if (passedCases == 0) {
+          status = '全错';
+        } else {
+          status = '部分AC';
+        }
+      } else {
+        status = _lastResult!.success ? 'AC' : '全错';
+      }
+    }
+
+    return {
+      'status': status,
+      'passedCases': passedCases,
+      'totalCases': totalCases,
+      'language': _selectedLanguage,
+    };
   }
 
   // 撤销操作
@@ -1200,7 +1235,10 @@ class Solution {
   // 返回按钮（带滑动返回动画）
   Widget _buildBackButton() {
     return GestureDetector(
-      onTap: () => Navigator.pop(context),
+      onTap: () {
+        // 如果已经提交过代码，返回结果；否则返回 null
+        Navigator.pop(context, _lastResult != null ? _buildInterviewResult() : null);
+      },
       child: CustomPaint(
         size: const Size(16, 16),
         painter: _TriangleArrowPainter(),

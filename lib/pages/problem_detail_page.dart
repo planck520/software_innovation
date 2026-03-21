@@ -1392,13 +1392,18 @@ public:
   // 构建悬浮按钮（带脉冲动画）
   Widget _buildFloatingActionButton() {
     return _PulsingFloatingActionButton(
-      onPressed: () {
-        Navigator.push(
+      onPressed: () async {
+        final result = await Navigator.push<Map<String, dynamic>>(
           context,
           MaterialPageRoute(
             builder: (context) => CodeEditorPage(question: widget.question),
           ),
         );
+
+        // 如果用户在代码编辑器提交了代码，将结果返回给面试页面
+        if (result != null && mounted) {
+          Navigator.pop(context, result);
+        }
       },
       color: _pGreen,
     );
