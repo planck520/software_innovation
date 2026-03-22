@@ -5,12 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 此文件包含需要在 main.dart 和 app_colors.dart 之间共享的配置
 
 /// 是否使���深色背景
-bool isDarkBackground = false;
+bool isDarkBackground = true;
 
 /// 初始化应用配置
 Future<void> initAppConfig() async {
   final prefs = await SharedPreferences.getInstance();
-  isDarkBackground = prefs.getBool('is_dark_background') ?? false;
+  isDarkBackground = prefs.getBool('is_dark_background') ?? true;
 }
 
 /// 切换深色/浅色背景

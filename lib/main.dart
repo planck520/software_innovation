@@ -7181,10 +7181,6 @@ class _HistoryPageState extends State<HistoryPage> {
                 style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
               ),
               const Spacer(),
-              Text(
-                "过去一年",
-                style: TextStyle(fontSize: 9, color: AppColors.textTertiary),
-              ),
             ],
           ),
           const SizedBox(height: 12),
