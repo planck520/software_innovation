@@ -14589,23 +14589,20 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
       setState(() {
         final c = result.confidence.clamp(0.0, 1.0);
 
-        // 使用开方放大 + 线性组合公式
-        // 开方放大低置信度区域的变化，线性保持高置信度区域的敏感度
-        final amplified = 100 * (0.6 * pow(c, 0.6) + 0.4 * c);
+        // 线性映射置信度到 [10, 100] 范围，不使用非线性放大
+        // 腾讯云置信度普遍偏高，直接用能保留更大动态范围
+        final double base = 10.0 + c * 90.0;
 
-        // 指数移动平均平滑（考虑历史数据）
+        // 指数移动平均平滑：新数据占主导权重 0.75，历史仅保留 0.25
+        // 相比旧系数（0.65/0.35），新数据影响力提升约 2 倍，曲线更敏感
         final double smoothed;
         if (_emotionHistory.isNotEmpty) {
           final lastScore = _emotionHistory.last;
-          // 平滑系数 0.35 让新数据有更大权重
-          smoothed = lastScore * 0.65 + amplified * 0.35;
+          smoothed = lastScore * 0.25 + base * 0.75;
         } else {
-          smoothed = amplified;
+          smoothed = base;
         }
-
-        // 扩大输出范围到 [25, 99]
-        final mapped = smoothed.clamp(25.0, 99.0);
-        _emotionScore = mapped.toInt();
+        _emotionScore = smoothed.clamp(10.0, 100.0).toInt();
 
         _emotionHistory.add(_emotionScore.toDouble());
         if (_emotionHistory.length > 20) {
