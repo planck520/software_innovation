@@ -8109,9 +8109,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   // 简历管理功能
   void _showResumeManager() {
-    final user = globalUsers[currentUserIndex];
-    final resumePath = user['resumePath'];
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -8164,61 +8161,66 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 24),
               // 当前简历状态
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: resumePath != null
-                      ? BubeiColors.success.withOpacity(0.14)
-                      : BubeiColors.surfaceDim,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: resumePath != null
-                        ? BubeiColors.success.withOpacity(0.36)
-                        : BubeiColors.border.withOpacity(0.9),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      resumePath != null
-                          ? Icons.check_circle
-                          : Icons.info_outline,
+              Builder(
+                builder: (context) {
+                  final resumePath = globalUsers[currentUserIndex]['resumePath'];
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
                       color: resumePath != null
-                          ? BubeiColors.success
-                          : BubeiColors.textSecondary,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            resumePath != null ? "已上传简历" : "暂未上传简历",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: BubeiColors.textPrimary,
-                            ),
-                          ),
-                          if (resumePath != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              resumePath.split('/').last.split('\\').last,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: BubeiColors.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
+                          ? BubeiColors.success.withOpacity(0.14)
+                          : BubeiColors.surfaceDim,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: resumePath != null
+                            ? BubeiColors.success.withOpacity(0.36)
+                            : BubeiColors.border.withOpacity(0.9),
                       ),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          resumePath != null
+                              ? Icons.check_circle
+                              : Icons.info_outline,
+                          color: resumePath != null
+                              ? BubeiColors.success
+                              : BubeiColors.textSecondary,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                resumePath != null ? "已上传简历" : "暂未上传简历",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: BubeiColors.textPrimary,
+                                ),
+                              ),
+                              if (resumePath != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  resumePath.split('/').last.split('\\').last,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: BubeiColors.textSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               // 提示信息
@@ -8251,122 +8253,127 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 24),
               // 操作按钮
-              Row(
-                children: [
-                  if (resumePath != null)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            globalUsers[currentUserIndex]['resumePath'] = null;
-                            globalUsers[currentUserIndex]['resumeContent'] = null;
-                          });
-                          saveUserData();
-                          setSheetState(() {});
-                          _showStatus("简历已删除", BubeiColors.warning);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: BubeiColors.error.withOpacity(0.14),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: BubeiColors.error.withOpacity(0.36),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.delete_outline,
-                                color: BubeiColors.error,
-                                size: 12.6,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                "删除简历",
-                                style: TextStyle(
-                                  color: BubeiColors.error,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+              Builder(
+                builder: (context) {
+                  final resumePath = globalUsers[currentUserIndex]['resumePath'];
+                  return Row(
+                    children: [
+                      if (resumePath != null)
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                globalUsers[currentUserIndex]['resumePath'] = null;
+                                globalUsers[currentUserIndex]['resumeContent'] = null;
+                              });
+                              saveUserData();
+                              setSheetState(() {});
+                              _showStatus("简历已删除", BubeiColors.warning);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: BubeiColors.error.withOpacity(0.14),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: BubeiColors.error.withOpacity(0.36),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (resumePath != null) const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        try {
-                          FilePickerResult? result = await FilePicker.platform
-                              .pickFiles(
-                                type: FileType.custom,
-                                allowedExtensions: ['pdf', 'doc', 'docx'],
-                              );
-                          if (result != null &&
-                              result.files.single.path != null) {
-                            final path = result.files.single.path!;
-                            String? resumeText;
-                            if (path.toLowerCase().endsWith('.pdf')) {
-                              resumeText = await _extractPdfText(path);
-                              debugPrint('[上传] resumeText = ${resumeText == null ? "null" : "${resumeText.length}字符"}');
-                            } else {
-                              try {
-                                final file = File(path);
-                                final bytes = await file.readAsBytes();
-                                resumeText = utf8.decode(bytes, allowMalformed: true);
-                              } catch (_) {}
-                            }
-                            setState(() {
-                              globalUsers[currentUserIndex]['resumePath'] = path;
-                              globalUsers[currentUserIndex]['resumeContent'] = resumeText;
-                            });
-                            debugPrint('[上传] 存储后 resumeContent = ${globalUsers[currentUserIndex]['resumeContent'] == null ? "null" : "有值"}');
-                            saveUserData();
-                            setSheetState(() {});
-                            _showStatus("简历上传成功", BubeiColors.success);
-                          }
-                        } catch (e) {
-                          _showStatus("上传失败", BubeiColors.error);
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: _metalGradient,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF565D6A)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              resumePath != null
-                                  ? Icons.refresh
-                                  : Icons.upload_file,
-                              color: Colors.white,
-                              size: 12.6,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              resumePath != null ? "更换简历" : "上传简历",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline,
+                                    color: BubeiColors.error,
+                                    size: 12.6,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "删除简历",
+                                    style: TextStyle(
+                                      color: BubeiColors.error,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
+                        ),
+                      if (resumePath != null) const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            try {
+                              FilePickerResult? result = await FilePicker.platform
+                                  .pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf', 'doc', 'docx'],
+                                  );
+                              if (result != null &&
+                                  result.files.single.path != null) {
+                                final path = result.files.single.path!;
+                                String? resumeText;
+                                if (path.toLowerCase().endsWith('.pdf')) {
+                                  resumeText = await _extractPdfText(path);
+                                  debugPrint('[上传] resumeText = ${resumeText == null ? "null" : "${resumeText.length}字符"}');
+                                } else {
+                                  try {
+                                    final file = File(path);
+                                    final bytes = await file.readAsBytes();
+                                    resumeText = utf8.decode(bytes, allowMalformed: true);
+                                  } catch (_) {}
+                                }
+                                setState(() {
+                                  globalUsers[currentUserIndex]['resumePath'] = path;
+                                  globalUsers[currentUserIndex]['resumeContent'] = resumeText;
+                                });
+                                debugPrint('[上传] 存储后 resumeContent = ${globalUsers[currentUserIndex]['resumeContent'] == null ? "null" : "有值"}');
+                                saveUserData();
+                                setSheetState(() {});
+                                _showStatus("简历上传成功", BubeiColors.success);
+                              }
+                            } catch (e) {
+                              _showStatus("上传失败", BubeiColors.error);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: _metalGradient,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF565D6A)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  resumePath != null
+                                      ? Icons.refresh
+                                      : Icons.upload_file,
+                                  color: Colors.white,
+                                  size: 12.6,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  resumePath != null ? "更换简历" : "上传简历",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
               // 支持格式提示
