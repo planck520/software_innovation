@@ -63,6 +63,9 @@ List<CameraDescription> _cameras = [];
 // 用于通知整个应用刷新主题的通知器
 final ValueNotifier<bool> themeNotifier = ValueNotifier<bool>(false);
 
+// Android原生通道 - 用于调用MainActivity中的方法
+const _nativeChannel = MethodChannel('com.huster.avatar/driver');
+
 List<Map<String, dynamic>> globalUsers = [
   {
     "username": "admin",
@@ -72,6 +75,8 @@ List<Map<String, dynamic>> globalUsers = [
     "history": <Map<String, dynamic>>[], // 明确指定类型
     "badges": _createDefaultBadges(),
     "submissions": <String, List<Map<String, dynamic>>>{},  // 新增提交记录字段
+    "resumePath": null,
+    "resumeContent": null,
   },
   {
     "username": "huster",
@@ -81,6 +86,8 @@ List<Map<String, dynamic>> globalUsers = [
     "history": <Map<String, dynamic>>[], // 明确指定类型
     "badges": _createDefaultBadges(),
     "submissions": <String, List<Map<String, dynamic>>>{},  // 新增提交记录字段
+    "resumePath": null,
+    "resumeContent": null,
   },
 ];
 
@@ -847,10 +854,16 @@ Future<void> loadUserData() async {
     // 还原 globalUsers
     globalUsers = List<Map<String, dynamic>>.from(decoded);
 
-    // 兼容性处理：确保所有用户都有 submissions 字段
+    // 兼容性处理：确保所有用户都有 submissions、resumePath、resumeContent 字段
     for (var user in globalUsers) {
       if (!user.containsKey('submissions')) {
         user['submissions'] = <String, List<Map<String, dynamic>>>{};
+      }
+      if (!user.containsKey('resumePath')) {
+        user['resumePath'] = null;
+      }
+      if (!user.containsKey('resumeContent')) {
+        user['resumeContent'] = null;
       }
     }
   }
@@ -8077,6 +8090,23 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // 调用Android原生方法提取PDF简历文本
+  Future<String?> _extractPdfText(String filePath) async {
+    try {
+      debugPrint('[PDF提取] 开始提取: $filePath');
+      final result = await _nativeChannel.invokeMethod('extractPdfText', {'filePath': filePath});
+      final text = result as String?;
+      debugPrint('[PDF提取] 结果长度: ${text == null ? "null" : "${text.length}字符"}');
+      if (text != null && text.length <= 100) {
+        debugPrint('[PDF提取] 内容: $text');
+      }
+      return text;
+    } catch (e) {
+      debugPrint('[PDF提取] 失败: $e');
+      return null;
+    }
+  }
+
   // 简历管理功能
   void _showResumeManager() {
     final user = globalUsers[currentUserIndex];
@@ -8277,10 +8307,23 @@ class _ProfilePageState extends State<ProfilePage> {
                               );
                           if (result != null &&
                               result.files.single.path != null) {
+                            final path = result.files.single.path!;
+                            String? resumeText;
+                            if (path.toLowerCase().endsWith('.pdf')) {
+                              resumeText = await _extractPdfText(path);
+                              debugPrint('[上传] resumeText = ${resumeText == null ? "null" : "${resumeText.length}字符"}');
+                            } else {
+                              try {
+                                final file = File(path);
+                                final bytes = await file.readAsBytes();
+                                resumeText = utf8.decode(bytes, allowMalformed: true);
+                              } catch (_) {}
+                            }
                             setState(() {
-                              globalUsers[currentUserIndex]['resumePath'] =
-                                  result.files.single.path;
+                              globalUsers[currentUserIndex]['resumePath'] = path;
+                              globalUsers[currentUserIndex]['resumeContent'] = resumeText;
                             });
+                            debugPrint('[上传] 存储后 resumeContent = ${globalUsers[currentUserIndex]['resumeContent'] == null ? "null" : "有值"}');
                             saveUserData();
                             setSheetState(() {});
                             _showStatus("简历上传成功", BubeiColors.success);
@@ -14804,6 +14847,14 @@ Map<String, String> _buildSystemPrompt() {
   final int objectiveDone = stats['objective'] ?? 0;
   final int algorithmDone = stats['algorithm'] ?? 0;
   final int currentMainNumber = _currentMainNumberFromDetails();
+  final resumeContent = globalUsers[currentUserIndex]['resumeContent'] as String?;
+  debugPrint('[ResumeDebug] resumeContent = ${resumeContent == null ? "null" : (resumeContent.length > 50 ? "${resumeContent.substring(0, 50)}..." : resumeContent)}');
+  String resumeSection = '';
+  if (resumeContent != null && resumeContent.trim().isNotEmpty && !resumeContent.startsWith('简历读取失败') && !resumeContent.startsWith('简历读取结果为空')) {
+    resumeSection = '\n【候选人简历内容】\n$resumeContent\n【简历内容结束】\n面试官在开场时必须先告知候选人："我已收到您的简历，正在根据简历内容安排面试"。然后根据简历内容进行针对性提问，深入了解候选人的实际项目经验。';
+  } else {
+    resumeSection = '\n面试官在开场时必须先告知候选人："我暂未收到您的简历，本次面试将围绕常规面试问题展开"，然后按常规流程进行面试。';
+  }
   final int currentSubQuestionCount = _currentSubQuestionCountFromDetails();
   final int completedMainCount = currentMainNumber > 0 ? currentMainNumber - 1 : 0;
   final int remainingSlots = (_totalQuestions - currentMainNumber).clamp(0, _totalQuestions);
@@ -14843,12 +14894,13 @@ Map<String, String> _buildSystemPrompt() {
     "role": "system",
     "content":
         "你是${widget.company ?? '目标公司'}的${widget.interviewerType}，正在为${widget.jobCategory}的${widget.job}面试。"
+        "$resumeSection"
         "$companyPolicy"
+        "目标难度：$effectiveDifficulty。"
+        "$interviewerStyle"
         "$timePolicy"
         "$naturalEndPolicy"
         "$antiReversePolicy"
-        "目标难度：$effectiveDifficulty。"
-        "$interviewerStyle"
         "$codePolicy"
         "$skipPolicy"
         "$hintPolicy"

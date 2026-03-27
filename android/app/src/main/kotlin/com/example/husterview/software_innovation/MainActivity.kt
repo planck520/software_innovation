@@ -6,15 +6,25 @@ import io.flutter.plugin.common.MethodChannel
 import com.iflytek.aiui.* // 导入讯飞 AIUI 核心包
 import org.json.JSONObject
 import android.widget.VideoView
+import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
+import com.tom_roush.pdfbox.pdmodel.PDDocument
+import com.tom_roush.pdfbox.text.PDFTextStripper
 
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.huster.avatar/driver"
     private var mAIUIAgent: AIUIAgent? = null
     private var mVideoView: VideoView? = null
+    private var _pdfBoxInitialized = false
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // 初始化 PDFBox
+        if (!_pdfBoxInitialized) {
+            PDFBoxResourceLoader.init(applicationContext)
+            _pdfBoxInitialized = true
+        }
 
         // 1. 程序启动立即初始化 AIUI
         initAIUI()
@@ -22,6 +32,15 @@ class MainActivity: FlutterActivity() {
         // 2. 建立 MethodChannel（保留它，以便以后 Flutter 仍然可以主动传话给数字人）
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
+                "extractPdfText" -> {
+                    val filePath = call.argument<String>("filePath")
+                    if (filePath != null) {
+                        val text = extractPdfText(filePath)
+                        result.success(text)
+                    } else {
+                        result.error("INVALID_ARGUMENT", "filePath is null", null)
+                    }
+                }
                 "startSpeaking" -> {
                     val text = call.argument<String>("text")
                     // 如果此时 Agent 还没好，再次尝试初始化
@@ -91,6 +110,20 @@ class MainActivity: FlutterActivity() {
                     mAIUIAgent?.sendMessage(AIUIMessage(AIUIConstant.CMD_WAKEUP, 0, 0, "", null))
                 }
             }
+        }
+    }
+
+    // PDF文本提取函数
+    private fun extractPdfText(filePath: String): String {
+        return try {
+            val file = java.io.File(filePath)
+            val document = PDDocument.load(file)
+            val stripper = PDFTextStripper()
+            val text = stripper.getText(document)
+            document.close()
+            if (text.isNullOrBlank()) "简历读取结果为空" else text
+        } catch (e: Exception) {
+            "简历读取失败: ${e.message}"
         }
     }
 

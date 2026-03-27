@@ -57,6 +57,9 @@ dependencies {
         include("*.jar", "*.aar")
     })
 
+    // PDFBox for Android - 简历PDF文本提取
+    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+
     // 如果你之前写了 implementation(name: "...", ext: "aar") 导致报错，
     // 请直接删掉它们，因为上面的 fileTree 已经全包了。
 }
