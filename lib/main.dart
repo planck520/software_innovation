@@ -8259,6 +8259,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         onTap: () {
                           setState(() {
                             globalUsers[currentUserIndex]['resumePath'] = null;
+                            globalUsers[currentUserIndex]['resumeContent'] = null;
                           });
                           saveUserData();
                           setSheetState(() {});
@@ -14848,10 +14849,14 @@ Map<String, String> _buildSystemPrompt() {
   final int algorithmDone = stats['algorithm'] ?? 0;
   final int currentMainNumber = _currentMainNumberFromDetails();
   final resumeContent = globalUsers[currentUserIndex]['resumeContent'] as String?;
-  debugPrint('[ResumeDebug] resumeContent = ${resumeContent == null ? "null" : (resumeContent.length > 50 ? "${resumeContent.substring(0, 50)}..." : resumeContent)}');
+  debugPrint('[ResumeDebug] resumeContent长度: ${resumeContent?.length ?? 0}字符');
+  if (resumeContent != null && resumeContent.isNotEmpty) {
+    debugPrint('[ResumeDebug] 前100字符: ${resumeContent.length > 100 ? resumeContent.substring(0, 100) : resumeContent}');
+    debugPrint('[ResumeDebug] 后100字符: ${resumeContent.length > 100 ? resumeContent.substring(resumeContent.length - 100) : resumeContent}');
+  }
   String resumeSection = '';
   if (resumeContent != null && resumeContent.trim().isNotEmpty && !resumeContent.startsWith('简历读取失败') && !resumeContent.startsWith('简历读取结果为空')) {
-    resumeSection = '\n【候选人简历内容】\n$resumeContent\n【简历内容结束】\n面试官在开场时必须先告知候选人："我已收到您的简历，正在根据简历内容安排面试"。然后根据简历内容进行针对性提问，深入了解候选人的实际项目经验。';
+    resumeSection = '\n【候选人简历内容（必须严格遵守）】\n$resumeContent\n【简历内容结束】\n重要约束：面试官只能针对上述简历中明确提到的项目经历进行提问，严禁编造或推测简历中不存在的项目名称。如果简历中提到了某个项目，可以要求候选人详细介绍该项目的技术细节、负责部分、遇到的挑战和解决方案。开场时必须先告知候选人："我已收到您的简历，正在根据简历内容安排面试"，然后用1-2句话简单总结一下简历中的核心项目经验（不要逐字念简历），最后开始针对简历中的实际项目进行深入提问。';
   } else {
     resumeSection = '\n面试官在开场时必须先告知候选人："我暂未收到您的简历，本次面试将围绕常规面试问题展开"，然后按常规流程进行面试。';
   }
@@ -14905,8 +14910,8 @@ Map<String, String> _buildSystemPrompt() {
         "$skipPolicy"
         "$hintPolicy"
         "$projectFollowUpStrategy"
-        "面试采用大问题/小问题结构：第1个大问题固定为自我介绍（含项目经历），整体每个大问题最多10个针对性追问。"
-        "第1个大问题要深挖技术能力：前3轮可了解项目背景，但应优先追问技术实现细节（技术栈、架构设计、核心难点、性能优化、代码实现等），避免过度关注业务描述。"
+        "面试采用大问题/小问题结构：第1个大问题固定为自我介绍。如果简历中有明确的项目经历，必须基于简历中的实际项目进行追问，严禁编造或推测简历中不存在的项目名称。整体每个大问题最多10个针对性追问。"
+        "第1个大问题要深挖技术能力：前3轮可了解项目背景，但应优先追问技术实现细节（技术栈、架构设计、核心难点、性能优化、代码实现等），避免过度关注业务描述。如果简历中提到了具体项目，必须以该项目的实际技术细节为准进行追问。"
         "主观题和客观题可以使用题库题或你自拟；算法题必须来自题库。"
         "当前进度：当前处于第$currentMainNumber/$_totalQuestions个大问题，已完成$completedMainCount个大问题，当前大问题追问$currentSubQuestionCount/$_maxSubQuestionsPerMain，剩余大问题槽位$remainingSlots。"
         "类型进度：主观$subjectiveDone/$targetSubjective，客观$objectiveDone/$targetObjective，算法$algorithmDone/$targetAlgorithm。"
