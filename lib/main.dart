@@ -925,7 +925,7 @@ class HusterviewApp extends StatelessWidget {
       builder: (context, isDark, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Husterview',
+          title: 'Ntervue',
           theme: AppTheme.bubeiDarkTheme,
           builder: EasyLoading.init(),
           home: const LoginPage(),
