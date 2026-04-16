@@ -49,3 +49,6 @@ nul
 .claude/
 temp_xrtc/
 .metadata
+
+# Local environment file
+.env
