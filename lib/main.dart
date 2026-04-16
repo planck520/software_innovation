@@ -63,6 +63,9 @@ List<CameraDescription> _cameras = [];
 // 用于通知整个应用刷新主题的通知器
 final ValueNotifier<bool> themeNotifier = ValueNotifier<bool>(false);
 
+// Android原生通道 - 用于调用MainActivity中的方法
+const _nativeChannel = MethodChannel('com.huster.avatar/driver');
+
 List<Map<String, dynamic>> globalUsers = [
   {
     "username": "admin",
@@ -72,6 +75,8 @@ List<Map<String, dynamic>> globalUsers = [
     "history": <Map<String, dynamic>>[], // 明确指定类型
     "badges": _createDefaultBadges(),
     "submissions": <String, List<Map<String, dynamic>>>{},  // 新增提交记录字段
+    "resumePath": null,
+    "resumeContent": null,
   },
   {
     "username": "huster",
@@ -81,6 +86,8 @@ List<Map<String, dynamic>> globalUsers = [
     "history": <Map<String, dynamic>>[], // 明确指定类型
     "badges": _createDefaultBadges(),
     "submissions": <String, List<Map<String, dynamic>>>{},  // 新增提交记录字段
+    "resumePath": null,
+    "resumeContent": null,
   },
 ];
 
@@ -847,10 +854,16 @@ Future<void> loadUserData() async {
     // 还原 globalUsers
     globalUsers = List<Map<String, dynamic>>.from(decoded);
 
-    // 兼容性处理：确保所有用户都有 submissions 字段
+    // 兼容性处理：确保所有用户都有 submissions、resumePath、resumeContent 字段
     for (var user in globalUsers) {
       if (!user.containsKey('submissions')) {
         user['submissions'] = <String, List<Map<String, dynamic>>>{};
+      }
+      if (!user.containsKey('resumePath')) {
+        user['resumePath'] = null;
+      }
+      if (!user.containsKey('resumeContent')) {
+        user['resumeContent'] = null;
       }
     }
   }
@@ -912,7 +925,7 @@ class HusterviewApp extends StatelessWidget {
       builder: (context, isDark, child) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Husterview',
+          title: 'Ntervue',
           theme: AppTheme.bubeiDarkTheme,
           builder: EasyLoading.init(),
           home: const LoginPage(),
@@ -8077,11 +8090,25 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  // 调用Android原生方法提取PDF简历文本
+  Future<String?> _extractPdfText(String filePath) async {
+    try {
+      debugPrint('[PDF提取] 开始提取: $filePath');
+      final result = await _nativeChannel.invokeMethod('extractPdfText', {'filePath': filePath});
+      final text = result as String?;
+      debugPrint('[PDF提取] 结果长度: ${text == null ? "null" : "${text.length}字符"}');
+      if (text != null && text.length <= 100) {
+        debugPrint('[PDF提取] 内容: $text');
+      }
+      return text;
+    } catch (e) {
+      debugPrint('[PDF提取] 失败: $e');
+      return null;
+    }
+  }
+
   // 简历管理功能
   void _showResumeManager() {
-    final user = globalUsers[currentUserIndex];
-    final resumePath = user['resumePath'];
-
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -8134,61 +8161,66 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 24),
               // 当前简历状态
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: resumePath != null
-                      ? BubeiColors.success.withOpacity(0.14)
-                      : BubeiColors.surfaceDim,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: resumePath != null
-                        ? BubeiColors.success.withOpacity(0.36)
-                        : BubeiColors.border.withOpacity(0.9),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      resumePath != null
-                          ? Icons.check_circle
-                          : Icons.info_outline,
+              Builder(
+                builder: (context) {
+                  final resumePath = globalUsers[currentUserIndex]['resumePath'];
+                  return Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
                       color: resumePath != null
-                          ? BubeiColors.success
-                          : BubeiColors.textSecondary,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            resumePath != null ? "已上传简历" : "暂未上传简历",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: BubeiColors.textPrimary,
-                            ),
-                          ),
-                          if (resumePath != null) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              resumePath.split('/').last.split('\\').last,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: BubeiColors.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
+                          ? BubeiColors.success.withOpacity(0.14)
+                          : BubeiColors.surfaceDim,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: resumePath != null
+                            ? BubeiColors.success.withOpacity(0.36)
+                            : BubeiColors.border.withOpacity(0.9),
                       ),
                     ),
-                  ],
-                ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          resumePath != null
+                              ? Icons.check_circle
+                              : Icons.info_outline,
+                          color: resumePath != null
+                              ? BubeiColors.success
+                              : BubeiColors.textSecondary,
+                          size: 14,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                resumePath != null ? "已上传简历" : "暂未上传简历",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: BubeiColors.textPrimary,
+                                ),
+                              ),
+                              if (resumePath != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  resumePath.split('/').last.split('\\').last,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: BubeiColors.textSecondary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
               // 提示信息
@@ -8221,108 +8253,127 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               const SizedBox(height: 24),
               // 操作按钮
-              Row(
-                children: [
-                  if (resumePath != null)
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            globalUsers[currentUserIndex]['resumePath'] = null;
-                          });
-                          saveUserData();
-                          setSheetState(() {});
-                          _showStatus("简历已删除", BubeiColors.warning);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          decoration: BoxDecoration(
-                            color: BubeiColors.error.withOpacity(0.14),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: BubeiColors.error.withOpacity(0.36),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.delete_outline,
-                                color: BubeiColors.error,
-                                size: 12.6,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                "删除简历",
-                                style: TextStyle(
-                                  color: BubeiColors.error,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
+              Builder(
+                builder: (context) {
+                  final resumePath = globalUsers[currentUserIndex]['resumePath'];
+                  return Row(
+                    children: [
+                      if (resumePath != null)
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                globalUsers[currentUserIndex]['resumePath'] = null;
+                                globalUsers[currentUserIndex]['resumeContent'] = null;
+                              });
+                              saveUserData();
+                              setSheetState(() {});
+                              _showStatus("简历已删除", BubeiColors.warning);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: BubeiColors.error.withOpacity(0.14),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: BubeiColors.error.withOpacity(0.36),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (resumePath != null) const SizedBox(width: 12),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        try {
-                          FilePickerResult? result = await FilePicker.platform
-                              .pickFiles(
-                                type: FileType.custom,
-                                allowedExtensions: ['pdf', 'doc', 'docx'],
-                              );
-                          if (result != null &&
-                              result.files.single.path != null) {
-                            setState(() {
-                              globalUsers[currentUserIndex]['resumePath'] =
-                                  result.files.single.path;
-                            });
-                            saveUserData();
-                            setSheetState(() {});
-                            _showStatus("简历上传成功", BubeiColors.success);
-                          }
-                        } catch (e) {
-                          _showStatus("上传失败", BubeiColors.error);
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: _metalGradient,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF565D6A)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              resumePath != null
-                                  ? Icons.refresh
-                                  : Icons.upload_file,
-                              color: Colors.white,
-                              size: 12.6,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              resumePath != null ? "更换简历" : "上传简历",
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline,
+                                    color: BubeiColors.error,
+                                    size: 12.6,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "删除简历",
+                                    style: TextStyle(
+                                      color: BubeiColors.error,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
+                          ),
+                        ),
+                      if (resumePath != null) const SizedBox(width: 12),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            try {
+                              FilePickerResult? result = await FilePicker.platform
+                                  .pickFiles(
+                                    type: FileType.custom,
+                                    allowedExtensions: ['pdf', 'doc', 'docx'],
+                                  );
+                              if (result != null &&
+                                  result.files.single.path != null) {
+                                final path = result.files.single.path!;
+                                String? resumeText;
+                                if (path.toLowerCase().endsWith('.pdf')) {
+                                  resumeText = await _extractPdfText(path);
+                                  debugPrint('[上传] resumeText = ${resumeText == null ? "null" : "${resumeText.length}字符"}');
+                                } else {
+                                  try {
+                                    final file = File(path);
+                                    final bytes = await file.readAsBytes();
+                                    resumeText = utf8.decode(bytes, allowMalformed: true);
+                                  } catch (_) {}
+                                }
+                                setState(() {
+                                  globalUsers[currentUserIndex]['resumePath'] = path;
+                                  globalUsers[currentUserIndex]['resumeContent'] = resumeText;
+                                });
+                                debugPrint('[上传] 存储后 resumeContent = ${globalUsers[currentUserIndex]['resumeContent'] == null ? "null" : "有值"}');
+                                saveUserData();
+                                setSheetState(() {});
+                                _showStatus("简历上传成功", BubeiColors.success);
+                              }
+                            } catch (e) {
+                              _showStatus("上传失败", BubeiColors.error);
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: _metalGradient,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFF565D6A)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  resumePath != null
+                                      ? Icons.refresh
+                                      : Icons.upload_file,
+                                  color: Colors.white,
+                                  size: 12.6,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  resumePath != null ? "更换简历" : "上传简历",
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
               // 支持格式提示
@@ -14589,23 +14640,20 @@ class _InterviewChatPageState extends State<InterviewChatPage> with SingleTicker
       setState(() {
         final c = result.confidence.clamp(0.0, 1.0);
 
-        // 使用开方放大 + 线性组合公式
-        // 开方放大低置信度区域的变化，线性保持高置信度区域的敏感度
-        final amplified = 100 * (0.6 * pow(c, 0.6) + 0.4 * c);
+        // 线性映射置信度到 [10, 100] 范围，不使用非线性放大
+        // 腾讯云置信度普遍偏高，直接用能保留更大动态范围
+        final double base = 10.0 + c * 90.0;
 
-        // 指数移动平均平滑（考虑历史数据）
+        // 指数移动平均平滑：新数据占主导权重 0.75，历史仅保留 0.25
+        // 相比旧系数（0.65/0.35），新数据影响力提升约 2 倍，曲线更敏感
         final double smoothed;
         if (_emotionHistory.isNotEmpty) {
           final lastScore = _emotionHistory.last;
-          // 平滑系数 0.35 让新数据有更大权重
-          smoothed = lastScore * 0.65 + amplified * 0.35;
+          smoothed = lastScore * 0.25 + base * 0.75;
         } else {
-          smoothed = amplified;
+          smoothed = base;
         }
-
-        // 扩大输出范围到 [25, 99]
-        final mapped = smoothed.clamp(25.0, 99.0);
-        _emotionScore = mapped.toInt();
+        _emotionScore = smoothed.clamp(10.0, 100.0).toInt();
 
         _emotionHistory.add(_emotionScore.toDouble());
         if (_emotionHistory.length > 20) {
@@ -14807,6 +14855,18 @@ Map<String, String> _buildSystemPrompt() {
   final int objectiveDone = stats['objective'] ?? 0;
   final int algorithmDone = stats['algorithm'] ?? 0;
   final int currentMainNumber = _currentMainNumberFromDetails();
+  final resumeContent = globalUsers[currentUserIndex]['resumeContent'] as String?;
+  debugPrint('[ResumeDebug] resumeContent长度: ${resumeContent?.length ?? 0}字符');
+  if (resumeContent != null && resumeContent.isNotEmpty) {
+    debugPrint('[ResumeDebug] 前100字符: ${resumeContent.length > 100 ? resumeContent.substring(0, 100) : resumeContent}');
+    debugPrint('[ResumeDebug] 后100字符: ${resumeContent.length > 100 ? resumeContent.substring(resumeContent.length - 100) : resumeContent}');
+  }
+  String resumeSection = '';
+  if (resumeContent != null && resumeContent.trim().isNotEmpty && !resumeContent.startsWith('简历读取失败') && !resumeContent.startsWith('简历读取结果为空')) {
+    resumeSection = '\n【候选人简历内容（必须严格遵守）】\n$resumeContent\n【简历内容结束】\n重要约束：面试官只能针对上述简历中明确提到的项目经历进行提问，严禁编造或推测简历中不存在的项目名称。如果简历中提到了某个项目，可以要求候选人详细介绍该项目的技术细节、负责部分、遇到的挑战和解决方案。开场时必须先告知候选人："我已收到您的简历，正在根据简历内容安排面试"，然后用1-2句话简单总结一下简历中的核心项目经验（不要逐字念简历），最后开始针对简历中的实际项目进行深入提问。';
+  } else {
+    resumeSection = '\n面试官在开场时必须先告知候选人："我暂未收到您的简历，本次面试将围绕常规面试问题展开"，然后按常规流程进行面试。';
+  }
   final int currentSubQuestionCount = _currentSubQuestionCountFromDetails();
   final int completedMainCount = currentMainNumber > 0 ? currentMainNumber - 1 : 0;
   final int remainingSlots = (_totalQuestions - currentMainNumber).clamp(0, _totalQuestions);
@@ -14846,18 +14906,19 @@ Map<String, String> _buildSystemPrompt() {
     "role": "system",
     "content":
         "你是${widget.company ?? '目标公司'}的${widget.interviewerType}，正在为${widget.jobCategory}的${widget.job}面试。"
+        "$resumeSection"
         "$companyPolicy"
+        "目标难度：$effectiveDifficulty。"
+        "$interviewerStyle"
         "$timePolicy"
         "$naturalEndPolicy"
         "$antiReversePolicy"
-        "目标难度：$effectiveDifficulty。"
-        "$interviewerStyle"
         "$codePolicy"
         "$skipPolicy"
         "$hintPolicy"
         "$projectFollowUpStrategy"
-        "面试采用大问题/小问题结构：第1个大问题固定为自我介绍（含项目经历），整体每个大问题最多10个针对性追问。"
-        "第1个大问题要深挖技术能力：前3轮可了解项目背景，但应优先追问技术实现细节（技术栈、架构设计、核心难点、性能优化、代码实现等），避免过度关注业务描述。"
+        "面试采用大问题/小问题结构：第1个大问题固定为自我介绍。如果简历中有明确的项目经历，必须基于简历中的实际项目进行追问，严禁编造或推测简历中不存在的项目名称。整体每个大问题最多10个针对性追问。"
+        "第1个大问题要深挖技术能力：前3轮可了解项目背景，但应优先追问技术实现细节（技术栈、架构设计、核心难点、性能优化、代码实现等），避免过度关注业务描述。如果简历中提到了具体项目，必须以该项目的实际技术细节为准进行追问。"
         "主观题和客观题可以使用题库题或你自拟；算法题必须来自题库。"
         "当前进度：当前处于第$currentMainNumber/$_totalQuestions个大问题，已完成$completedMainCount个大问题，当前大问题追问$currentSubQuestionCount/$_maxSubQuestionsPerMain，剩余大问题槽位$remainingSlots。"
         "类型进度：主观$subjectiveDone/$targetSubjective，客观$objectiveDone/$targetObjective，算法$algorithmDone/$targetAlgorithm。"
