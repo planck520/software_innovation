@@ -2095,8 +2095,8 @@ class _RegisterPageState extends State<RegisterPage>
     if (email.isEmpty) {
       setState(() => _emailError = "请输入邮箱地址");
       return;
-    }
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+    }//验证格式
+    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {//AI辅助生成，Deepseek-R1,2026年3月30日
       setState(() => _emailError = "请输入有效的邮箱地址");
       return;
     }
@@ -3788,7 +3788,7 @@ class _BubeiHomePageState extends State<BubeiHomePage> {
                               ),
                             ),
                             Text(
-                              _dailyQuote,
+                              _dailyQuote,//AI辅助修改：Deepseek-R1,2026年4月13日
                               style: TextStyle(
                                 color: const Color(0xFFACB2BE),
                                 fontSize: 12,
@@ -15968,7 +15968,6 @@ class _MiniEmotionCurvePainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-
     final path = Path();
     final stepX = size.width / (data.length - 1);
     final minVal = data.reduce((a, b) => a < b ? a : b);
